@@ -20,7 +20,7 @@
   <meta name="twitter:image:alt" content="SF Memory — Memory for the next era of AI.">
   <link rel="canonical" href="https://sfmemo.com/">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/styles.css?v=12">
+  <link rel="stylesheet" href="/styles.css?v=13">
   <title>SF Memory — Memory for the Next Era of AI</title>
   <script type="application/ld+json">
     {
@@ -31,11 +31,12 @@
       "description": "SF Memory is developing AI memory subsystems, advanced packaging, and a long-term path to U.S. manufacturing."
     }
   </script>
-  <script type="module" src="/visual.js?v=8"></script>
+  <script type="module" src="/visual.js?v=9"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
   <div class="page-grid" aria-hidden="true"></div>
+  <div class="scroll-rail" aria-hidden="true"><span></span></div>
 
   <header class="site-header">
     <a class="wordmark" href="#top" aria-label="SF Memory home"><span>SF</span> MEMORY</a>
@@ -47,22 +48,31 @@
 
   <main id="main">
     <section class="hero hero-horizon" id="top" aria-labelledby="hero-title">
-      <canvas id="hero-canvas" aria-hidden="true"></canvas>
-      <div class="hero-light-fallback" aria-hidden="true"></div>
-      <div class="hero-copy">
-        <p class="eyebrow">SF Memory · California</p>
-        <h1 id="hero-title">
-          <span>Memory for</span>
-          <span>the next era</span>
-          <span>of AI.</span>
-        </h1>
-        <div class="hero-meta">
-          <p class="hero-intro">We’re building the design foundation for AI memory subsystems and advanced packaging, with a long-term path to U.S. manufacturing.</p>
-          <a class="hero-link" href="#approach">
-            <span>Explore the approach</span>
-            <i aria-hidden="true"></i>
-            <b aria-hidden="true">↓</b>
-          </a>
+      <div class="hero-frame">
+        <canvas id="hero-canvas" aria-hidden="true"></canvas>
+        <div class="hero-light-fallback" aria-hidden="true"></div>
+        <div class="hero-slit" aria-hidden="true"></div>
+        <div class="hero-copy">
+          <p class="eyebrow">SF Memory · California</p>
+          <h1 id="hero-title">
+            <span>The</span>
+            <span>SF Memory</span>
+            <span>Company</span>
+          </h1>
+          <div class="hero-meta">
+            <p class="hero-intro">We’re building the design foundation for AI memory subsystems and advanced packaging, with a long-term path to U.S. manufacturing.</p>
+            <a class="hero-link" href="#approach">
+              <span>Explore the approach</span>
+              <i aria-hidden="true"></i>
+              <b aria-hidden="true">↓</b>
+            </a>
+          </div>
+        </div>
+        <div class="field-controls">
+          <p>Move the light. Flip the field.</p>
+          <button class="field-toggle" type="button" aria-pressed="false" aria-label="Switch to light field">
+            <span>Light field</span><i aria-hidden="true"></i>
+          </button>
         </div>
       </div>
     </section>
@@ -131,7 +141,7 @@
       <div class="vision-plane" aria-hidden="true"></div>
       <div class="vision-heading">
         <p class="section-label">02 / Vision</p>
-        <h2 id="vision-title">Design it.<br>Validate it.<br>Build it here.</h2>
+        <h2 id="vision-title"><span>Design it.</span><span>Validate it.</span><span>Build it here.</span></h2>
         <p>A staged path from proprietary design methodology to differentiated AI memory products and, ultimately, U.S. manufacturing.</p>
       </div>
 
@@ -183,7 +193,7 @@
 
     <section class="closing">
       <p class="section-label">SF Memory</p>
-      <h2>Build the memory subsystems AI infrastructure will need next.</h2>
+      <h2><span>Build the memory subsystems AI infrastructure will need next.</span></h2>
       <a class="closing-link" href="#top"><span>Back to the horizon</span><i aria-hidden="true">↑</i></a>
     </section>
   </main>
