@@ -3,6 +3,7 @@ import * as THREE from "./vendor/three.module.js";
 const hero = document.querySelector(".hero-horizon");
 const surface = hero?.querySelector(".hero-visual");
 const canvas = document.querySelector("#hero-canvas");
+const gestureTarget = surface?.querySelector(".hero-gesture-target");
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 const finePointer = window.matchMedia("(pointer: fine)").matches;
 const INITIAL_ROTATION_X = 0.18;
@@ -337,12 +338,29 @@ if (hero && surface && canvas) {
     shadow.position.set(0, -1.55, 0.15);
     stackRoot.add(shadow);
 
-    const hitArea = new THREE.Mesh(
-      new THREE.BoxGeometry(7, 4.2, 4),
-      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, colorWrite: false }),
-    );
-    hitArea.position.y = 0.08;
-    stackRoot.add(hitArea);
+    const interactionMeshes = [
+      substrate,
+      interposer,
+      baseDie,
+      ...layerMeshes,
+      seams,
+      edgeStrips,
+      tsvs,
+      bumps,
+    ];
+
+    const gestureBounds = {
+      min: new THREE.Vector3(-3.14, -1.57, -1.57),
+      max: new THREE.Vector3(3.14, 1.72, 1.57),
+    };
+    const gestureCorners = [];
+    for (const x of [gestureBounds.min.x, gestureBounds.max.x]) {
+      for (const y of [gestureBounds.min.y, gestureBounds.max.y]) {
+        for (const z of [gestureBounds.min.z, gestureBounds.max.z]) {
+          gestureCorners.push(new THREE.Vector3(x, y, z));
+        }
+      }
+    }
 
     const raycaster = new THREE.Raycaster();
     const pointerNdc = new THREE.Vector2();
@@ -364,6 +382,7 @@ if (hero && surface && canvas) {
     let lastTouchTapAt = 0;
     let lastTouchTapX = 0;
     let lastTouchTapY = 0;
+    let lastGestureClipPath = "";
 
     surface.dataset.inspecting = "false";
     surface.dataset.dragging = "false";
@@ -380,7 +399,54 @@ if (hero && surface && canvas) {
       pointerNdc.set(point.x, point.y);
       raycaster.setFromCamera(pointerNdc, camera);
       scene.updateMatrixWorld(true);
-      return raycaster.intersectObject(hitArea, false).length > 0;
+      return raycaster.intersectObjects(interactionMeshes, false).length > 0;
+    }
+
+    function startsOnGestureTarget(event) {
+      return mobile && gestureTarget?.dataset.ready === "true" && event.target === gestureTarget;
+    }
+
+    function convexHull(points) {
+      const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y);
+      if (sorted.length <= 2) return sorted;
+      const cross = (origin, a, b) =>
+        (a.x - origin.x) * (b.y - origin.y) - (a.y - origin.y) * (b.x - origin.x);
+      const lower = [];
+      sorted.forEach((point) => {
+        while (lower.length >= 2 && cross(lower.at(-2), lower.at(-1), point) <= 0) lower.pop();
+        lower.push(point);
+      });
+      const upper = [];
+      for (let index = sorted.length - 1; index >= 0; index -= 1) {
+        const point = sorted[index];
+        while (upper.length >= 2 && cross(upper.at(-2), upper.at(-1), point) <= 0) upper.pop();
+        upper.push(point);
+      }
+      lower.pop();
+      upper.pop();
+      return lower.concat(upper);
+    }
+
+    function updateGestureTarget() {
+      if (!gestureTarget || !mobile) return;
+      camera.updateMatrixWorld(true);
+      stackRoot.updateWorldMatrix(true, true);
+      const projected = gestureCorners.map((corner) => {
+        const point = corner.clone().applyMatrix4(stackRoot.matrixWorld).project(camera);
+        return {
+          x: clamp((point.x * 0.5 + 0.5) * 100, 0, 100),
+          y: clamp((-point.y * 0.5 + 0.5) * 100, 0, 100),
+        };
+      });
+      const polygon = convexHull(projected)
+        .map((point) => `${point.x.toFixed(3)}% ${point.y.toFixed(3)}%`)
+        .join(", ");
+      const clipPath = `polygon(${polygon})`;
+      if (clipPath === lastGestureClipPath) return;
+      lastGestureClipPath = clipPath;
+      gestureTarget.style.clipPath = clipPath;
+      gestureTarget.style.webkitClipPath = clipPath;
+      gestureTarget.dataset.ready = "true";
     }
 
     function updateInteractionState() {
@@ -444,15 +510,18 @@ if (hero && surface && canvas) {
       const point = pointFromClient(event.clientX, event.clientY);
       const touchInput = tracked.type === "touch";
       const pitchDelta = touchInput
-        ? dy * (Math.PI / 150)
+        ? dy * (Math.PI / 60)
         : (dy / bounds.height) * Math.PI * 0.62;
       const yawDelta = touchInput
         ? dx * (Math.PI / 36)
         : (dx / bounds.width) * Math.PI * 2;
 
       dragging = true;
+      const pitch = touchInput
+        ? tracked.startRotation.x + pitchDelta
+        : tracked.startRotation.x - pitchDelta;
       rotationTarget.set(
-        clamp(tracked.startRotation.x - pitchDelta, -0.3, 0.42),
+        clamp(pitch, touchInput ? -0.7 : -0.3, touchInput ? 0.8 : 0.42),
         tracked.startRotation.y + yawDelta,
       );
       updateLights(point);
@@ -502,6 +571,7 @@ if (hero && surface && canvas) {
 
       stackRoot.rotation.x = rotationCurrent.x;
       stackRoot.rotation.y = rotationCurrent.y;
+      updateGestureTarget();
       layerActivity.fill(0);
 
       particleMeta.forEach((meta, index) => {
@@ -618,7 +688,7 @@ if (hero && surface && canvas) {
     surface.addEventListener("pointerdown", (event) => {
       if (event.button !== undefined && event.button !== 0) return;
       const point = pointFromClient(event.clientX, event.clientY);
-      const hit = hitsStack(point);
+      const hit = startsOnGestureTarget(event) || hitsStack(point);
       if (!hit) return;
 
       activePointers.set(event.pointerId, {
@@ -690,7 +760,7 @@ if (hero && surface && canvas) {
     });
     surface.addEventListener("dblclick", (event) => {
       const point = pointFromClient(event.clientX, event.clientY);
-      if (!hitsStack(point)) return;
+      if (!startsOnGestureTarget(event) && !hitsStack(point)) return;
       event.preventDefault();
       resetRotation();
     });
@@ -747,6 +817,7 @@ if (hero && surface && canvas) {
     canvas.addEventListener("webglcontextlost", (event) => {
       event.preventDefault();
       stop();
+      if (gestureTarget) gestureTarget.dataset.ready = "false";
       hero.classList.remove("webgl-ready");
     });
 

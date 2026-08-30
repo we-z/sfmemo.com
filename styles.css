@@ -977,7 +977,7 @@ footer p { margin: 0; }
   display: block;
   opacity: 1;
   cursor: grab;
-  touch-action: pinch-zoom;
+  touch-action: pan-y pinch-zoom;
 }
 
 .hero-visual[data-dragging="true"] #hero-canvas { cursor: grabbing; }
@@ -1741,7 +1741,15 @@ footer p { margin: 0; }
   width: min(52vw, 52rem);
   height: 80%;
   overflow: hidden;
-  touch-action: pinch-zoom;
+  touch-action: pan-y pinch-zoom;
+}
+
+.hero-gesture-target {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  pointer-events: none;
+  touch-action: pan-y pinch-zoom;
 }
 
 @media (min-width: 75rem) {
@@ -2011,11 +2019,14 @@ footer p { margin: 0; }
     height: clamp(23rem, 44svh, 25.75rem);
     margin: 0 calc(var(--gutter) * -1);
     overflow: hidden;
-    overscroll-behavior: contain;
-    touch-action: pinch-zoom;
+    touch-action: pan-y pinch-zoom;
   }
 
-  .hero-visual #hero-canvas { touch-action: pinch-zoom; }
+  .hero-visual #hero-canvas { touch-action: pan-y pinch-zoom; }
+  .hero-gesture-target[data-ready="true"] {
+    pointer-events: auto;
+    touch-action: pinch-zoom;
+  }
   .hero-visual-label { display: none; }
   .vision-stages::after { width: 34%; }
   .closing { min-height: 78svh; }
