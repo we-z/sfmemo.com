@@ -557,7 +557,7 @@ if (hero && surface && canvas) {
       const bounds = surface.getBoundingClientRect();
       if (!bounds.width || !bounds.height) return;
       mobile = window.innerWidth <= 780;
-      stackRoot.position.y = mobile ? -0.12 : 0;
+      stackRoot.position.y = mobile ? 1.05 : 0;
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.05 : finePointer ? 1.3 : 1.15));
       renderer.setSize(bounds.width, bounds.height, false);
 

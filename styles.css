@@ -1968,12 +1968,13 @@ footer p { margin: 0; }
 
 @media (max-width: 780px) {
   .hero.hero-horizon {
-    min-height: max(100svh, 54rem);
+    min-height: calc(max(100svh, 54rem) + 40svh);
     padding: 0;
   }
 
   .hero-frame {
-    position: relative;
+    position: sticky;
+    top: 0;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto;
@@ -2010,10 +2011,11 @@ footer p { margin: 0; }
     height: clamp(23rem, 44svh, 25.75rem);
     margin: 0 calc(var(--gutter) * -1);
     overflow: hidden;
-    touch-action: pan-y pinch-zoom;
+    overscroll-behavior: contain;
+    touch-action: pinch-zoom;
   }
 
-  .hero-visual #hero-canvas { touch-action: pan-y pinch-zoom; }
+  .hero-visual #hero-canvas { touch-action: pinch-zoom; }
   .hero-visual-label { display: none; }
   .vision-stages::after { width: 34%; }
   .closing { min-height: 78svh; }
@@ -2021,7 +2023,7 @@ footer p { margin: 0; }
 }
 
 @media (min-width: 521px) and (max-width: 780px) and (orientation: portrait) {
-  .hero.hero-horizon,
+  .hero.hero-horizon { min-height: calc(max(100svh, 60rem) + 40svh); }
   .hero-frame { min-height: max(100svh, 60rem); }
   .hero-frame { grid-template-rows: auto clamp(20rem, 36svh, 24rem); }
   .hero-horizon .eyebrow { margin-bottom: 1.5rem; }
@@ -2031,12 +2033,12 @@ footer p { margin: 0; }
 }
 
 @media (orientation: landscape) and (max-height: 480px) and (max-width: 900px) {
-  .hero.hero-horizon,
-  .hero-frame {
-    min-height: max(100svh, 23rem);
-  }
+  .hero.hero-horizon { min-height: calc(max(100svh, 23rem) + 35svh); }
+  .hero-frame { min-height: max(100svh, 23rem); }
 
   .hero-frame {
+    position: sticky;
+    top: 0;
     display: block;
     padding: calc(6rem + env(safe-area-inset-top, 0px)) var(--gutter) calc(1.5rem + env(safe-area-inset-bottom, 0px));
     align-items: center;
@@ -2095,7 +2097,7 @@ footer p { margin: 0; }
 }
 
 @media (max-width: 360px) {
-  .hero.hero-horizon,
+  .hero.hero-horizon { min-height: calc(max(100svh, 50rem) + 40svh); }
   .hero-frame { min-height: max(100svh, 50rem); }
   .hero-frame { padding-top: calc(6.4rem + env(safe-area-inset-top, 0px)); }
   .hero-horizon .eyebrow { margin-bottom: 1.2rem; }
