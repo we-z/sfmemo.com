@@ -172,7 +172,7 @@ if (hero && canvas) {
       if (!bounds.width || !bounds.height) return;
       renderer.setSize(bounds.width, bounds.height, false);
       uniforms.uResolution.value.set(bounds.width, bounds.height);
-      uniforms.uMobile.value = bounds.width < 780 ? 1 : 0;
+      uniforms.uMobile.value = bounds.width <= 780 ? 1 : 0;
       render(performance.now(), true);
     }
 
