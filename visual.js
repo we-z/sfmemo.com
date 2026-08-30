@@ -159,29 +159,41 @@ if (hero && heroSurface && canvas) {
 
     scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
 
+    const backdropTarget = new THREE.WebGLRenderTarget(1, 1, {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      format: THREE.RGBAFormat,
+      depthBuffer: false,
+      stencilBuffer: false,
+    });
+    backdropTarget.texture.generateMipmaps = false;
+    const glassDrawingBufferSize = new THREE.Vector2();
+
     const prismScene = new THREE.Scene();
     const prismCamera = new THREE.PerspectiveCamera(35, 1, 0.1, 30);
     prismCamera.position.set(0, 0, 7);
 
     const prismUniforms = {
+      uBackdrop: { value: backdropTarget.texture },
+      uGlassResolution: { value: new THREE.Vector2(1, 1) },
       uLightPosition: { value: new THREE.Vector3(2.5, 1.5, 3) },
       uTheme: { value: 0 },
     };
 
     const prismMaterial = new THREE.ShaderMaterial({
       uniforms: prismUniforms,
-      transparent: true,
-      depthWrite: false,
-      side: THREE.DoubleSide,
+      transparent: false,
+      depthWrite: true,
+      side: THREE.FrontSide,
       vertexShader: `
         varying vec3 vWorldPosition;
-        varying vec3 vNormal;
+        varying vec3 vWorldNormal;
         varying vec3 vLocalPosition;
 
         void main() {
           vec4 worldPosition = modelMatrix * vec4(position, 1.0);
           vWorldPosition = worldPosition.xyz;
-          vNormal = normalize(mat3(modelMatrix) * normal);
+          vWorldNormal = normalize(mat3(modelMatrix) * normal);
           vLocalPosition = position;
           gl_Position = projectionMatrix * viewMatrix * worldPosition;
         }
@@ -190,25 +202,61 @@ if (hero && heroSurface && canvas) {
         precision highp float;
 
         varying vec3 vWorldPosition;
-        varying vec3 vNormal;
+        varying vec3 vWorldNormal;
         varying vec3 vLocalPosition;
+        uniform sampler2D uBackdrop;
+        uniform vec2 uGlassResolution;
         uniform vec3 uLightPosition;
         uniform float uTheme;
 
+        vec2 refractionOffset(vec3 incident, vec3 surfaceNormal, float ior) {
+          vec3 transmitted = refract(incident, surfaceNormal, 1.0 / ior);
+          vec2 straightSlope = incident.xy / max(abs(incident.z), 0.2);
+          vec2 transmittedSlope = transmitted.xy / max(abs(transmitted.z), 0.2);
+          return clamp((transmittedSlope - straightSlope) * 0.055, vec2(-0.055), vec2(0.055));
+        }
+
+        vec3 compositeBackdrop(vec4 sampleColor) {
+          vec3 pageColor = mix(vec3(0.0196, 0.0275, 0.0392), vec3(0.9294, 0.9529, 0.9843), uTheme);
+          return sampleColor.rgb + pageColor * (1.0 - sampleColor.a);
+        }
+
         void main() {
-          vec3 normal = normalize(vNormal);
+          vec3 normal = normalize(vWorldNormal);
           vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
           vec3 lightDirection = normalize(uLightPosition - vWorldPosition);
-          float fresnel = pow(1.0 - abs(dot(normal, viewDirection)), 2.35);
-          float lightEdge = pow(max(dot(reflect(-lightDirection, normal), viewDirection), 0.0), 24.0);
-          float innerBand = 0.5 + 0.5 * sin(vLocalPosition.y * 9.0 + vLocalPosition.x * 5.0);
-          vec3 darkGlass = vec3(0.13, 0.42, 0.95);
-          vec3 lightGlass = vec3(0.02, 0.25, 0.78);
-          vec3 glass = mix(darkGlass, lightGlass, uTheme);
-          vec3 edge = mix(vec3(0.72, 0.88, 1.0), vec3(0.06, 0.32, 0.9), uTheme);
-          vec3 color = glass * (0.18 + innerBand * 0.08) + edge * fresnel * 1.15 + vec3(1.0) * lightEdge * 0.82;
-          float alpha = mix(0.15, 0.2, uTheme) + fresnel * mix(0.58, 0.7, uTheme) + lightEdge * 0.24;
-          gl_FragColor = vec4(color, clamp(alpha, 0.0, 0.86));
+          vec3 halfVector = normalize(lightDirection + viewDirection);
+          float facing = clamp(abs(dot(normal, viewDirection)), 0.0, 1.0);
+          float fresnel = 0.043 + 0.957 * pow(1.0 - facing, 5.0);
+          float specular = pow(max(dot(normal, halfVector), 0.0), 118.0);
+          float broadSpecular = pow(max(dot(normal, halfVector), 0.0), 18.0);
+
+          vec2 screenUv = gl_FragCoord.xy / max(uGlassResolution, vec2(1.0));
+          vec3 incidentDirection = -viewDirection;
+          vec2 redUv = clamp(screenUv + refractionOffset(incidentDirection, normal, 1.504), vec2(0.002), vec2(0.998));
+          vec2 greenUv = clamp(screenUv + refractionOffset(incidentDirection, normal, 1.516), vec2(0.002), vec2(0.998));
+          vec2 blueUv = clamp(screenUv + refractionOffset(incidentDirection, normal, 1.528), vec2(0.002), vec2(0.998));
+          vec3 redSample = compositeBackdrop(texture2D(uBackdrop, redUv));
+          vec3 greenSample = compositeBackdrop(texture2D(uBackdrop, greenUv));
+          vec3 blueSample = compositeBackdrop(texture2D(uBackdrop, blueUv));
+          vec3 refracted = vec3(
+            redSample.r,
+            greenSample.g,
+            blueSample.b
+          );
+
+          float edgeDepth = smoothstep(0.18, 0.92, fresnel);
+          float internalCaustic = pow(max(dot(refract(-lightDirection, normal, 1.0 / 1.52), -viewDirection), 0.0), 11.0);
+          float baseCaustic = exp(-abs(vLocalPosition.y + 0.69) * 18.0) * (0.35 + 0.65 * facing);
+          vec3 glassTint = mix(vec3(0.16, 0.46, 0.88), vec3(0.035, 0.22, 0.58), uTheme);
+          vec3 rimTint = mix(vec3(0.66, 0.88, 1.0), vec3(0.06, 0.3, 0.82), uTheme);
+
+          vec3 color = refracted * mix(0.94, 0.78, edgeDepth);
+          color += glassTint * (0.035 + edgeDepth * 0.16 + baseCaustic * 0.06);
+          color += rimTint * fresnel * 0.42;
+          color += vec3(1.0) * (specular * 1.65 + broadSpecular * 0.075 + internalCaustic * 0.16);
+
+          gl_FragColor = vec4(color, 1.0);
         }
       `,
     });
@@ -220,14 +268,50 @@ if (hero && heroSurface && canvas) {
     prismShape.closePath();
 
     const prismGeometry = new THREE.ExtrudeGeometry(prismShape, {
-      depth: 0.72,
+      depth: 0.78,
       steps: 1,
-      bevelEnabled: false,
+      bevelEnabled: true,
+      bevelSegments: 5,
+      bevelSize: 0.055,
+      bevelThickness: 0.055,
     });
     prismGeometry.center();
+    prismGeometry.computeVertexNormals();
 
     const prismGroup = new THREE.Group();
-    prismGroup.rotation.set(0, -0.24, 0);
+    prismGroup.rotation.set(0, -0.22, 0);
+
+    const contactShadow = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.25, 0.42),
+      new THREE.ShaderMaterial({
+        uniforms: { uTheme: prismUniforms.uTheme },
+        transparent: true,
+        depthTest: true,
+        depthWrite: false,
+        vertexShader: `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          precision highp float;
+          varying vec2 vUv;
+          uniform float uTheme;
+          void main() {
+            vec2 p = (vUv - 0.5) * vec2(2.0, 5.2);
+            float falloff = exp(-dot(p, p) * 1.45);
+            vec3 shadowColor = mix(vec3(0.0, 0.025, 0.08), vec3(0.08, 0.18, 0.34), uTheme);
+            gl_FragColor = vec4(shadowColor, falloff * mix(0.34, 0.16, uTheme));
+          }
+        `,
+      }),
+    );
+    contactShadow.position.set(0, -0.84, -0.18);
+    contactShadow.renderOrder = 1;
+    prismGroup.add(contactShadow);
+
     const prismMesh = new THREE.Mesh(prismGeometry, prismMaterial);
     prismMesh.renderOrder = 4;
     prismGroup.add(prismMesh);
@@ -237,46 +321,16 @@ if (hero && heroSurface && canvas) {
       new THREE.LineBasicMaterial({
         color: 0x9bc7ff,
         transparent: true,
-        opacity: 0.72,
+        opacity: 0.07,
         blending: THREE.AdditiveBlending,
-        depthTest: false,
+        depthTest: true,
       }),
     );
     prismEdges.renderOrder = 5;
     prismGroup.add(prismEdges);
     prismScene.add(prismGroup);
 
-    function dynamicLine(color, opacity = 0.7) {
-      const positions = new Float32Array(6);
-      const geometry = new THREE.BufferGeometry();
-      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-      const line = new THREE.Line(
-        geometry,
-        new THREE.LineBasicMaterial({
-          color,
-          transparent: true,
-          opacity,
-          blending: THREE.NormalBlending,
-          depthTest: false,
-        }),
-      );
-      line.renderOrder = 2;
-      prismScene.add(line);
-      return line;
-    }
-
-    function updateLine(line, startPoint, endPoint) {
-      const positions = line.geometry.attributes.position.array;
-      positions[0] = startPoint.x;
-      positions[1] = startPoint.y;
-      positions[2] = startPoint.z;
-      positions[3] = endPoint.x;
-      positions[4] = endPoint.y;
-      positions[5] = endPoint.z;
-      line.geometry.attributes.position.needsUpdate = true;
-    }
-
-    function dynamicBand(color, opacity = 0.35) {
+    function dynamicBand(color, opacity = 0.35, blending = THREE.AdditiveBlending, renderOrder = 2) {
       const positions = new Float32Array(18);
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
@@ -286,33 +340,33 @@ if (hero && heroSurface && canvas) {
           color,
           transparent: true,
           opacity,
-          blending: THREE.NormalBlending,
+          blending,
           depthTest: false,
           depthWrite: false,
           side: THREE.DoubleSide,
         }),
       );
-      band.renderOrder = 3;
+      band.renderOrder = renderOrder;
+      band.frustumCulled = false;
       prismScene.add(band);
       return band;
     }
 
-    function updateBand(band, startPoint, endPoint, width) {
+    function updateBand(band, startPoint, endPoint, startWidth, endWidth) {
       const deltaX = endPoint.x - startPoint.x;
       const deltaY = endPoint.y - startPoint.y;
       const length = Math.max(Math.hypot(deltaX, deltaY), 0.001);
-      const normalX = (-deltaY / length) * width;
-      const normalY = (deltaX / length) * width;
-      const startWidth = width * 0.12;
+      const normalX = -deltaY / length;
+      const normalY = deltaX / length;
       const positions = band.geometry.attributes.position.array;
-      const startAX = startPoint.x - normalX * (startWidth / width);
-      const startAY = startPoint.y - normalY * (startWidth / width);
-      const startBX = startPoint.x + normalX * (startWidth / width);
-      const startBY = startPoint.y + normalY * (startWidth / width);
-      const endAX = endPoint.x - normalX;
-      const endAY = endPoint.y - normalY;
-      const endBX = endPoint.x + normalX;
-      const endBY = endPoint.y + normalY;
+      const startAX = startPoint.x - normalX * startWidth;
+      const startAY = startPoint.y - normalY * startWidth;
+      const startBX = startPoint.x + normalX * startWidth;
+      const startBY = startPoint.y + normalY * startWidth;
+      const endAX = endPoint.x - normalX * endWidth;
+      const endAY = endPoint.y - normalY * endWidth;
+      const endBX = endPoint.x + normalX * endWidth;
+      const endBY = endPoint.y + normalY * endWidth;
 
       positions.set([
         startAX, startAY, startPoint.z,
@@ -325,30 +379,116 @@ if (hero && heroSurface && canvas) {
       band.geometry.attributes.position.needsUpdate = true;
     }
 
-    const spectrum = [
-      0xff3b5c,
-      0xff8a3d,
-      0xffd84d,
-      0x5bea83,
-      0x3fe0f5,
-      0x4f7cff,
-      0xb967ff,
-    ];
-    const incidentBeams = [dynamicLine(0xd9efff, 0.7), dynamicLine(0x7fc4ff, 0.52)];
-    const internalBeams = [dynamicLine(0xffffff, 0.45), dynamicLine(0xcce9ff, 0.32)];
-    const refractedBeams = pointers.map(() => spectrum.map((color) => dynamicBand(color, 0.35)));
-    const lightSources = pointers.map(() => {
-      const source = new THREE.Mesh(
-        new THREE.SphereGeometry(0.035, 12, 12),
-        new THREE.MeshBasicMaterial({
-          color: 0xeaf6ff,
+    function makeSpectrumFan() {
+      const positions = new Float32Array(18);
+      const uvs = new Float32Array([
+        0, 0,
+        1, 0,
+        1, 1,
+        0, 0,
+        1, 1,
+        0, 1,
+      ]);
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
+      const fan = new THREE.Mesh(
+        geometry,
+        new THREE.ShaderMaterial({
+          uniforms: {
+            uOpacity: { value: 0.42 },
+          },
           transparent: true,
-          opacity: 0.95,
-          blending: THREE.AdditiveBlending,
           depthTest: false,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+          blending: THREE.AdditiveBlending,
+          vertexShader: `
+            varying vec2 vUv;
+            void main() {
+              vUv = uv;
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `,
+          fragmentShader: `
+            precision highp float;
+            varying vec2 vUv;
+            uniform float uOpacity;
+
+            vec3 spectrum(float position) {
+              float p = clamp(position, 0.0, 1.0) * 6.0;
+              if (p < 1.0) return mix(vec3(1.0, 0.15, 0.34), vec3(1.0, 0.42, 0.16), p);
+              if (p < 2.0) return mix(vec3(1.0, 0.42, 0.16), vec3(1.0, 0.82, 0.2), p - 1.0);
+              if (p < 3.0) return mix(vec3(1.0, 0.82, 0.2), vec3(0.28, 0.88, 0.45), p - 2.0);
+              if (p < 4.0) return mix(vec3(0.28, 0.88, 0.45), vec3(0.16, 0.78, 0.96), p - 3.0);
+              if (p < 5.0) return mix(vec3(0.16, 0.78, 0.96), vec3(0.25, 0.38, 1.0), p - 4.0);
+              return mix(vec3(0.25, 0.38, 1.0), vec3(0.68, 0.27, 1.0), p - 5.0);
+            }
+
+            void main() {
+              float edgeFeather = smoothstep(0.0, 0.055, vUv.y) * (1.0 - smoothstep(0.945, 1.0, vUv.y));
+              float sourceFade = smoothstep(0.0, 0.015, vUv.x);
+              float distanceFade = 1.0 - smoothstep(0.8, 1.0, vUv.x);
+              float body = edgeFeather * sourceFade * distanceFade;
+              vec3 color = spectrum(1.0 - vUv.y);
+              gl_FragColor = vec4(color, body * uOpacity);
+            }
+          `,
         }),
       );
+      fan.renderOrder = 3;
+      fan.frustumCulled = false;
+      prismScene.add(fan);
+      return fan;
+    }
+
+    function updateSpectrumFan(fan, startPoint, endX, startHalfWidth, endHalfWidth, endCenterY, z) {
+      const positions = fan.geometry.attributes.position.array;
+      positions.set([
+        startPoint.x, startPoint.y - startHalfWidth, startPoint.z,
+        endX, endCenterY - endHalfWidth, z,
+        endX, endCenterY + endHalfWidth, z,
+        startPoint.x, startPoint.y - startHalfWidth, startPoint.z,
+        endX, endCenterY + endHalfWidth, z,
+        startPoint.x, startPoint.y + startHalfWidth, startPoint.z,
+      ]);
+      fan.geometry.attributes.position.needsUpdate = true;
+    }
+
+    const incidentBeams = pointers.map((_, pointerIndex) => ({
+      glow: dynamicBand(pointerIndex === 0 ? 0x8fc8ff : 0x5baeff, 0.26, THREE.AdditiveBlending, 2),
+      core: dynamicBand(pointerIndex === 0 ? 0xf4fbff : 0xbfe3ff, 0.82, THREE.AdditiveBlending, 2),
+    }));
+    const internalBeams = pointers.map((_, pointerIndex) =>
+      dynamicBand(pointerIndex === 0 ? 0xeaf7ff : 0x91d3ff, 0.34, THREE.AdditiveBlending, 5));
+    const spectrumFans = pointers.map(() => makeSpectrumFan());
+
+    const flareCanvas = document.createElement("canvas");
+    flareCanvas.width = 128;
+    flareCanvas.height = 128;
+    const flareContext = flareCanvas.getContext("2d");
+    const flareGradient = flareContext.createRadialGradient(64, 64, 0, 64, 64, 64);
+    flareGradient.addColorStop(0, "rgba(255,255,255,1)");
+    flareGradient.addColorStop(0.08, "rgba(214,239,255,0.95)");
+    flareGradient.addColorStop(0.28, "rgba(89,169,255,0.34)");
+    flareGradient.addColorStop(1, "rgba(30,103,255,0)");
+    flareContext.fillStyle = flareGradient;
+    flareContext.fillRect(0, 0, 128, 128);
+    const flareTexture = new THREE.CanvasTexture(flareCanvas);
+    flareTexture.colorSpace = THREE.SRGBColorSpace;
+
+    const lightSources = pointers.map(() => {
+      const source = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: flareTexture,
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthTest: false,
+        depthWrite: false,
+      }));
       source.renderOrder = 6;
+      source.frustumCulled = false;
       prismScene.add(source);
       return source;
     });
@@ -357,7 +497,6 @@ if (hero && heroSurface && canvas) {
     const sourcePoint = new THREE.Vector3();
     const entryPoint = new THREE.Vector3();
     const exitPoint = new THREE.Vector3();
-    const rayEnd = new THREE.Vector3();
 
     function updatePrism() {
       const surfaceBounds = heroSurface.getBoundingClientRect();
@@ -365,21 +504,22 @@ if (hero && heroSurface && canvas) {
       const verticalSpan = 2 * prismCamera.position.z * Math.tan(THREE.MathUtils.degToRad(prismCamera.fov * 0.5));
       const horizontalSpan = verticalSpan * aspect;
       const isMobile = surfaceBounds.width <= 780;
+      const compactMobile = isMobile && surfaceBounds.height <= 760;
 
       prismGroup.position.set(
-        isMobile ? -horizontalSpan * 0.1 : horizontalSpan * 0.13,
-        isMobile ? -verticalSpan * 0.27 : -0.05,
+        compactMobile ? -horizontalSpan * 0.18 : (isMobile ? -horizontalSpan * 0.1 : horizontalSpan * 0.13),
+        compactMobile ? -verticalSpan * 0.34 : (isMobile ? -verticalSpan * 0.27 : -0.05),
         0,
       );
-      prismGroup.scale.setScalar(isMobile ? 0.52 : Math.min(1.08, 0.9 + aspect * 0.075));
+      prismGroup.scale.setScalar(compactMobile ? 0.36 : (isMobile ? 0.52 : Math.min(1.08, 0.9 + aspect * 0.075)));
       prismGroup.updateMatrixWorld(true);
       prismGroup.getWorldPosition(prismCenter);
 
       pointerTargets.forEach((pointer, pointerIndex) => {
         const active = pointerActive[pointerIndex];
-        const beamStrength = pointerIndex === 0 ? Math.max(active, 0.48) : active;
-        const sourceX = pointerIndex === 0 && !active ? (isMobile ? 0.07 : 0.42) : pointer.x;
-        const sourceY = pointerIndex === 0 && !active ? (isMobile ? 0.23 : 0.54) : pointer.y;
+        const beamStrength = pointerIndex === 0 ? Math.max(active, 0.42) : active;
+        const sourceX = pointerIndex === 0 && !active ? (compactMobile ? 0.035 : (isMobile ? 0.07 : 0.42)) : pointer.x;
+        const sourceY = pointerIndex === 0 && !active ? (isMobile ? 0.5 + prismCenter.y / verticalSpan : 0.54) : pointer.y;
         sourcePoint.set(
           (sourceX - 0.5) * horizontalSpan,
           (sourceY - 0.5) * verticalSpan,
@@ -387,17 +527,20 @@ if (hero && heroSurface && canvas) {
         );
 
         const entersFromLeft = sourcePoint.x <= prismCenter.x;
-        entryPoint.set(entersFromLeft ? -0.72 : 0.72, 0, 0.38);
-        exitPoint.set(entersFromLeft ? 0.72 : -0.72, 0, 0.38);
+        entryPoint.set(entersFromLeft ? -0.42 : 0.42, 0, 0.43);
+        exitPoint.set(entersFromLeft ? 0.42 : -0.42, 0, 0.43);
         prismGroup.localToWorld(entryPoint);
         prismGroup.localToWorld(exitPoint);
 
         lightSources[pointerIndex].position.copy(sourcePoint);
-        lightSources[pointerIndex].material.opacity = active * 0.82;
-        incidentBeams[pointerIndex].material.opacity = beamStrength * (pointerIndex === 0 ? 0.88 : 0.7);
-        internalBeams[pointerIndex].material.opacity = beamStrength * (pointerIndex === 0 ? 0.56 : 0.42);
-        updateLine(incidentBeams[pointerIndex], sourcePoint, entryPoint);
-        updateLine(internalBeams[pointerIndex], entryPoint, exitPoint);
+        lightSources[pointerIndex].scale.setScalar(compactMobile ? 0.17 : (isMobile ? 0.22 : 0.28));
+        lightSources[pointerIndex].material.opacity = active * (pointerIndex === 0 ? 0.9 : 0.7);
+        incidentBeams[pointerIndex].glow.material.opacity = beamStrength * (pointerIndex === 0 ? 0.24 : 0.16);
+        incidentBeams[pointerIndex].core.material.opacity = beamStrength * (pointerIndex === 0 ? 0.86 : 0.64);
+        internalBeams[pointerIndex].material.opacity = beamStrength * (pointerIndex === 0 ? 0.36 : 0.26);
+        updateBand(incidentBeams[pointerIndex].glow, sourcePoint, entryPoint, 0.008, isMobile ? 0.028 : 0.035);
+        updateBand(incidentBeams[pointerIndex].core, sourcePoint, entryPoint, 0.0015, isMobile ? 0.005 : 0.0065);
+        updateBand(internalBeams[pointerIndex], entryPoint, exitPoint, 0.006, 0.009);
 
         const exitDirection = entersFromLeft ? 1 : -1;
         const edgePadding = horizontalSpan * (isMobile ? 0.025 : 0.035);
@@ -418,19 +561,19 @@ if (hero && heroSurface && canvas) {
           -verticalSpan * 0.2,
           verticalSpan * 0.2,
         );
-        const spectralSpread = verticalSpan * (isMobile ? 0.09 : 0.14);
-        const bandWidth = verticalSpan * (isMobile ? 0.0048 : 0.0036);
-
-        refractedBeams[pointerIndex].forEach((band, rayIndex) => {
-          const spectralPosition = (rayIndex - (spectrum.length - 1) / 2) / ((spectrum.length - 1) / 2);
-          rayEnd.set(
-            exitPoint.x + outputDeltaX,
-            exitPoint.y + directionalLift + spectralPosition * spectralSpread,
-            0.12 + rayIndex * 0.006,
-          );
-          band.material.opacity = beamStrength * (pointerIndex === 0 ? 0.78 : 0.6);
-          updateBand(band, exitPoint, rayEnd, bandWidth);
-        });
+        const spectralHalfSpread = verticalSpan * (compactMobile ? 0.03 : (isMobile ? 0.065 : 0.085));
+        const spectrumStartHalfWidth = verticalSpan * 0.0035;
+        const spectrumEndX = exitPoint.x + outputDeltaX;
+        spectrumFans[pointerIndex].material.uniforms.uOpacity.value = beamStrength * (pointerIndex === 0 ? 0.74 : 0.52);
+        updateSpectrumFan(
+          spectrumFans[pointerIndex],
+          exitPoint,
+          spectrumEndX,
+          spectrumStartHalfWidth,
+          spectralHalfSpread,
+          exitPoint.y + directionalLift - spectralHalfSpread,
+          0.16,
+        );
       });
 
       prismUniforms.uLightPosition.value.copy(lightSources[0].position);
@@ -441,11 +584,25 @@ if (hero && heroSurface && canvas) {
       uniforms.uTheme.value = themeValue;
       prismUniforms.uTheme.value = themeValue;
       prismEdges.material.color.set(light ? 0x155eef : 0x9bc7ff);
-      prismEdges.material.opacity = light ? 0.86 : 0.66;
-      incidentBeams[0].material.color.set(light ? 0x174ea6 : 0xd9efff);
-      incidentBeams[1].material.color.set(light ? 0x155eef : 0x7fc4ff);
-      internalBeams.forEach((beam) => beam.material.color.set(light ? 0x1d4f9d : 0xffffff));
-      lightSources.forEach((source) => source.material.color.set(light ? 0x155eef : 0xeaf6ff));
+      prismEdges.material.opacity = light ? 0.09 : 0.07;
+      incidentBeams.forEach((beam, index) => {
+        beam.glow.material.color.set(light ? (index === 0 ? 0x3c74c9 : 0x4b7ed1) : (index === 0 ? 0x8fc8ff : 0x5baeff));
+        beam.core.material.color.set(light ? (index === 0 ? 0x164d9d : 0x2862ad) : (index === 0 ? 0xf4fbff : 0xbfe3ff));
+        beam.glow.material.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
+        beam.core.material.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
+        beam.glow.material.needsUpdate = true;
+        beam.core.material.needsUpdate = true;
+      });
+      internalBeams.forEach((beam) => {
+        beam.material.color.set(light ? 0x1d4f9d : 0xeaf7ff);
+        beam.material.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
+        beam.material.needsUpdate = true;
+      });
+      spectrumFans.forEach((fan) => {
+        fan.material.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
+        fan.material.needsUpdate = true;
+      });
+      lightSources.forEach((source) => source.material.color.set(light ? 0x155eef : 0xffffff));
       render(performance.now(), true);
     };
 
@@ -460,6 +617,10 @@ if (hero && heroSurface && canvas) {
       uniforms.uRipple.value = rippleStartedAt[0] < 0 ? -1 : (now - rippleStartedAt[0]) / 1700;
       uniforms.uRipple2.value = rippleStartedAt[1] < 0 ? -1 : (now - rippleStartedAt[1]) / 1700;
       updatePrism();
+      renderer.setRenderTarget(backdropTarget);
+      renderer.clear();
+      renderer.render(scene, camera);
+      renderer.setRenderTarget(null);
       renderer.clear();
       renderer.render(scene, camera);
       renderer.clearDepth();
@@ -473,6 +634,9 @@ if (hero && heroSurface && canvas) {
       renderer.setSize(bounds.width, bounds.height, false);
       uniforms.uResolution.value.set(bounds.width, bounds.height);
       uniforms.uMobile.value = bounds.width <= 780 ? 1 : 0;
+      renderer.getDrawingBufferSize(glassDrawingBufferSize);
+      backdropTarget.setSize(glassDrawingBufferSize.x, glassDrawingBufferSize.y);
+      prismUniforms.uGlassResolution.value.copy(glassDrawingBufferSize);
       prismCamera.aspect = bounds.width / Math.max(bounds.height, 1);
       prismCamera.updateProjectionMatrix();
       render(performance.now(), true);
@@ -523,17 +687,23 @@ if (hero && heroSurface && canvas) {
       pointerActive[slot] = 0;
     }
 
+    function renderOnReducedMotion() {
+      if (reduceMotion) render(performance.now(), true);
+    }
+
     heroSurface.addEventListener("pointermove", (event) => {
       if (!finePointer || event.pointerType === "touch") return;
       const point = pointFromEvent(event);
       pointerActive[0] = 1;
       pointerTargets[0].set(point.x, point.y);
+      renderOnReducedMotion();
     });
 
     heroSurface.addEventListener("pointerleave", (event) => {
       if (event.pointerType === "touch") return;
       pointerActive[0] = 0;
       pointerTargets[0].set(0.22, 0.66);
+      renderOnReducedMotion();
     });
 
     heroSurface.addEventListener("pointerdown", (event) => {
@@ -544,23 +714,28 @@ if (hero && heroSurface && canvas) {
       rippleOrigins[0].set(point.x, point.y);
       pointerTargets[0].set(point.x, point.y);
       rippleStartedAt[0] = performance.now();
+      renderOnReducedMotion();
     });
 
     heroSurface.addEventListener("touchstart", (event) => {
       Array.from(event.changedTouches).forEach((touch) => setTouchPoint(touch, true));
+      renderOnReducedMotion();
       start();
     }, { passive: true });
 
     heroSurface.addEventListener("touchmove", (event) => {
       Array.from(event.changedTouches).forEach((touch) => setTouchPoint(touch));
+      renderOnReducedMotion();
     }, { passive: true });
 
     heroSurface.addEventListener("touchend", (event) => {
       Array.from(event.changedTouches).forEach(releaseTouch);
+      renderOnReducedMotion();
     }, { passive: true });
 
     heroSurface.addEventListener("touchcancel", (event) => {
       Array.from(event.changedTouches).forEach(releaseTouch);
+      renderOnReducedMotion();
     }, { passive: true });
 
     function start() {
