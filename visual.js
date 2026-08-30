@@ -1,4 +1,4 @@
-import "./hbm-stack.js?v=9";
+import "./hbm-stack.js?v=10";
 
 const hero = document.querySelector(".hero-horizon");
 const heroSurface = hero?.querySelector(".hero-visual") ?? hero;
@@ -192,12 +192,6 @@ function updateScrollMotion() {
     const departure = smoothstep(clamp01((heroProgress - 0.04) / 0.96));
     const metaDeparture = smoothstep(clamp01((heroProgress - 0.02) / 0.58));
 
-    setMotionVariable("--hero-line-1-x", px(-viewportWidth * 0.045 * departure * amplitude), motionScenes.hero);
-    setMotionVariable("--hero-line-1-y", px(-viewportHeight * 0.14 * departure * amplitude), motionScenes.hero);
-    setMotionVariable("--hero-line-2-x", px(viewportWidth * 0.07 * departure * amplitude), motionScenes.hero);
-    setMotionVariable("--hero-line-2-y", px(-viewportHeight * 0.095 * departure * amplitude), motionScenes.hero);
-    setMotionVariable("--hero-line-3-x", px(-viewportWidth * 0.025 * departure * amplitude), motionScenes.hero);
-    setMotionVariable("--hero-line-3-y", px(-viewportHeight * 0.05 * departure * amplitude), motionScenes.hero);
     setMotionVariable("--hero-eyebrow-y", px(-18 * departure * amplitude), motionScenes.hero);
     setMotionVariable("--hero-eyebrow-opacity", unit(1 - metaDeparture * 0.88), motionScenes.hero);
     setMotionVariable("--hero-meta-y", px(-30 * metaDeparture * amplitude), motionScenes.hero);

@@ -975,15 +975,12 @@ footer p { margin: 0; }
 
 #hero-canvas {
   display: block;
-  opacity: 0;
+  opacity: 1;
   cursor: grab;
   touch-action: pinch-zoom;
-  transition: opacity 900ms ease;
 }
 
 .hero-visual[data-dragging="true"] #hero-canvas { cursor: grabbing; }
-
-.hero-horizon.webgl-ready #hero-canvas { opacity: 1; }
 
 .hero-package-fallback {
   background:
@@ -1789,22 +1786,9 @@ footer p { margin: 0; }
 
 .scroll-motion .hero-frame #hero-canvas { will-change: opacity; }
 
-.scroll-motion .hero-horizon h1 span,
 .scroll-motion .hero-horizon .eyebrow,
 .scroll-motion .hero-horizon .hero-meta,
 .scroll-motion .hero-frame .hero-package-fallback { will-change: opacity; }
-
-.scroll-motion .hero-horizon h1 span:nth-child(1) {
-  transform: translate3d(var(--hero-line-1-x, 0px), var(--hero-line-1-y, 0px), 0);
-}
-
-.scroll-motion .hero-horizon h1 span:nth-child(2) {
-  transform: translate3d(var(--hero-line-2-x, 0px), var(--hero-line-2-y, 0px), 0);
-}
-
-.scroll-motion .hero-horizon h1 span:nth-child(3) {
-  transform: translate3d(var(--hero-line-3-x, 0px), var(--hero-line-3-y, 0px), 0);
-}
 
 .scroll-motion .hero-horizon .eyebrow {
   opacity: var(--hero-eyebrow-opacity, 1);
