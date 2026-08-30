@@ -152,7 +152,8 @@ if (hero && heroSurface && canvas) {
           float grain = hash(gl_FragCoord.xy + floor(uTime * 8.0)) - 0.5;
           color += grain * 0.012;
           float alpha = clamp((deepField * 0.82 + leadingEdge + fieldSheen * 0.2) * fieldMask, 0.0, mix(0.94, 0.72, uTheme));
-          gl_FragColor = vec4(max(color, 0.0), alpha);
+          float fieldIntensity = mix(1.55, 1.2, uTheme);
+          gl_FragColor = vec4(max(color, 0.0) * fieldIntensity, alpha);
         }
       `,
     });
