@@ -1104,7 +1104,7 @@ footer p { margin: 0; }
 
   .hero-horizon h1 {
     font-size: clamp(4rem, 15.5vw, 6rem);
-    line-height: 0.86;
+    line-height: 0.94;
   }
 
   .hero-meta {
@@ -1220,6 +1220,7 @@ footer p { margin: 0; }
   .proof-band h2 {
     max-width: 100%;
     font-size: clamp(3.25rem, 13.4vw, 5.4rem);
+    line-height: 0.98;
   }
 
   .proof-copy {
@@ -1706,7 +1707,10 @@ footer p { margin: 0; }
   .vision.vision-editorial { padding-block: 7rem; }
 
   .approach-editorial h2,
-  .vision-editorial h2 { font-size: clamp(3.75rem, 13vw, 5.5rem); }
+  .vision-editorial h2 {
+    font-size: clamp(3.75rem, 13vw, 5.5rem);
+    line-height: 0.98;
+  }
 
   .approach-watermark { font-size: 22vw; }
 
@@ -1730,7 +1734,10 @@ footer p { margin: 0; }
   }
 
   .item-number { font-size: 1.2rem; }
-  .item-title { font-size: clamp(1.35rem, 6vw, 1.7rem); }
+  .item-title {
+    font-size: clamp(1.35rem, 6vw, 1.7rem);
+    line-height: 1.18;
+  }
   .approach-panel-inner {
     grid-template-columns: 3.5rem minmax(0, 1fr) 1.25rem;
     gap: 1rem;
@@ -1764,9 +1771,14 @@ footer p { margin: 0; }
   }
 
   .vision-number { font-size: clamp(4.5rem, 19vw, 6rem); }
-  .vision-title { font-size: clamp(1.8rem, 8vw, 2.5rem); }
+  .vision-title {
+    font-size: clamp(1.8rem, 8vw, 2.5rem);
+    line-height: 1.1;
+  }
   .vision-body p { padding: 0 1rem 2rem; font-size: 0.95rem; }
   .vision-word { font-size: 20vw; }
+
+  .closing h2 { line-height: 1.02; }
 }
 
 @media (max-width: 420px) {
@@ -1774,6 +1786,14 @@ footer p { margin: 0; }
   .vision.vision-editorial { padding-block: 6rem; }
   .approach-editorial .section-label,
   .vision-editorial .section-label { font-size: 0.7rem; }
+  .approach-editorial h2 {
+    font-size: clamp(2.7rem, 12.4vw, 3.15rem);
+    line-height: 1.02;
+  }
+  .vision-editorial h2 {
+    font-size: clamp(3.25rem, 14vw, 3.75rem);
+    line-height: 1;
+  }
   .approach-trigger { grid-template-columns: 3.1rem minmax(0, 1fr) 1.1rem; padding-inline: 1rem; }
   .approach-panel-inner { grid-template-columns: 3.1rem minmax(0, 1fr) 1.1rem; padding-inline: 1rem; }
   .approach-item::before,
