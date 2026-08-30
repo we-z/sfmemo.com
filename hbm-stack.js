@@ -345,7 +345,6 @@ if (hero && surface && canvas) {
     const raycaster = new THREE.Raycaster();
     const pointerNdc = new THREE.Vector2();
     const activePointers = new Map();
-    const pointerStarts = new Map();
     const rotationCurrent = new THREE.Vector2(-0.14, -0.3);
     const rotationTarget = new THREE.Vector2(-0.14, -0.3);
     const baseRotation = new THREE.Vector2(-0.14, -0.3);
@@ -360,12 +359,11 @@ if (hero && surface && canvas) {
     let frameId = 0;
     let lastFrameAt = performance.now();
     let flowTime = 0.18;
-    let burstStartedAt = -1;
-    let multiTouchSequence = false;
-    let horizontalTouch = false;
+    let dragging = false;
+    let suppressHoverUntilLeave = false;
 
     surface.dataset.inspecting = "false";
-    surface.dataset.burstCount = "0";
+    surface.dataset.dragging = "false";
 
     function pointFromClient(clientX, clientY) {
       const bounds = surface.getBoundingClientRect();
@@ -382,9 +380,25 @@ if (hero && surface && canvas) {
       return raycaster.intersectObject(hitArea, false).length > 0;
     }
 
+    function updateInteractionState() {
+      surface.dataset.inspecting = String(hovering || dragging);
+      surface.dataset.dragging = String(dragging);
+    }
+
+    function updateLights(point) {
+      rimLight.position.x = 4.4 + point.x * 2.2;
+      keyLight.position.x = -4.5 + point.x * 1.2;
+    }
+
+    function renderDirectlyWhenReduced() {
+      if (!reduceMotion) return;
+      rotationCurrent.copy(rotationTarget);
+      render(performance.now(), true);
+    }
+
     function setInspection(point, active) {
       hovering = active;
-      surface.dataset.inspecting = String(active);
+      updateInteractionState();
       if (!active || reduceMotion) {
         rotationTarget.copy(baseRotation);
       } else {
@@ -393,16 +407,57 @@ if (hero && surface && canvas) {
           baseRotation.y + point.x * 0.7,
         );
       }
-      rimLight.position.x = 4.4 + point.x * 2.2;
-      keyLight.position.x = -4.5 + point.x * 1.2;
-      if (reduceMotion) render(performance.now(), true);
+      updateLights(point);
+      renderDirectlyWhenReduced();
     }
 
-    function triggerBurst() {
-      burstStartedAt = performance.now();
-      surface.dataset.burstCount = String(Number(surface.dataset.burstCount) + 1);
-      start();
-      if (reduceMotion) render(performance.now(), true);
+    function wrapAngle(angle) {
+      return Math.atan2(Math.sin(angle), Math.cos(angle));
+    }
+
+    function commitRotation() {
+      const wrappedYaw = wrapAngle(rotationTarget.y);
+      rotationCurrent.y += wrappedYaw - rotationTarget.y;
+      rotationTarget.y = wrappedYaw;
+      baseRotation.copy(rotationTarget);
+    }
+
+    function setDirectRotation(tracked, event) {
+      const bounds = surface.getBoundingClientRect();
+      const dx = event.clientX - tracked.startX;
+      const dy = event.clientY - tracked.startY;
+      const point = pointFromClient(event.clientX, event.clientY);
+
+      hovering = false;
+      dragging = true;
+      suppressHoverUntilLeave = true;
+      rotationTarget.set(
+        clamp(tracked.startRotation.x - (dy / bounds.height) * Math.PI * 0.62, -0.3, 0.42),
+        tracked.startRotation.y + (dx / bounds.width) * Math.PI * 2,
+      );
+      updateLights(point);
+      updateInteractionState();
+      renderDirectlyWhenReduced();
+    }
+
+    function endDraggingState() {
+      dragging = [...activePointers.values()].some((pointer) => pointer.mode === "rotate");
+      updateInteractionState();
+    }
+
+    function enterMultiTouchMode() {
+      if ([...activePointers.values()].some((pointer) => pointer.mode === "rotate")) commitRotation();
+      activePointers.forEach((pointer) => { pointer.mode = "multi"; });
+      hovering = false;
+      dragging = false;
+      rotationTarget.copy(baseRotation);
+      updateInteractionState();
+
+      activePointers.forEach((_, pointerId) => {
+        if (surface.hasPointerCapture(pointerId)) {
+          try { surface.releasePointerCapture(pointerId); } catch {}
+        }
+      });
     }
 
     function render(now = performance.now(), force = false) {
@@ -414,16 +469,14 @@ if (hero && surface && canvas) {
 
       const delta = clamp((now - lastFrameAt) / 1000, 0, 0.05);
       lastFrameAt = now;
-      const burstAge = burstStartedAt < 0 ? 2 : (now - burstStartedAt) / 950;
-      const burstEnvelope = burstAge < 1 ? Math.sin(Math.PI * burstAge) : 0;
-      const inspectAmount = hovering ? 1 : 0;
-      const speed = 0.085 + inspectAmount * 0.022 + burstEnvelope * 0.11;
+      const inspectAmount = hovering || dragging ? 1 : 0;
+      const speed = 0.085 + inspectAmount * 0.022;
 
       if (!reduceMotion) {
         flowTime = (flowTime + delta * speed) % 1;
-        rotationCurrent.lerp(rotationTarget, 0.115);
+        rotationCurrent.lerp(rotationTarget, dragging ? 0.34 : 0.115);
       } else {
-        rotationCurrent.copy(baseRotation);
+        rotationCurrent.copy(rotationTarget);
       }
 
       stackRoot.rotation.x = rotationCurrent.x;
@@ -438,7 +491,7 @@ if (hero && surface && canvas) {
         const entrance = smoothstep(progress * 10);
         const exit = smoothstep((1 - progress) * 12);
         const pulse = 0.74 + 0.26 * Math.sin((progress * Math.PI * 12) + meta.lane);
-        const scale = Math.max(0.001, entrance * exit * pulse * (1 + burstEnvelope * 0.55));
+        const scale = Math.max(0.001, entrance * exit * pulse);
 
         helper.position.copy(tempPoint);
         helper.rotation.set(0, 0, 0);
@@ -446,7 +499,7 @@ if (hero && surface && canvas) {
         helper.updateMatrix();
         particles.setMatrixAt(index, helper.matrix);
 
-        helper.scale.setScalar(scale * (1.18 + burstEnvelope * 0.22));
+        helper.scale.setScalar(scale * 1.18);
         helper.updateMatrix();
         particleHalos.setMatrixAt(index, helper.matrix);
 
@@ -463,17 +516,17 @@ if (hero && surface && canvas) {
       particleHalos.instanceMatrix.needsUpdate = true;
 
       for (let index = 0; index < layerCount; index += 1) {
-        const activity = clamp(layerActivity[index] + burstEnvelope * 0.08, 0, 1);
+        const activity = clamp(layerActivity[index], 0, 1);
         tempColor.copy(edgeIdle).lerp(edgeActive, activity);
         edgeStrips.setColorAt(index, tempColor);
         layerMaterials[index].emissiveIntensity = 0.14 + activity * 0.48;
       }
       edgeStrips.instanceColor.needsUpdate = true;
 
-      tsvMaterial.emissiveIntensity = 0.2 + inspectAmount * 0.18 + burstEnvelope * 0.42;
-      routeMaterial.opacity = 0.27 + inspectAmount * 0.1 + burstEnvelope * 0.2;
-      particleMaterial.opacity = 0.9 + burstEnvelope * 0.08;
-      rimLight.intensity = 31 + inspectAmount * 6 + burstEnvelope * 10;
+      tsvMaterial.emissiveIntensity = 0.2 + inspectAmount * 0.18;
+      routeMaterial.opacity = 0.27 + inspectAmount * 0.1;
+      particleMaterial.opacity = 0.9;
+      rimLight.intensity = 31 + inspectAmount * 6;
 
       renderer.render(scene, camera);
       if (!force && !reduceMotion && visible && !document.hidden) frameId = requestAnimationFrame(render);
@@ -502,77 +555,136 @@ if (hero && surface && canvas) {
     }
 
     surface.addEventListener("pointermove", (event) => {
-      const point = pointFromClient(event.clientX, event.clientY);
       const tracked = activePointers.get(event.pointerId);
 
       if (tracked) {
-        tracked.point = point;
-        tracked.clientX = event.clientX;
-        tracked.clientY = event.clientY;
-        if (event.pointerType === "touch") {
-          const dx = event.clientX - tracked.startX;
-          const dy = event.clientY - tracked.startY;
-          if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.15) horizontalTouch = true;
-          if (horizontalTouch) setInspection(point, true);
-        } else {
-          setInspection(point, tracked.hit);
+        if (tracked.type !== "touch" && event.buttons === 0) {
+          releasePointer(event);
+          return;
         }
-      } else if (event.pointerType !== "touch") {
+        tracked.lastX = event.clientX;
+        tracked.lastY = event.clientY;
+        if (!tracked.hit || tracked.mode === "multi" || tracked.mode === "scroll") return;
+
+        const dx = event.clientX - tracked.startX;
+        const dy = event.clientY - tracked.startY;
+        const distance = Math.hypot(dx, dy);
+
+        if (tracked.mode === "pending") {
+          if (distance < 10) return;
+          if (Math.abs(dx) > Math.abs(dy) * 1.2) {
+            tracked.mode = "rotate";
+            tracked.startRotation.copy(rotationCurrent);
+            tracked.startX = event.clientX;
+            tracked.startY = event.clientY;
+            try { surface.setPointerCapture(event.pointerId); } catch {}
+          } else if (Math.abs(dy) >= Math.abs(dx) * 1.2) {
+            tracked.mode = "scroll";
+            return;
+          } else {
+            return;
+          }
+        } else if (tracked.mode === "pressed") {
+          if (distance < 3) return;
+          tracked.mode = "rotate";
+          tracked.startRotation.copy(rotationCurrent);
+          tracked.startX = event.clientX;
+          tracked.startY = event.clientY;
+        }
+
+        if (tracked.mode === "rotate") setDirectRotation(tracked, event);
+      } else if (event.pointerType !== "touch" && !suppressHoverUntilLeave) {
+        const point = pointFromClient(event.clientX, event.clientY);
         setInspection(point, hitsStack(point));
       }
     });
 
     surface.addEventListener("pointerleave", (event) => {
-      if (event.pointerType !== "touch") setInspection({ x: 0, y: 0 }, false);
+      if (event.pointerType === "touch" || activePointers.has(event.pointerId)) return;
+      suppressHoverUntilLeave = false;
+      setInspection({ x: 0, y: 0 }, false);
     });
 
     surface.addEventListener("pointerdown", (event) => {
       if (event.button !== undefined && event.button !== 0) return;
       const point = pointFromClient(event.clientX, event.clientY);
       const hit = hitsStack(point);
+      if (!hit && event.pointerType !== "touch") return;
+
       activePointers.set(event.pointerId, {
-        point,
+        type: event.pointerType,
         hit,
         startX: event.clientX,
         startY: event.clientY,
-        clientX: event.clientX,
-        clientY: event.clientY,
+        lastX: event.clientX,
+        lastY: event.clientY,
+        startRotation: rotationCurrent.clone(),
+        mode: event.pointerType === "touch" ? "pending" : "pressed",
       });
-      pointerStarts.set(event.pointerId, { x: event.clientX, y: event.clientY, hit });
-      if (event.pointerType === "touch" && activePointers.size > 1) multiTouchSequence = true;
+
+      const activeTouchCount = [...activePointers.values()]
+        .filter((pointer) => pointer.type === "touch").length;
+      if (event.pointerType === "touch" && activeTouchCount > 1) {
+        enterMultiTouchMode();
+        return;
+      }
+
       if (event.pointerType !== "touch" && hit) {
         try { surface.setPointerCapture(event.pointerId); } catch {}
       }
-      if (hit) setInspection(point, true);
     });
 
-    function releasePointer(event, allowBurst) {
-      const startPoint = pointerStarts.get(event.pointerId);
+    function releasePointer(event) {
       const tracked = activePointers.get(event.pointerId);
-      const movement = startPoint
-        ? Math.hypot(event.clientX - startPoint.x, event.clientY - startPoint.y)
-        : Infinity;
-      const singlePointer = activePointers.size === 1;
+      if (!tracked) return;
 
-      if (allowBurst && startPoint?.hit && tracked?.hit && movement <= 8 && singlePointer && !multiTouchSequence) {
-        triggerBurst();
-      }
+      if (tracked.mode === "rotate") commitRotation();
 
       activePointers.delete(event.pointerId);
-      pointerStarts.delete(event.pointerId);
-      if (surface.hasPointerCapture(event.pointerId)) surface.releasePointerCapture(event.pointerId);
+      if (surface.hasPointerCapture(event.pointerId)) {
+        try { surface.releasePointerCapture(event.pointerId); } catch {}
+      }
+      endDraggingState();
+
+      if (tracked.mode === "multi") {
+        const remainingTouches = [...activePointers.values()]
+          .filter((pointer) => pointer.type === "touch");
+        if (remainingTouches.length === 1) {
+          const [remaining] = remainingTouches;
+          const point = pointFromClient(remaining.lastX, remaining.lastY);
+          remaining.hit = hitsStack(point);
+          remaining.mode = "pending";
+          remaining.startX = remaining.lastX;
+          remaining.startY = remaining.lastY;
+          remaining.startRotation.copy(rotationCurrent);
+        }
+      }
 
       if (!activePointers.size) {
-        multiTouchSequence = false;
-        horizontalTouch = false;
-        if (event.pointerType === "touch") setInspection({ x: 0, y: 0 }, false);
+        hovering = false;
+        dragging = false;
+        if (event.pointerType === "touch") {
+          suppressHoverUntilLeave = false;
+        } else {
+          const bounds = surface.getBoundingClientRect();
+          const releasedInside = event.clientX >= bounds.left
+            && event.clientX <= bounds.right
+            && event.clientY >= bounds.top
+            && event.clientY <= bounds.bottom;
+          suppressHoverUntilLeave = tracked.mode === "rotate" && releasedInside;
+        }
+        rotationTarget.copy(baseRotation);
+        updateLights({ x: 0, y: 0 });
+        updateInteractionState();
+        renderDirectlyWhenReduced();
       }
     }
 
-    surface.addEventListener("pointerup", (event) => releasePointer(event, true));
-    surface.addEventListener("pointercancel", (event) => releasePointer(event, false));
+    window.addEventListener("pointerup", releasePointer);
+    window.addEventListener("pointercancel", releasePointer);
     surface.addEventListener("lostpointercapture", (event) => {
-      if (activePointers.has(event.pointerId)) releasePointer(event, false);
+      const tracked = activePointers.get(event.pointerId);
+      if (tracked && tracked.mode !== "multi") releasePointer(event);
     });
 
     function start() {
@@ -595,19 +707,29 @@ if (hero && surface && canvas) {
     }, { rootMargin: "100px" }).observe(hero);
 
     document.addEventListener("visibilitychange", () => {
+      if ([...activePointers.values()].some((pointer) => pointer.mode === "rotate")) commitRotation();
       activePointers.clear();
-      pointerStarts.clear();
+      hovering = false;
+      dragging = false;
+      suppressHoverUntilLeave = false;
+      rotationTarget.copy(baseRotation);
+      updateLights({ x: 0, y: 0 });
+      updateInteractionState();
       if (document.hidden) stop();
       else start();
     });
     window.addEventListener("blur", () => {
+      if ([...activePointers.values()].some((pointer) => pointer.mode === "rotate")) commitRotation();
       activePointers.clear();
-      pointerStarts.clear();
+      dragging = false;
+      suppressHoverUntilLeave = false;
       setInspection({ x: 0, y: 0 }, false);
     });
     window.addEventListener("orientationchange", () => {
+      if ([...activePointers.values()].some((pointer) => pointer.mode === "rotate")) commitRotation();
       activePointers.clear();
-      pointerStarts.clear();
+      dragging = false;
+      suppressHoverUntilLeave = false;
       setInspection({ x: 0, y: 0 }, false);
       resize();
     });

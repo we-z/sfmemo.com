@@ -981,7 +981,7 @@ footer p { margin: 0; }
   transition: opacity 900ms ease;
 }
 
-.hero-visual[data-inspecting="true"] #hero-canvas { cursor: grabbing; }
+.hero-visual[data-dragging="true"] #hero-canvas { cursor: grabbing; }
 
 .hero-horizon.webgl-ready #hero-canvas { opacity: 1; }
 
