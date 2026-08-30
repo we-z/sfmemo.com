@@ -258,7 +258,10 @@ approachItems.forEach((item, index) => {
   });
 
   const previewWord = () => {
-    if (approachWord) approachWord.textContent = item.dataset.word ?? "BOUNDARY";
+    const openItem = approachItems.find((candidate) => candidate.dataset.open === "true");
+    if (approachWord) {
+      approachWord.textContent = openItem?.dataset.word ?? item.dataset.word ?? "BOUNDARY";
+    }
   };
   trigger?.addEventListener("mouseenter", previewWord);
   trigger?.addEventListener("focus", previewWord);
