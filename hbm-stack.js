@@ -5,6 +5,8 @@ const surface = hero?.querySelector(".hero-visual");
 const canvas = document.querySelector("#hero-canvas");
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 const finePointer = window.matchMedia("(pointer: fine)").matches;
+const INITIAL_ROTATION_X = 0.18;
+const INITIAL_ROTATION_Y = 0.46;
 
 if (hero && surface && canvas) {
   try {
@@ -25,7 +27,7 @@ if (hero && surface && canvas) {
     camera.position.set(0, 1.6, 12);
 
     const stackRoot = new THREE.Group();
-    stackRoot.rotation.set(-0.14, -0.3, 0);
+    stackRoot.rotation.set(INITIAL_ROTATION_X, INITIAL_ROTATION_Y, 0);
     scene.add(stackRoot);
 
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -345,9 +347,9 @@ if (hero && surface && canvas) {
     const raycaster = new THREE.Raycaster();
     const pointerNdc = new THREE.Vector2();
     const activePointers = new Map();
-    const rotationCurrent = new THREE.Vector2(-0.14, -0.3);
-    const rotationTarget = new THREE.Vector2(-0.14, -0.3);
-    const baseRotation = new THREE.Vector2(-0.14, -0.3);
+    const rotationCurrent = new THREE.Vector2(INITIAL_ROTATION_X, INITIAL_ROTATION_Y);
+    const rotationTarget = new THREE.Vector2(INITIAL_ROTATION_X, INITIAL_ROTATION_Y);
+    const baseRotation = new THREE.Vector2(INITIAL_ROTATION_X, INITIAL_ROTATION_Y);
     const layerActivity = new Float32Array(layerCount);
     const tempColor = new THREE.Color();
     const tempPoint = new THREE.Vector3();
@@ -564,26 +566,17 @@ if (hero && surface && canvas) {
         }
         tracked.lastX = event.clientX;
         tracked.lastY = event.clientY;
-        if (!tracked.hit || tracked.mode === "multi" || tracked.mode === "scroll") return;
+        if ((tracked.type !== "touch" && !tracked.hit) || tracked.mode === "multi") return;
 
         const dx = event.clientX - tracked.startX;
         const dy = event.clientY - tracked.startY;
         const distance = Math.hypot(dx, dy);
 
         if (tracked.mode === "pending") {
-          if (distance < 10) return;
-          if (Math.abs(dx) > Math.abs(dy) * 1.2) {
-            tracked.mode = "rotate";
-            tracked.startRotation.copy(rotationCurrent);
-            tracked.startX = event.clientX;
-            tracked.startY = event.clientY;
-            try { surface.setPointerCapture(event.pointerId); } catch {}
-          } else if (Math.abs(dy) >= Math.abs(dx) * 1.2) {
-            tracked.mode = "scroll";
-            return;
-          } else {
-            return;
-          }
+          if (distance < 4) return;
+          tracked.mode = "rotate";
+          tracked.startRotation.copy(rotationCurrent);
+          try { surface.setPointerCapture(event.pointerId); } catch {}
         } else if (tracked.mode === "pressed") {
           if (distance < 3) return;
           tracked.mode = "rotate";
@@ -592,12 +585,19 @@ if (hero && surface && canvas) {
           tracked.startY = event.clientY;
         }
 
-        if (tracked.mode === "rotate") setDirectRotation(tracked, event);
+        if (tracked.mode === "rotate") {
+          const activeTouchCount = [...activePointers.values()]
+            .filter((pointer) => pointer.type === "touch").length;
+          if (tracked.type === "touch" && activeTouchCount === 1 && event.cancelable) {
+            event.preventDefault();
+          }
+          setDirectRotation(tracked, event);
+        }
       } else if (event.pointerType !== "touch" && !suppressHoverUntilLeave) {
         const point = pointFromClient(event.clientX, event.clientY);
         setInspection(point, hitsStack(point));
       }
-    });
+    }, { passive: false });
 
     surface.addEventListener("pointerleave", (event) => {
       if (event.pointerType === "touch" || activePointers.has(event.pointerId)) return;

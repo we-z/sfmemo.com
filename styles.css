@@ -977,7 +977,7 @@ footer p { margin: 0; }
   display: block;
   opacity: 0;
   cursor: grab;
-  touch-action: pan-y pinch-zoom;
+  touch-action: pinch-zoom;
   transition: opacity 900ms ease;
 }
 
@@ -1744,7 +1744,7 @@ footer p { margin: 0; }
   width: min(52vw, 52rem);
   height: 80%;
   overflow: hidden;
-  touch-action: pan-y pinch-zoom;
+  touch-action: pinch-zoom;
 }
 
 @media (min-width: 75rem) {
