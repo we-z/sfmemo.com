@@ -1796,7 +1796,10 @@ footer p { margin: 0; }
   pointer-events: none;
 }
 
-.hero-frame #hero-canvas,
+.hero-frame #hero-canvas {
+  transform: none;
+}
+
 .hero-frame .hero-light-fallback {
   transform: translate3d(0, var(--hero-canvas-y, 0px), 0) scale(var(--hero-canvas-scale, 1));
   transform-origin: 72% 58%;
@@ -1960,10 +1963,11 @@ body.theme-light .vision-editorial[data-active] .vision-stage:not([data-open="tr
   to { clip-path: circle(150vmax at var(--flip-x, 82%) var(--flip-y, 82%)); }
 }
 
+.scroll-motion .hero-frame #hero-canvas { will-change: opacity; }
+
 .scroll-motion .hero-horizon h1 span,
 .scroll-motion .hero-horizon .eyebrow,
 .scroll-motion .hero-horizon .hero-meta,
-.scroll-motion .hero-frame #hero-canvas,
 .scroll-motion .hero-frame .hero-light-fallback,
 .scroll-motion .hero-slit { will-change: transform, opacity; }
 

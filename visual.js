@@ -7,7 +7,6 @@ const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 let reduceMotion = motionPreference.matches;
 const finePointer = window.matchMedia("(pointer: fine)").matches;
 let setPrismTheme = () => {};
-let flipPrism = () => {};
 
 if (hero && heroSurface && canvas) {
   try {
@@ -25,8 +24,8 @@ if (hero && heroSurface && canvas) {
 
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const pointers = [new THREE.Vector2(0.78, 0.58), new THREE.Vector2(0.72, 0.62)];
-    const pointerTargets = [new THREE.Vector2(0.78, 0.58), new THREE.Vector2(0.72, 0.62)];
+    const pointers = [new THREE.Vector2(0.22, 0.66), new THREE.Vector2(0.3, 0.6)];
+    const pointerTargets = [new THREE.Vector2(0.22, 0.66), new THREE.Vector2(0.3, 0.6)];
     const pointerActive = [0, 0];
     const rippleOrigins = [new THREE.Vector2(0.76, 0.62), new THREE.Vector2(0.68, 0.64)];
     const rippleStartedAt = [-1, -1];
@@ -165,7 +164,6 @@ if (hero && heroSurface && canvas) {
     prismCamera.position.set(0, 0, 7);
 
     const prismUniforms = {
-      uTime: { value: 0 },
       uLightPosition: { value: new THREE.Vector3(2.5, 1.5, 3) },
       uTheme: { value: 0 },
     };
@@ -195,7 +193,6 @@ if (hero && heroSurface && canvas) {
         varying vec3 vNormal;
         varying vec3 vLocalPosition;
         uniform vec3 uLightPosition;
-        uniform float uTime;
         uniform float uTheme;
 
         void main() {
@@ -204,23 +201,33 @@ if (hero && heroSurface && canvas) {
           vec3 lightDirection = normalize(uLightPosition - vWorldPosition);
           float fresnel = pow(1.0 - abs(dot(normal, viewDirection)), 2.35);
           float lightEdge = pow(max(dot(reflect(-lightDirection, normal), viewDirection), 0.0), 24.0);
-          float innerBand = 0.5 + 0.5 * sin(vLocalPosition.y * 9.0 + vLocalPosition.x * 5.0 - uTime * 0.5);
+          float innerBand = 0.5 + 0.5 * sin(vLocalPosition.y * 9.0 + vLocalPosition.x * 5.0);
           vec3 darkGlass = vec3(0.13, 0.42, 0.95);
           vec3 lightGlass = vec3(0.02, 0.25, 0.78);
           vec3 glass = mix(darkGlass, lightGlass, uTheme);
           vec3 edge = mix(vec3(0.72, 0.88, 1.0), vec3(0.06, 0.32, 0.9), uTheme);
           vec3 color = glass * (0.18 + innerBand * 0.08) + edge * fresnel * 1.15 + vec3(1.0) * lightEdge * 0.82;
-          float alpha = (mix(0.15, 0.08, uTheme) + fresnel * 0.58 + lightEdge * 0.24) * mix(1.0, 0.48, uTheme);
+          float alpha = mix(0.15, 0.2, uTheme) + fresnel * mix(0.58, 0.7, uTheme) + lightEdge * 0.24;
           gl_FragColor = vec4(color, clamp(alpha, 0.0, 0.86));
         }
       `,
     });
 
-    const prismGeometry = new THREE.CylinderGeometry(1.06, 1.06, 1.15, 3, 1, false);
-    prismGeometry.rotateX(Math.PI / 2);
-    prismGeometry.rotateZ(Math.PI / 6);
+    const prismShape = new THREE.Shape();
+    prismShape.moveTo(-0.98, -0.58);
+    prismShape.lineTo(0.98, -0.58);
+    prismShape.lineTo(0, 1.02);
+    prismShape.closePath();
+
+    const prismGeometry = new THREE.ExtrudeGeometry(prismShape, {
+      depth: 0.72,
+      steps: 1,
+      bevelEnabled: false,
+    });
+    prismGeometry.center();
 
     const prismGroup = new THREE.Group();
+    prismGroup.rotation.set(0, -0.24, 0);
     const prismMesh = new THREE.Mesh(prismGeometry, prismMaterial);
     prismMesh.renderOrder = 4;
     prismGroup.add(prismMesh);
@@ -249,7 +256,7 @@ if (hero && heroSurface && canvas) {
           color,
           transparent: true,
           opacity,
-          blending: THREE.AdditiveBlending,
+          blending: THREE.NormalBlending,
           depthTest: false,
         }),
       );
@@ -269,9 +276,67 @@ if (hero && heroSurface && canvas) {
       line.geometry.attributes.position.needsUpdate = true;
     }
 
-    const spectrum = [0xb8e4ff, 0x71c7ff, 0x5b8cff, 0x8b7cff, 0xf0a6ff];
+    function dynamicBand(color, opacity = 0.35) {
+      const positions = new Float32Array(18);
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      const band = new THREE.Mesh(
+        geometry,
+        new THREE.MeshBasicMaterial({
+          color,
+          transparent: true,
+          opacity,
+          blending: THREE.NormalBlending,
+          depthTest: false,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        }),
+      );
+      band.renderOrder = 3;
+      prismScene.add(band);
+      return band;
+    }
+
+    function updateBand(band, startPoint, endPoint, width) {
+      const deltaX = endPoint.x - startPoint.x;
+      const deltaY = endPoint.y - startPoint.y;
+      const length = Math.max(Math.hypot(deltaX, deltaY), 0.001);
+      const normalX = (-deltaY / length) * width;
+      const normalY = (deltaX / length) * width;
+      const startWidth = width * 0.12;
+      const positions = band.geometry.attributes.position.array;
+      const startAX = startPoint.x - normalX * (startWidth / width);
+      const startAY = startPoint.y - normalY * (startWidth / width);
+      const startBX = startPoint.x + normalX * (startWidth / width);
+      const startBY = startPoint.y + normalY * (startWidth / width);
+      const endAX = endPoint.x - normalX;
+      const endAY = endPoint.y - normalY;
+      const endBX = endPoint.x + normalX;
+      const endBY = endPoint.y + normalY;
+
+      positions.set([
+        startAX, startAY, startPoint.z,
+        endAX, endAY, endPoint.z,
+        endBX, endBY, endPoint.z,
+        startAX, startAY, startPoint.z,
+        endBX, endBY, endPoint.z,
+        startBX, startBY, startPoint.z,
+      ]);
+      band.geometry.attributes.position.needsUpdate = true;
+    }
+
+    const spectrum = [
+      0xff3b5c,
+      0xff8a3d,
+      0xffd84d,
+      0x5bea83,
+      0x3fe0f5,
+      0x4f7cff,
+      0xb967ff,
+    ];
     const incidentBeams = [dynamicLine(0xd9efff, 0.7), dynamicLine(0x7fc4ff, 0.52)];
-    const refractedBeams = pointers.map(() => spectrum.map((color) => dynamicLine(color, 0.5)));
+    const internalBeams = [dynamicLine(0xffffff, 0.45), dynamicLine(0xcce9ff, 0.32)];
+    const refractedBeams = pointers.map(() => spectrum.map((color) => dynamicBand(color, 0.35)));
     const lightSources = pointers.map(() => {
       const source = new THREE.Mesh(
         new THREE.SphereGeometry(0.035, 12, 12),
@@ -290,53 +355,85 @@ if (hero && heroSurface && canvas) {
 
     const prismCenter = new THREE.Vector3();
     const sourcePoint = new THREE.Vector3();
+    const entryPoint = new THREE.Vector3();
+    const exitPoint = new THREE.Vector3();
     const rayEnd = new THREE.Vector3();
-    let prismFlipTarget = 0;
-    let prismFlipRotation = 0;
 
-    function updatePrism(now) {
+    function updatePrism() {
       const surfaceBounds = heroSurface.getBoundingClientRect();
       const aspect = surfaceBounds.width / Math.max(surfaceBounds.height, 1);
       const verticalSpan = 2 * prismCamera.position.z * Math.tan(THREE.MathUtils.degToRad(prismCamera.fov * 0.5));
       const horizontalSpan = verticalSpan * aspect;
       const isMobile = surfaceBounds.width <= 780;
 
-      prismGroup.position.set(isMobile ? 0.05 : horizontalSpan * 0.255, isMobile ? -verticalSpan * 0.27 : -0.05, 0);
-      prismGroup.scale.setScalar(isMobile ? 0.72 : Math.min(1.12, 0.92 + aspect * 0.08));
-      prismFlipRotation += (prismFlipTarget - prismFlipRotation) * (reduceMotion ? 1 : 0.075);
-      prismGroup.rotation.x += ((pointers[0].y - 0.5) * -0.32 - prismGroup.rotation.x) * 0.045;
-      prismGroup.rotation.y += ((pointers[0].x - 0.5) * 0.48 + prismFlipRotation + scrollProgress * 0.7 - prismGroup.rotation.y) * 0.055;
-      prismGroup.rotation.z = reduceMotion ? 0 : Math.sin(now * 0.00032) * 0.045;
+      prismGroup.position.set(
+        isMobile ? -horizontalSpan * 0.1 : horizontalSpan * 0.13,
+        isMobile ? -verticalSpan * 0.27 : -0.05,
+        0,
+      );
+      prismGroup.scale.setScalar(isMobile ? 0.52 : Math.min(1.08, 0.9 + aspect * 0.075));
+      prismGroup.updateMatrixWorld(true);
       prismGroup.getWorldPosition(prismCenter);
 
-      pointers.forEach((pointer, pointerIndex) => {
+      pointerTargets.forEach((pointer, pointerIndex) => {
         const active = pointerActive[pointerIndex];
-        const beamStrength = pointerIndex === 0 ? Math.max(active, 0.2) : active;
+        const beamStrength = pointerIndex === 0 ? Math.max(active, 0.48) : active;
+        const sourceX = pointerIndex === 0 && !active ? (isMobile ? 0.07 : 0.42) : pointer.x;
+        const sourceY = pointerIndex === 0 && !active ? (isMobile ? 0.23 : 0.54) : pointer.y;
         sourcePoint.set(
-          (pointer.x - 0.5) * horizontalSpan,
-          (pointer.y - 0.5) * verticalSpan,
-          1.25,
+          (sourceX - 0.5) * horizontalSpan,
+          (sourceY - 0.5) * verticalSpan,
+          1.15,
         );
+
+        const entersFromLeft = sourcePoint.x <= prismCenter.x;
+        entryPoint.set(entersFromLeft ? -0.72 : 0.72, 0, 0.38);
+        exitPoint.set(entersFromLeft ? 0.72 : -0.72, 0, 0.38);
+        prismGroup.localToWorld(entryPoint);
+        prismGroup.localToWorld(exitPoint);
+
         lightSources[pointerIndex].position.copy(sourcePoint);
         lightSources[pointerIndex].material.opacity = active * 0.82;
-        incidentBeams[pointerIndex].material.opacity = beamStrength * (pointerIndex === 0 ? 0.7 : 0.48);
-        updateLine(incidentBeams[pointerIndex], sourcePoint, prismCenter);
+        incidentBeams[pointerIndex].material.opacity = beamStrength * (pointerIndex === 0 ? 0.88 : 0.7);
+        internalBeams[pointerIndex].material.opacity = beamStrength * (pointerIndex === 0 ? 0.56 : 0.42);
+        updateLine(incidentBeams[pointerIndex], sourcePoint, entryPoint);
+        updateLine(internalBeams[pointerIndex], entryPoint, exitPoint);
 
-        const exitDirection = sourcePoint.x <= prismCenter.x ? 1 : -1;
-        refractedBeams[pointerIndex].forEach((line, rayIndex) => {
-          const spectralOffset = (rayIndex - (spectrum.length - 1) / 2) * 0.115;
+        const exitDirection = entersFromLeft ? 1 : -1;
+        const edgePadding = horizontalSpan * (isMobile ? 0.025 : 0.035);
+        const outputDistance = Math.max(
+          horizontalSpan * 0.12,
+          entersFromLeft
+            ? horizontalSpan * 0.5 - exitPoint.x - edgePadding
+            : exitPoint.x + horizontalSpan * 0.5 - edgePadding,
+        );
+        const inputDeltaX = entryPoint.x - sourcePoint.x;
+        const safeInputDeltaX = Math.abs(inputDeltaX) < 0.16
+          ? (inputDeltaX < 0 ? -0.16 : 0.16)
+          : inputDeltaX;
+        const inputSlope = (entryPoint.y - sourcePoint.y) / safeInputDeltaX;
+        const outputDeltaX = exitDirection * outputDistance;
+        const directionalLift = THREE.MathUtils.clamp(
+          inputSlope * outputDeltaX * 0.62,
+          -verticalSpan * 0.2,
+          verticalSpan * 0.2,
+        );
+        const spectralSpread = verticalSpan * (isMobile ? 0.09 : 0.14);
+        const bandWidth = verticalSpan * (isMobile ? 0.0048 : 0.0036);
+
+        refractedBeams[pointerIndex].forEach((band, rayIndex) => {
+          const spectralPosition = (rayIndex - (spectrum.length - 1) / 2) / ((spectrum.length - 1) / 2);
           rayEnd.set(
-            prismCenter.x + exitDirection * horizontalSpan * 0.62,
-            prismCenter.y + spectralOffset * verticalSpan + (pointer.y - 0.5) * verticalSpan * 0.12,
-            0.15 + rayIndex * 0.025,
+            exitPoint.x + outputDeltaX,
+            exitPoint.y + directionalLift + spectralPosition * spectralSpread,
+            0.12 + rayIndex * 0.006,
           );
-          line.material.opacity = beamStrength * (0.26 + rayIndex * 0.055);
-          updateLine(line, prismCenter, rayEnd);
+          band.material.opacity = beamStrength * (pointerIndex === 0 ? 0.78 : 0.6);
+          updateBand(band, exitPoint, rayEnd, bandWidth);
         });
       });
 
       prismUniforms.uLightPosition.value.copy(lightSources[0].position);
-      prismUniforms.uTime.value = reduceMotion ? 0 : now / 1000;
     }
 
     setPrismTheme = (light) => {
@@ -344,13 +441,12 @@ if (hero && heroSurface && canvas) {
       uniforms.uTheme.value = themeValue;
       prismUniforms.uTheme.value = themeValue;
       prismEdges.material.color.set(light ? 0x155eef : 0x9bc7ff);
+      prismEdges.material.opacity = light ? 0.86 : 0.66;
+      incidentBeams[0].material.color.set(light ? 0x174ea6 : 0xd9efff);
+      incidentBeams[1].material.color.set(light ? 0x155eef : 0x7fc4ff);
+      internalBeams.forEach((beam) => beam.material.color.set(light ? 0x1d4f9d : 0xffffff));
       lightSources.forEach((source) => source.material.color.set(light ? 0x155eef : 0xeaf6ff));
       render(performance.now(), true);
-    };
-
-    flipPrism = () => {
-      prismFlipTarget += Math.PI;
-      start();
     };
 
     function render(now = performance.now(), force = false) {
@@ -363,7 +459,7 @@ if (hero && heroSurface && canvas) {
       uniforms.uPointer2Active.value = pointerActive[1];
       uniforms.uRipple.value = rippleStartedAt[0] < 0 ? -1 : (now - rippleStartedAt[0]) / 1700;
       uniforms.uRipple2.value = rippleStartedAt[1] < 0 ? -1 : (now - rippleStartedAt[1]) / 1700;
-      updatePrism(now);
+      updatePrism();
       renderer.clear();
       renderer.render(scene, camera);
       renderer.clearDepth();
@@ -428,15 +524,16 @@ if (hero && heroSurface && canvas) {
     }
 
     heroSurface.addEventListener("pointermove", (event) => {
-      if (!finePointer) return;
+      if (!finePointer || event.pointerType === "touch") return;
       const point = pointFromEvent(event);
       pointerActive[0] = 1;
       pointerTargets[0].set(point.x, point.y);
     });
 
-    heroSurface.addEventListener("pointerleave", () => {
+    heroSurface.addEventListener("pointerleave", (event) => {
+      if (event.pointerType === "touch") return;
       pointerActive[0] = 0;
-      pointerTargets[0].set(0.78, 0.58);
+      pointerTargets[0].set(0.22, 0.66);
     });
 
     heroSurface.addEventListener("pointerdown", (event) => {
@@ -538,7 +635,6 @@ fieldToggle?.addEventListener("click", () => {
   const commitTheme = () => applyFieldTheme(nextLight);
   if (document.startViewTransition && !reduceMotion) document.startViewTransition(commitTheme);
   else commitTheme();
-  flipPrism();
 });
 
 const approach = document.querySelector(".approach-editorial");
