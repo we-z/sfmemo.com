@@ -336,7 +336,7 @@ if (hero && surface && canvas) {
     stackRoot.add(shadow);
 
     const hitArea = new THREE.Mesh(
-      new THREE.BoxGeometry(6.2, 3.8, 3.2),
+      new THREE.BoxGeometry(7, 4.2, 4),
       new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, colorWrite: false }),
     );
     hitArea.position.y = 0.08;
@@ -389,8 +389,8 @@ if (hero && surface && canvas) {
         rotationTarget.copy(baseRotation);
       } else {
         rotationTarget.set(
-          baseRotation.x + point.y * 0.052,
-          baseRotation.y + point.x * 0.3,
+          baseRotation.x + point.y * 0.16,
+          baseRotation.y + point.x * 0.7,
         );
       }
       rimLight.position.x = 4.4 + point.x * 2.2;
@@ -421,7 +421,7 @@ if (hero && surface && canvas) {
 
       if (!reduceMotion) {
         flowTime = (flowTime + delta * speed) % 1;
-        rotationCurrent.lerp(rotationTarget, 0.085);
+        rotationCurrent.lerp(rotationTarget, 0.115);
       } else {
         rotationCurrent.copy(baseRotation);
       }
@@ -483,6 +483,7 @@ if (hero && surface && canvas) {
       const bounds = surface.getBoundingClientRect();
       if (!bounds.width || !bounds.height) return;
       mobile = window.innerWidth <= 780;
+      stackRoot.position.y = mobile ? 0.34 : 0;
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.05 : finePointer ? 1.3 : 1.15));
       renderer.setSize(bounds.width, bounds.height, false);
 
