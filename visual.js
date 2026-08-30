@@ -557,8 +557,6 @@ function updateScrollMotion() {
     setMotionVariable("--hero-meta-opacity", unit(1 - metaDeparture), motionScenes.hero);
     setMotionVariable("--hero-canvas-y", px(-22 * departure * amplitude), motionScenes.hero);
     setMotionVariable("--hero-canvas-scale", unit(1 + departure * (mobile ? 0.045 : 0.13)), motionScenes.hero);
-    setMotionVariable("--hero-slit-x", px(viewportWidth * (0.1 + heroProgress * 1.22)), motionScenes.hero);
-    setMotionVariable("--hero-slit-opacity", unit(Math.sin(heroProgress * Math.PI) * 0.72), motionScenes.hero);
   }
 
   if (motionScenes.approach) {
