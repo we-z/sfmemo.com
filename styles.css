@@ -1974,10 +1974,14 @@ footer p { margin: 0; }
 
   .hero-frame {
     position: relative;
-    display: block;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    gap: 1rem;
     min-height: max(100svh, 54rem);
     padding: calc(8.4rem + env(safe-area-inset-top, 0px)) var(--gutter) calc(2.5rem + env(safe-area-inset-bottom, 0px));
     align-items: flex-start;
+    align-content: start;
   }
 
   .hero-frame::before {
@@ -1990,24 +1994,21 @@ footer p { margin: 0; }
   .hero-horizon .hero-copy {
     position: relative;
     z-index: 4;
+    grid-row: 1;
     width: 100%;
-  }
-
-  .hero-horizon h1,
-  .hero-horizon .hero-intro,
-  .hero-link {
-    text-shadow: 0 0.2rem 1.6rem rgba(5, 7, 10, 0.94);
   }
 
   .hero-visual {
-    position: absolute;
+    position: relative;
     z-index: 3;
-    top: clamp(11.5rem, 22svh, 13rem);
-    right: 0;
-    left: 0;
-    width: 100%;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    grid-row: 2;
+    width: calc(100% + (var(--gutter) * 2));
     height: clamp(23rem, 44svh, 25.75rem);
-    margin: 0;
+    margin: 0 calc(var(--gutter) * -1);
     overflow: hidden;
     touch-action: pan-y pinch-zoom;
   }
