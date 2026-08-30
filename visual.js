@@ -20,10 +20,12 @@ if (hero && canvas) {
 
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const pointer = new THREE.Vector2(0.78, 0.58);
-    const pointerTarget = new THREE.Vector2(0.78, 0.58);
-    const rippleOrigin = new THREE.Vector2(0.76, 0.62);
-    let rippleStartedAt = -1;
+    const pointers = [new THREE.Vector2(0.78, 0.58), new THREE.Vector2(0.72, 0.62)];
+    const pointerTargets = [new THREE.Vector2(0.78, 0.58), new THREE.Vector2(0.72, 0.62)];
+    const pointerActive = [finePointer ? 1 : 0, 0];
+    const rippleOrigins = [new THREE.Vector2(0.76, 0.62), new THREE.Vector2(0.68, 0.64)];
+    const rippleStartedAt = [-1, -1];
+    const touchSlots = new Map();
     let visible = true;
     let frameId = 0;
     let scrollProgress = 0;
@@ -31,9 +33,14 @@ if (hero && canvas) {
     const uniforms = {
       uTime: { value: 0 },
       uResolution: { value: new THREE.Vector2(1, 1) },
-      uPointer: { value: pointer },
-      uRippleOrigin: { value: rippleOrigin },
+      uPointer: { value: pointers[0] },
+      uPointer2: { value: pointers[1] },
+      uPointerActive: { value: pointerActive[0] },
+      uPointer2Active: { value: pointerActive[1] },
+      uRippleOrigin: { value: rippleOrigins[0] },
+      uRippleOrigin2: { value: rippleOrigins[1] },
       uRipple: { value: -1 },
+      uRipple2: { value: -1 },
       uScroll: { value: 0 },
       uMobile: { value: 0 },
     };
@@ -56,8 +63,13 @@ if (hero && canvas) {
         uniform float uTime;
         uniform vec2 uResolution;
         uniform vec2 uPointer;
+        uniform vec2 uPointer2;
+        uniform float uPointerActive;
+        uniform float uPointer2Active;
         uniform vec2 uRippleOrigin;
+        uniform vec2 uRippleOrigin2;
         uniform float uRipple;
+        uniform float uRipple2;
         uniform float uScroll;
         uniform float uMobile;
 
@@ -71,12 +83,14 @@ if (hero && canvas) {
           vec2 uv = vUv;
           float aspect = uResolution.x / max(uResolution.y, 1.0);
           float mobile = uMobile;
-          float pointerFalloff = exp(-pow((uv.x - uPointer.x) * 2.7, 2.0));
+          float pointerFalloff = exp(-pow((uv.x - uPointer.x) * 2.7, 2.0)) * uPointerActive;
+          float pointerFalloff2 = exp(-pow((uv.x - uPointer2.x) * 2.7, 2.0)) * uPointer2Active;
           float baseY = mix(0.54, 0.44, mobile);
           float horizon = baseY
             + sin(uv.x * 3.45 + uTime * 0.11) * 0.035
             + sin(uv.x * 8.2 - uTime * 0.07) * 0.012
             + (uPointer.y - 0.5) * 0.105 * pointerFalloff
+            + (uPointer2.y - 0.5) * 0.105 * pointerFalloff2
             - uScroll * mix(0.10, 0.05, mobile);
 
           if (uRipple >= 0.0 && uRipple <= 1.25) {
@@ -86,6 +100,16 @@ if (hero && canvas) {
             float ring = sin((distanceFromTap - radius) * 44.0)
               * exp(-abs(distanceFromTap - radius) * 19.0)
               * (1.0 - smoothstep(0.0, 1.2, uRipple));
+            horizon += ring * 0.072;
+          }
+
+          if (uRipple2 >= 0.0 && uRipple2 <= 1.25) {
+            vec2 rippleScale = vec2(aspect, 0.92);
+            float distanceFromTap = length((uv - uRippleOrigin2) * rippleScale);
+            float radius = uRipple2 * 0.9;
+            float ring = sin((distanceFromTap - radius) * 44.0)
+              * exp(-abs(distanceFromTap - radius) * 19.0)
+              * (1.0 - smoothstep(0.0, 1.2, uRipple2));
             horizon += ring * 0.072;
           }
 
@@ -131,10 +155,14 @@ if (hero && canvas) {
 
     function render(now = performance.now(), force = false) {
       frameId = 0;
-      pointer.lerp(pointerTarget, reduceMotion ? 1 : 0.055);
+      pointers[0].lerp(pointerTargets[0], reduceMotion ? 1 : 0.055);
+      pointers[1].lerp(pointerTargets[1], reduceMotion ? 1 : 0.055);
       uniforms.uTime.value = reduceMotion ? 0 : now / 1000;
       uniforms.uScroll.value += (scrollProgress - uniforms.uScroll.value) * (reduceMotion ? 1 : 0.06);
-      uniforms.uRipple.value = rippleStartedAt < 0 ? -1 : (now - rippleStartedAt) / 1700;
+      uniforms.uPointerActive.value = pointerActive[0];
+      uniforms.uPointer2Active.value = pointerActive[1];
+      uniforms.uRipple.value = rippleStartedAt[0] < 0 ? -1 : (now - rippleStartedAt[0]) / 1700;
+      uniforms.uRipple2.value = rippleStartedAt[1] < 0 ? -1 : (now - rippleStartedAt[1]) / 1700;
       renderer.render(scene, camera);
       if (!force && !reduceMotion && visible && !document.hidden) frameId = requestAnimationFrame(render);
     }
@@ -153,29 +181,79 @@ if (hero && canvas) {
       scrollProgress = THREE.MathUtils.clamp(-bounds.top / Math.max(bounds.height, 1), 0, 1);
     }
 
-    function pointFromEvent(event) {
+    function pointFromClient(clientX, clientY) {
       const bounds = hero.getBoundingClientRect();
       return {
-        x: THREE.MathUtils.clamp((event.clientX - bounds.left) / bounds.width, 0, 1),
-        y: THREE.MathUtils.clamp(1 - (event.clientY - bounds.top) / bounds.height, 0, 1),
+        x: THREE.MathUtils.clamp((clientX - bounds.left) / bounds.width, 0, 1),
+        y: THREE.MathUtils.clamp(1 - (clientY - bounds.top) / bounds.height, 0, 1),
       };
+    }
+
+    function pointFromEvent(event) {
+      return pointFromClient(event.clientX, event.clientY);
+    }
+
+    function setTouchPoint(touch, startRipple = false) {
+      let slot = touchSlots.get(touch.identifier);
+      if (slot === undefined) {
+        const usedSlots = new Set(touchSlots.values());
+        slot = usedSlots.has(0) ? (usedSlots.has(1) ? -1 : 1) : 0;
+        if (slot < 0) return;
+        touchSlots.set(touch.identifier, slot);
+      }
+
+      const point = pointFromClient(touch.clientX, touch.clientY);
+      pointerActive[slot] = 1;
+      pointerTargets[slot].set(point.x, point.y);
+
+      if (startRipple) {
+        pointers[slot].set(point.x, point.y);
+        rippleOrigins[slot].set(point.x, point.y);
+        rippleStartedAt[slot] = performance.now();
+      }
+    }
+
+    function releaseTouch(touch) {
+      const slot = touchSlots.get(touch.identifier);
+      if (slot === undefined) return;
+      touchSlots.delete(touch.identifier);
+      pointerActive[slot] = 0;
     }
 
     hero.addEventListener("pointermove", (event) => {
       if (!finePointer) return;
       const point = pointFromEvent(event);
-      pointerTarget.set(point.x, point.y);
+      pointerTargets[0].set(point.x, point.y);
     });
 
-    hero.addEventListener("pointerleave", () => pointerTarget.set(0.78, 0.58));
+    hero.addEventListener("pointerleave", () => pointerTargets[0].set(0.78, 0.58));
 
     hero.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "touch") return;
       if (event.button !== undefined && event.button !== 0) return;
       const point = pointFromEvent(event);
-      rippleOrigin.set(point.x, point.y);
-      pointerTarget.set(point.x, point.y);
-      rippleStartedAt = performance.now();
+      pointerActive[0] = 1;
+      rippleOrigins[0].set(point.x, point.y);
+      pointerTargets[0].set(point.x, point.y);
+      rippleStartedAt[0] = performance.now();
     });
+
+    hero.addEventListener("touchstart", (event) => {
+      Array.from(event.changedTouches).forEach((touch) => setTouchPoint(touch, true));
+      start();
+    }, { passive: true });
+
+    hero.addEventListener("touchmove", (event) => {
+      Array.from(event.changedTouches).forEach((touch) => setTouchPoint(touch));
+    }, { passive: true });
+
+    hero.addEventListener("touchend", (event) => {
+      Array.from(event.changedTouches).forEach(releaseTouch);
+    }, { passive: true });
+
+    hero.addEventListener("touchcancel", (event) => {
+      Array.from(event.changedTouches).forEach(releaseTouch);
+    }, { passive: true });
 
     function start() {
       if (frameId || reduceMotion || !visible || document.hidden) return;
