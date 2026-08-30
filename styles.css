@@ -1292,8 +1292,8 @@ footer p { margin: 0; }
   top: 0.45rem;
   right: 0;
   bottom: 0.45rem;
-  left: 7.75rem;
-  border-radius: 1.25rem 0 0 1.25rem;
+  left: 0;
+  border-radius: 1.25rem;
   background: linear-gradient(90deg, rgba(29, 78, 216, 0.2), rgba(59, 130, 246, 0.06) 58%, transparent);
   opacity: 0;
   transform: translateX(1.5rem);
@@ -1305,7 +1305,7 @@ footer p { margin: 0; }
   position: absolute;
   right: 0;
   bottom: 0;
-  left: 7.75rem;
+  left: 0;
   height: 2px;
   background: linear-gradient(90deg, var(--blue-2), transparent 82%);
   transform: scaleX(0);
