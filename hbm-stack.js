@@ -443,13 +443,17 @@ if (hero && surface && canvas) {
       const dy = event.clientY - tracked.startY;
       const point = pointFromClient(event.clientX, event.clientY);
       const touchInput = tracked.type === "touch";
-      const pitchRange = Math.PI * (touchInput ? 1.1 : 0.62);
-      const yawRange = Math.PI * (touchInput ? 4 : 2);
+      const pitchDelta = touchInput
+        ? dy * (Math.PI / 150)
+        : (dy / bounds.height) * Math.PI * 0.62;
+      const yawDelta = touchInput
+        ? dx * (Math.PI / 36)
+        : (dx / bounds.width) * Math.PI * 2;
 
       dragging = true;
       rotationTarget.set(
-        clamp(tracked.startRotation.x - (dy / bounds.height) * pitchRange, -0.3, 0.42),
-        tracked.startRotation.y + (dx / bounds.width) * yawRange,
+        clamp(tracked.startRotation.x - pitchDelta, -0.3, 0.42),
+        tracked.startRotation.y + yawDelta,
       );
       updateLights(point);
       updateInteractionState();
@@ -477,7 +481,7 @@ if (hero && surface && canvas) {
 
     function render(now = performance.now(), force = false) {
       frameId = 0;
-      const mobileFrameInterval = dragging ? 15 : 31;
+      const mobileFrameInterval = dragging ? 0 : 31;
       if (!force && mobile && now - lastFrameAt < mobileFrameInterval) {
         frameId = requestAnimationFrame(render);
         return;
@@ -553,7 +557,7 @@ if (hero && surface && canvas) {
       const bounds = surface.getBoundingClientRect();
       if (!bounds.width || !bounds.height) return;
       mobile = window.innerWidth <= 780;
-      stackRoot.position.y = mobile ? 0.34 : 0;
+      stackRoot.position.y = mobile ? -0.12 : 0;
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.05 : finePointer ? 1.3 : 1.15));
       renderer.setSize(bounds.width, bounds.height, false);
 
@@ -615,7 +619,7 @@ if (hero && surface && canvas) {
       if (event.button !== undefined && event.button !== 0) return;
       const point = pointFromClient(event.clientX, event.clientY);
       const hit = hitsStack(point);
-      if (!hit && event.pointerType !== "touch") return;
+      if (!hit) return;
 
       activePointers.set(event.pointerId, {
         type: event.pointerType,
