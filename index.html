@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#05070a">
   <meta name="description" content="SF Memory is building advanced memory systems and packaging for the next era of AI infrastructure.">
   <meta property="og:type" content="website">
@@ -20,7 +20,7 @@
   <meta name="twitter:image:alt" content="SF Memory — Memory for the next era of AI.">
   <link rel="canonical" href="https://sfmemo.com/">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/styles.css?v=5">
   <title>SF Memory — Memory for the Next Era of AI</title>
   <script type="application/ld+json">
     {
@@ -31,7 +31,7 @@
       "description": "SF Memory is building advanced memory systems and packaging for the next era of AI infrastructure."
     }
   </script>
-  <script type="module" src="/visual.js"></script>
+  <script type="module" src="/visual.js?v=5"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -51,23 +51,36 @@
         <p class="eyebrow"><span></span> SF Memory · California</p>
         <h1>Memory for the next era of AI.</h1>
         <p class="hero-intro">We’re building advanced memory systems and packaging for AI infrastructure—with a long-term path to American manufacturing.</p>
-        <a class="button" href="#approach">Explore the vision <span aria-hidden="true">↓</span></a>
+        <a class="button" href="#memory-visual">Explore the system <span aria-hidden="true">↘</span></a>
       </div>
 
-      <div class="scene-shell" id="memory-visual" aria-label="Conceptual three-dimensional AI memory package">
-        <canvas id="memory-canvas" aria-hidden="true"></canvas>
-        <div class="fallback-package" aria-hidden="true">
-          <div class="fallback-stack stack-a"><i></i><i></i><i></i><i></i></div>
-          <div class="fallback-stack stack-b"><i></i><i></i><i></i><i></i></div>
-          <div class="fallback-stack stack-c"><i></i><i></i><i></i><i></i></div>
-          <div class="fallback-stack stack-d"><i></i><i></i><i></i><i></i></div>
-          <div class="fallback-die">AI</div>
-          <div class="fallback-interposer"></div>
+      <div class="scene-shell" id="memory-visual" role="region" aria-label="Interactive conceptual AI memory package" tabindex="-1">
+        <div class="scene-stage">
+          <canvas id="memory-canvas" aria-hidden="true"></canvas>
+          <div class="fallback-package" aria-hidden="true">
+            <div class="fallback-stack stack-a"><i></i><i></i><i></i><i></i></div>
+            <div class="fallback-stack stack-b"><i></i><i></i><i></i><i></i></div>
+            <div class="fallback-stack stack-c"><i></i><i></i><i></i><i></i></div>
+            <div class="fallback-stack stack-d"><i></i><i></i><i></i><i></i></div>
+            <div class="fallback-die">AI</div>
+            <div class="fallback-interposer"></div>
+          </div>
+          <p class="scene-status"><span></span> Interactive concept</p>
+          <p class="scene-hint">Drag to orbit · click a component</p>
         </div>
-        <div class="scene-index scene-index-memory"><span>01</span> HBM</div>
-        <div class="scene-index scene-index-logic"><span>02</span> LOGIC</div>
-        <div class="scene-index scene-index-package"><span>03</span> PACKAGE</div>
-        <p class="scene-caption">Conceptual AI-memory system</p>
+
+        <div class="scene-console">
+          <div class="scene-tabs" role="tablist" aria-label="Explore the memory system">
+            <button id="scene-tab-memory" type="button" role="tab" aria-selected="true" aria-controls="scene-panel" tabindex="0" data-scene-target="memory"><span>01</span> Memory</button>
+            <button id="scene-tab-logic" type="button" role="tab" aria-selected="false" aria-controls="scene-panel" tabindex="-1" data-scene-target="logic"><span>02</span> Logic</button>
+            <button id="scene-tab-package" type="button" role="tab" aria-selected="false" aria-controls="scene-panel" tabindex="-1" data-scene-target="package"><span>03</span> Package</button>
+          </div>
+          <div class="scene-readout" id="scene-panel" role="tabpanel" aria-live="polite" aria-labelledby="scene-tab-memory">
+            <p class="scene-readout-index">01 / Memory</p>
+            <h3>Bandwidth, close to compute.</h3>
+            <p>Stacked memory and data paths designed around AI workloads.</p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -79,10 +92,22 @@
       </div>
 
       <div class="system-rail" aria-label="SF Memory technical focus">
-        <article><span>01</span><h3>Memory architecture</h3></article>
-        <article><span>02</span><h3>Control + telemetry</h3></article>
-        <article><span>03</span><h3>Advanced packaging</h3></article>
-        <article><span>04</span><h3>Test + reliability</h3></article>
+        <details name="technical-focus" data-visual-target="memory" open>
+          <summary><span>01</span><span class="summary-title">Memory architecture</span><i aria-hidden="true"></i></summary>
+          <p>Workload-aware memory behavior across scheduling, allocation, reliability, and repair.</p>
+        </details>
+        <details name="technical-focus" data-visual-target="logic">
+          <summary><span>02</span><span class="summary-title">Control + telemetry</span><i aria-hidden="true"></i></summary>
+          <p>Control logic that makes traffic, health, and failure signals visible to the system.</p>
+        </details>
+        <details name="technical-focus" data-visual-target="package">
+          <summary><span>03</span><span class="summary-title">Advanced packaging</span><i aria-hidden="true"></i></summary>
+          <p>Memory, logic, power delivery, and thermals designed across one package boundary.</p>
+        </details>
+        <details name="technical-focus">
+          <summary><span>04</span><span class="summary-title">Test + reliability</span><i aria-hidden="true"></i></summary>
+          <p>Testability, failure isolation, recovery, and repeatable qualification evidence.</p>
+        </details>
       </div>
     </section>
 
@@ -94,12 +119,12 @@
         <article>
           <p class="point-status">At work today</p>
           <h3>Design intelligence</h3>
-          <p>Commercial memory-chip-design RL environments and proprietary Verilog for advanced memory and processor techniques.</p>
+          <p>Memory-chip-design RL environments and proprietary Verilog for advanced memory and processor techniques.</p>
         </article>
         <article>
           <p class="point-status">What comes next</p>
           <h3>AI memory systems</h3>
-          <p>Subsystem architecture, package-aware validation, test, repair, and telemetry for valuable AI workloads.</p>
+          <p>Subsystem architecture, package-aware validation, test, repair, and telemetry for AI workloads.</p>
         </article>
         <article class="future-point">
           <p class="point-status">Long-term objective</p>
@@ -107,7 +132,7 @@
           <p>Differentiated AI-memory packaging and manufacturing capacity in California, earned through product and demand proof.</p>
         </article>
       </div>
-      <p class="company-note">Customer identities and commercial terms are not publicly disclosed. No production-silicon performance claim is made.</p>
+      <p class="company-note">Our work begins in design: simulation environments and RTL for advanced memory systems.</p>
     </section>
 
     <section class="closing">
