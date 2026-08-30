@@ -8,6 +8,10 @@
     {
       "pattern": "sfmemo.com",
       "custom_domain": true
+    },
+    {
+      "pattern": "www.sfmemo.com",
+      "custom_domain": true
     }
   ],
   "assets": {
