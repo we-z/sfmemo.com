@@ -1,181 +1,407 @@
 import * as THREE from "./vendor/three.module.js";
 
 const hero = document.querySelector(".hero-horizon");
-const heroSurface = hero?.querySelector(".hero-frame") ?? hero;
+const heroSurface = hero?.querySelector(".hero-visual") ?? hero;
 const canvas = document.querySelector("#hero-canvas");
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 let reduceMotion = motionPreference.matches;
 const finePointer = window.matchMedia("(pointer: fine)").matches;
-let setFieldTheme = () => {};
 
 if (hero && heroSurface && canvas) {
   try {
     const renderer = new THREE.WebGLRenderer({
       canvas,
       alpha: true,
-      antialias: false,
+      antialias: true,
       powerPreference: "high-performance",
     });
 
     renderer.setClearColor(0x05070a, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, finePointer ? 1.35 : 1.1));
-    renderer.autoClear = false;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.96;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, finePointer ? 1.3 : 1.05));
 
     const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const pointers = [new THREE.Vector2(0.22, 0.66), new THREE.Vector2(0.3, 0.6)];
-    const pointerTargets = [new THREE.Vector2(0.22, 0.66), new THREE.Vector2(0.3, 0.6)];
-    const pointerActive = [0, 0];
-    const rippleOrigins = [new THREE.Vector2(0.76, 0.62), new THREE.Vector2(0.68, 0.64)];
-    const rippleStartedAt = [-1, -1];
-    const touchSlots = new Map();
-    let visible = true;
-    let frameId = 0;
-    let scrollProgress = 0;
+    const camera = new THREE.OrthographicCamera(-5, 5, 4, -4, 0.1, 60);
+    camera.up.set(0, 0, -1);
+    const packageRoot = new THREE.Group();
+    scene.add(packageRoot);
 
-    const uniforms = {
-      uTime: { value: 0 },
-      uResolution: { value: new THREE.Vector2(1, 1) },
-      uPointer: { value: pointers[0] },
-      uPointer2: { value: pointers[1] },
-      uPointerActive: { value: pointerActive[0] },
-      uPointer2Active: { value: pointerActive[1] },
-      uRippleOrigin: { value: rippleOrigins[0] },
-      uRippleOrigin2: { value: rippleOrigins[1] },
-      uRipple: { value: -1 },
-      uRipple2: { value: -1 },
-      uScroll: { value: 0 },
-      uMobile: { value: 0 },
-      uTheme: { value: 0 },
+    const createChamferedSlab = (width, depth, height, chamfer) => {
+      const halfWidth = width / 2;
+      const halfDepth = depth / 2;
+      const shape = new THREE.Shape();
+      shape.moveTo(-halfWidth + chamfer, -halfDepth);
+      shape.lineTo(halfWidth - chamfer, -halfDepth);
+      shape.lineTo(halfWidth, -halfDepth + chamfer);
+      shape.lineTo(halfWidth, halfDepth - chamfer);
+      shape.lineTo(halfWidth - chamfer, halfDepth);
+      shape.lineTo(-halfWidth + chamfer, halfDepth);
+      shape.lineTo(-halfWidth, halfDepth - chamfer);
+      shape.lineTo(-halfWidth, -halfDepth + chamfer);
+      shape.closePath();
+      const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth: height,
+        bevelEnabled: false,
+        curveSegments: 1,
+      });
+      geometry.rotateX(-Math.PI / 2);
+      geometry.translate(0, -height / 2, 0);
+      geometry.computeVertexNormals();
+      return geometry;
     };
 
-    const material = new THREE.ShaderMaterial({
-      uniforms,
+    const substrateMaterial = new THREE.MeshBasicMaterial({ color: 0x050b14 });
+    const interposerMaterial = new THREE.MeshBasicMaterial({ color: 0x102a50 });
+    const logicMaterial = new THREE.MeshBasicMaterial({ color: 0x397dcc });
+    const logicFrameMaterial = new THREE.MeshBasicMaterial({ color: 0x07101d });
+
+    const substrate = new THREE.Mesh(createChamferedSlab(9.1, 5.8, 0.24, 0.22), substrateMaterial);
+    substrate.position.y = -0.12;
+    packageRoot.add(substrate);
+
+    const interposerGeometry = createChamferedSlab(8.74, 5.45, 0.14, 0.18);
+    const interposer = new THREE.Mesh(interposerGeometry, interposerMaterial);
+    interposer.position.y = 0.08;
+    packageRoot.add(interposer);
+
+    const packageEdge = new THREE.LineSegments(
+      new THREE.EdgesGeometry(interposerGeometry, 24),
+      new THREE.LineBasicMaterial({ color: 0x8bbcff, transparent: true, opacity: 0.58 }),
+    );
+    packageEdge.position.copy(interposer.position);
+    packageRoot.add(packageEdge);
+
+    const logicFrame = new THREE.Mesh(createChamferedSlab(3.12, 2.58, 0.12, 0.13), logicFrameMaterial);
+    logicFrame.position.y = 0.23;
+    packageRoot.add(logicFrame);
+
+    const logicDieGeometry = createChamferedSlab(2.76, 2.22, 0.38, 0.11);
+    const logicDie = new THREE.Mesh(logicDieGeometry, logicMaterial);
+    logicDie.position.y = 0.47;
+    packageRoot.add(logicDie);
+
+    const logicEdgeMaterial = new THREE.LineBasicMaterial({ color: 0xd7eaff, transparent: true, opacity: 0.76 });
+    const logicEdge = new THREE.LineSegments(new THREE.EdgesGeometry(logicDieGeometry, 28), logicEdgeMaterial);
+    logicEdge.position.copy(logicDie.position);
+    packageRoot.add(logicEdge);
+
+    const logicGrooveGeometry = new THREE.BufferGeometry();
+    const logicGrooves = [];
+    [-0.62, -0.3, 0.3, 0.62].forEach((z) => {
+      logicGrooves.push(-0.94, 0.665, z, 0.94, 0.665, z);
+    });
+    logicGrooveGeometry.setAttribute("position", new THREE.Float32BufferAttribute(logicGrooves, 3));
+    packageRoot.add(new THREE.LineSegments(
+      logicGrooveGeometry,
+      new THREE.LineBasicMaterial({ color: 0x8dbdff, transparent: true, opacity: 0.2 }),
+    ));
+
+    const stackCenters = [
+      new THREE.Vector3(-3.18, 0, -1.82),
+      new THREE.Vector3(-3.18, 0, 1.82),
+      new THREE.Vector3(3.18, 0, -1.82),
+      new THREE.Vector3(3.18, 0, 1.82),
+    ];
+    const layerCount = 8;
+    const layerThickness = 0.042;
+    const layerPitch = 0.05;
+    const layerBaseY = 0.28;
+    const layerGeometry = createChamferedSlab(1.46, 1.42, layerThickness, 0.075);
+    const separatorGeometry = new THREE.PlaneGeometry(1.18, 0.018);
+    const stackMeshes = [];
+    const stackMaterials = [];
+    const separatorMeshes = [];
+    const separatorMaterials = [];
+    const tsvMaterials = [];
+    const stackHighlights = [0, 0, 0, 0];
+    const stackHitAreas = [];
+    const matrixHelper = new THREE.Object3D();
+    const stackIdleColor = new THREE.Color(0x1859c7);
+    const stackActiveColor = new THREE.Color(0x5ba0ff);
+    const tsvIdleColor = new THREE.Color(0x79acfb);
+    const tsvActiveColor = new THREE.Color(0xe3f1ff);
+    const logicIdleColor = new THREE.Color(0x397dcc);
+    const logicActiveColor = new THREE.Color(0x8ec5ff);
+    const towerHeight = layerPitch * (layerCount - 1) + layerThickness;
+
+    stackCenters.forEach((center, stackIndex) => {
+      const stackMaterial = new THREE.MeshBasicMaterial({ color: stackIdleColor });
+      const stackMesh = new THREE.InstancedMesh(layerGeometry, stackMaterial, layerCount);
+      stackMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      stackMesh.userData.stackIndex = stackIndex;
+      stackMeshes.push(stackMesh);
+      stackMaterials.push(stackMaterial);
+      packageRoot.add(stackMesh);
+
+      const separatorMaterial = new THREE.MeshBasicMaterial({
+        color: 0xc4dcff,
+        transparent: true,
+        opacity: 0.28,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+      const separators = new THREE.InstancedMesh(separatorGeometry, separatorMaterial, layerCount - 1);
+      separators.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      separatorMeshes.push(separators);
+      separatorMaterials.push(separatorMaterial);
+      packageRoot.add(separators);
+
+      const stackBase = new THREE.Mesh(
+        createChamferedSlab(1.66, 1.61, 0.1, 0.08),
+        logicFrameMaterial,
+      );
+      stackBase.position.set(center.x, 0.23, center.z);
+      packageRoot.add(stackBase);
+
+      const tsvMaterial = new THREE.MeshBasicMaterial({ color: tsvIdleColor });
+      const tsvs = new THREE.InstancedMesh(
+        new THREE.CylinderGeometry(0.034, 0.034, towerHeight, 10),
+        tsvMaterial,
+        4,
+      );
+      [[-0.59, -0.57], [0.59, -0.57], [-0.59, 0.57], [0.59, 0.57]].forEach(([x, z], index) => {
+        matrixHelper.position.set(center.x + x, layerBaseY + towerHeight / 2 - 0.03, center.z + z);
+        matrixHelper.rotation.set(0, 0, 0);
+        matrixHelper.scale.set(1, 1, 1);
+        matrixHelper.updateMatrix();
+        tsvs.setMatrixAt(index, matrixHelper.matrix);
+      });
+      tsvMaterials.push(tsvMaterial);
+      packageRoot.add(tsvs);
+
+      const hitArea = new THREE.Mesh(
+        new THREE.BoxGeometry(1.86, towerHeight + 0.48, 1.82),
+        new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }),
+      );
+      hitArea.position.set(center.x, layerBaseY + towerHeight / 2, center.z);
+      hitArea.userData.stackIndex = stackIndex;
+      stackHitAreas.push(hitArea);
+      packageRoot.add(hitArea);
+    });
+
+    const bumpMaterial = new THREE.MeshBasicMaterial({ color: 0x7198c9 });
+    const microBumps = new THREE.InstancedMesh(new THREE.SphereGeometry(0.035, 8, 6), bumpMaterial, 64);
+    let bumpIndex = 0;
+    stackCenters.forEach((center) => {
+      [-0.45, -0.15, 0.15, 0.45].forEach((x) => {
+        [-0.45, -0.15, 0.15, 0.45].forEach((z) => {
+          matrixHelper.position.set(center.x + x, 0.205, center.z + z);
+          matrixHelper.rotation.set(0, 0, 0);
+          matrixHelper.scale.set(1, 1, 1);
+          matrixHelper.updateMatrix();
+          microBumps.setMatrixAt(bumpIndex, matrixHelper.matrix);
+          bumpIndex += 1;
+        });
+      });
+    });
+    packageRoot.add(microBumps);
+
+    const routeCurves = [];
+    const routeMaterials = [];
+    stackCenters.forEach((center, stackIndex) => {
+      const side = Math.sign(center.x);
+      const points = [
+        new THREE.Vector3(center.x - side * 0.82, 0.19, center.z),
+        new THREE.Vector3(side * 2.36, 0.19, center.z),
+        new THREE.Vector3(side * 2.36, 0.19, center.z * 0.68),
+        new THREE.Vector3(side * 1.82, 0.19, center.z * 0.68),
+        new THREE.Vector3(side * 1.32, 0.19, center.z * 0.42),
+      ];
+      const route = new THREE.CurvePath();
+      for (let index = 0; index < points.length - 1; index += 1) {
+        route.add(new THREE.LineCurve3(points[index], points[index + 1]));
+      }
+      routeCurves.push(route);
+      const routeMaterial = new THREE.MeshBasicMaterial({
+        color: 0x6aa7ff,
+        transparent: true,
+        opacity: 0.16,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      routeMaterials.push(routeMaterial);
+      packageRoot.add(new THREE.Mesh(
+        new THREE.TubeGeometry(route, 32, 0.018, 5, false),
+        routeMaterial,
+      ));
+
+      const terminals = new THREE.InstancedMesh(
+        new THREE.CylinderGeometry(0.075, 0.075, 0.026, 10),
+        routeMaterial,
+        2,
+      );
+      [points[0], points.at(-1)].forEach((point, index) => {
+        matrixHelper.position.set(point.x, 0.205, point.z);
+        matrixHelper.rotation.set(0, 0, 0);
+        matrixHelper.scale.set(1, 1, 1);
+        matrixHelper.updateMatrix();
+        terminals.setMatrixAt(index, matrixHelper.matrix);
+      });
+      terminals.userData.stackIndex = stackIndex;
+      packageRoot.add(terminals);
+    });
+
+    const pulseMaterial = new THREE.MeshBasicMaterial({
+      color: 0xd3e5ff,
       transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthTest: false,
       depthWrite: false,
+    });
+    const bandwidthPacket = new THREE.Mesh(new THREE.CircleGeometry(0.095, 18), pulseMaterial);
+    bandwidthPacket.rotation.x = -Math.PI / 2;
+    bandwidthPacket.position.y = 0.76;
+    bandwidthPacket.renderOrder = 14;
+    packageRoot.add(bandwidthPacket);
+
+    const lightPoolMaterial = new THREE.ShaderMaterial({
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthTest: false,
+      depthWrite: false,
+      uniforms: { uStrength: { value: 0.12 } },
       vertexShader: `
         varying vec2 vUv;
         void main() {
           vUv = uv;
-          gl_Position = vec4(position, 1.0);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
       `,
       fragmentShader: `
-        precision highp float;
-
         varying vec2 vUv;
-        uniform float uTime;
-        uniform vec2 uResolution;
-        uniform vec2 uPointer;
-        uniform vec2 uPointer2;
-        uniform float uPointerActive;
-        uniform float uPointer2Active;
-        uniform vec2 uRippleOrigin;
-        uniform vec2 uRippleOrigin2;
-        uniform float uRipple;
-        uniform float uRipple2;
-        uniform float uScroll;
-        uniform float uMobile;
-        uniform float uTheme;
-
-        float hash(vec2 p) {
-          p = fract(p * vec2(123.34, 456.21));
-          p += dot(p, p + 45.32);
-          return fract(p.x * p.y);
-        }
-
+        uniform float uStrength;
         void main() {
-          vec2 uv = vUv;
-          float aspect = uResolution.x / max(uResolution.y, 1.0);
-          float mobile = uMobile;
-          float pointerFalloff = exp(-pow((uv.x - uPointer.x) * 2.7, 2.0)) * uPointerActive;
-          float pointerFalloff2 = exp(-pow((uv.x - uPointer2.x) * 2.7, 2.0)) * uPointer2Active;
-          float baseY = mix(0.54, 0.44, mobile);
-          float horizon = baseY
-            + sin(uv.x * 3.45 + uTime * 0.11) * 0.035
-            + sin(uv.x * 8.2 - uTime * 0.07) * 0.012
-            + (uPointer.y - 0.5) * 0.105 * pointerFalloff
-            + (uPointer2.y - 0.5) * 0.105 * pointerFalloff2
-            - uScroll * mix(0.10, 0.05, mobile);
-
-          if (uRipple >= 0.0 && uRipple <= 1.25) {
-            vec2 rippleScale = vec2(aspect, 0.92);
-            float distanceFromTap = length((uv - uRippleOrigin) * rippleScale);
-            float radius = uRipple * 0.9;
-            float ring = sin((distanceFromTap - radius) * 44.0)
-              * exp(-abs(distanceFromTap - radius) * 19.0)
-              * (1.0 - smoothstep(0.0, 1.2, uRipple));
-            horizon += ring * 0.072;
-          }
-
-          if (uRipple2 >= 0.0 && uRipple2 <= 1.25) {
-            vec2 rippleScale = vec2(aspect, 0.92);
-            float distanceFromTap = length((uv - uRippleOrigin2) * rippleScale);
-            float radius = uRipple2 * 0.9;
-            float ring = sin((distanceFromTap - radius) * 44.0)
-              * exp(-abs(distanceFromTap - radius) * 19.0)
-              * (1.0 - smoothstep(0.0, 1.2, uRipple2));
-            horizon += ring * 0.072;
-          }
-
-          float d = uv.y - horizon;
-          float revealStart = mix(0.28, 0.02, mobile);
-          float rightMask = smoothstep(revealStart, mix(0.72, 0.34, mobile), uv.x);
-          float edgeFade = smoothstep(1.08, 0.82, uv.x);
-          float fieldMask = rightMask * edgeFade;
-          vec3 cobalt = mix(vec3(0.055, 0.205, 0.62), vec3(0.02, 0.18, 0.72), uTheme);
-          vec3 blue = mix(vec3(0.16, 0.46, 0.96), vec3(0.04, 0.34, 0.96), uTheme);
-          vec3 ice = mix(vec3(0.66, 0.82, 1.0), vec3(0.34, 0.62, 1.0), uTheme);
-          vec3 color = vec3(0.0);
-          float deepField = smoothstep(0.34, -0.24, d);
-          float depthFade = smoothstep(-0.5, 0.04, d);
-          color += mix(cobalt * 0.22, blue * 0.58, depthFade) * deepField * fieldMask;
-          float leadingEdge = exp(-abs(d) * 42.0);
-          color += mix(blue, ice, smoothstep(0.48, 0.94, uv.x)) * leadingEdge * fieldMask * 0.9;
-
-          for (int index = 0; index < 9; index++) {
-            float layer = float(index);
-            float layerY = horizon - 0.032 - layer * 0.027
-              + sin(uv.x * (5.2 + layer * 0.18) + layer * 0.62 - uTime * 0.035) * 0.006;
-            float strand = exp(-abs(uv.y - layerY) * mix(135.0, 94.0, layer / 8.0));
-            float strandFade = 1.0 - layer / 11.0;
-            color += mix(cobalt, blue, 0.28 + uv.x * 0.38) * strand * fieldMask * strandFade * 0.34;
-          }
-
-          float fieldSheen = exp(-pow(d * 5.8, 2.0))
-            * smoothstep(0.38, 0.78, uv.x)
-            * smoothstep(1.02, 0.72, uv.x);
-          color += ice * fieldSheen * 0.12;
-          float lowerGlow = exp(-pow((d + 0.19) * 4.0, 2.0)) * fieldMask;
-          color += cobalt * lowerGlow * 0.16;
-          float grain = hash(gl_FragCoord.xy + floor(uTime * 8.0)) - 0.5;
-          color += grain * 0.012;
-          float alpha = clamp((deepField * 0.82 + leadingEdge + fieldSheen * 0.2) * fieldMask, 0.0, mix(0.94, 0.72, uTheme));
-          float fieldIntensity = mix(1.55, 1.2, uTheme);
-          gl_FragColor = vec4(max(color, 0.0) * fieldIntensity, alpha);
+          float falloff = 1.0 - smoothstep(0.0, 0.5, distance(vUv, vec2(0.5)));
+          gl_FragColor = vec4(0.24, 0.54, 1.0, falloff * uStrength);
         }
       `,
     });
+    const lightPool = new THREE.Mesh(new THREE.PlaneGeometry(4.8, 4.8), lightPoolMaterial);
+    lightPool.rotation.x = -Math.PI / 2;
+    lightPool.position.y = 0.72;
+    lightPool.renderOrder = 12;
+    packageRoot.add(lightPool);
 
-    scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
+    const pointerTarget = new THREE.Vector2(0, 0.05);
+    const pointerCurrent = new THREE.Vector2(0, 0.05);
+    const pointerNdc = new THREE.Vector2();
+    const activePointers = new Map();
+    const pointerStarts = new Map();
+    const raycaster = new THREE.Raycaster();
+    const lightPoolTarget = new THREE.Vector3();
+    const packageTarget = new THREE.Vector3();
+    const layoutPosition = new THREE.Vector3();
+    let activeStack = -1;
+    let burstStack = -1;
+    let burstStartedAt = -1;
+    let baseScale = 0.78;
+    let mobile = false;
+    let visible = true;
+    let frameId = 0;
+    let lastFrameAt = 0;
+    let scrollProgress = 0;
+    let multiTouchSequence = false;
+    const introStartedAt = performance.now();
+    heroSurface.dataset.activeStack = "none";
+    heroSurface.dataset.traceCount = "0";
 
-    setFieldTheme = (light) => {
-      uniforms.uTheme.value = light ? 1 : 0;
-      render(performance.now(), true);
-    };
+    const easeOutCubic = (value) => 1 - ((1 - value) ** 3);
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+    function updateStackInstances(introSpread) {
+      stackCenters.forEach((center, stackIndex) => {
+        for (let layer = 0; layer < layerCount; layer += 1) {
+          const y = layerBaseY + layer * layerPitch + layer * introSpread * 0.008;
+          const nestedScale = 1 + (layerCount - 1 - layer) * 0.016;
+          const activeScale = stackHighlights[stackIndex] * 0.022;
+          matrixHelper.position.set(center.x, y, center.z);
+          matrixHelper.rotation.set(0, 0, 0);
+          matrixHelper.scale.set(nestedScale + activeScale, 1, nestedScale + activeScale);
+          matrixHelper.updateMatrix();
+          stackMeshes[stackIndex].setMatrixAt(layer, matrixHelper.matrix);
+
+          if (layer < layerCount - 1) {
+            const lineProgress = layer / (layerCount - 2);
+            matrixHelper.position.set(
+              center.x,
+              layerBaseY + (layerCount - 1) * layerPitch + layerThickness / 2 + 0.008,
+              center.z - 0.48 + lineProgress * 0.96,
+            );
+            matrixHelper.rotation.set(-Math.PI / 2, 0, 0);
+            matrixHelper.scale.set(1 + activeScale, 1, 1 + activeScale);
+            matrixHelper.updateMatrix();
+            separatorMeshes[stackIndex].setMatrixAt(layer, matrixHelper.matrix);
+          }
+        }
+        stackMeshes[stackIndex].instanceMatrix.needsUpdate = true;
+        separatorMeshes[stackIndex].instanceMatrix.needsUpdate = true;
+      });
+    }
+
+    function updatePulse(now) {
+      const elapsed = burstStartedAt < 0 ? 2 : (now - burstStartedAt) / 900;
+      if (burstStack < 0 || elapsed > 1.18) {
+        pulseMaterial.opacity = 0;
+        if (elapsed > 1.18) burstStack = -1;
+        return 0;
+      }
+
+      const curve = routeCurves[burstStack];
+      const point = curve.getPoint(clamp(elapsed * 1.08, 0, 1));
+      bandwidthPacket.position.set(point.x, 0.76, point.z);
+      const envelope = Math.sin(Math.PI * clamp(elapsed / 1.12, 0, 1));
+      pulseMaterial.opacity = 0.92 * envelope;
+      bandwidthPacket.scale.setScalar(0.78 + envelope * 0.35);
+      return envelope;
+    }
 
     function render(now = performance.now(), force = false) {
       frameId = 0;
-      pointers[0].lerp(pointerTargets[0], reduceMotion ? 1 : 0.055);
-      pointers[1].lerp(pointerTargets[1], reduceMotion ? 1 : 0.055);
-      uniforms.uTime.value = reduceMotion ? 0 : now / 1000;
-      uniforms.uScroll.value += (scrollProgress - uniforms.uScroll.value) * (reduceMotion ? 1 : 0.06);
-      uniforms.uPointerActive.value = pointerActive[0];
-      uniforms.uPointer2Active.value = pointerActive[1];
-      uniforms.uRipple.value = rippleStartedAt[0] < 0 ? -1 : (now - rippleStartedAt[0]) / 1700;
-      uniforms.uRipple2.value = rippleStartedAt[1] < 0 ? -1 : (now - rippleStartedAt[1]) / 1700;
-      renderer.clear();
+      if (!force && mobile && now - lastFrameAt < 31) {
+        frameId = requestAnimationFrame(render);
+        return;
+      }
+      lastFrameAt = now;
+
+      pointerCurrent.lerp(pointerTarget, reduceMotion ? 1 : 0.075);
+      const introProgress = clamp((now - introStartedAt) / 1150, 0, 1);
+      const introSpread = reduceMotion ? 0 : 1 - easeOutCubic(introProgress);
+      const burstEnvelope = updatePulse(now);
+
+      stackHighlights.forEach((highlightValue, stackIndex) => {
+        const pointerActive = [...activePointers.values()].some((pointer) => pointer.stackIndex === stackIndex);
+        const target = stackIndex === activeStack || pointerActive ? 1 : 0;
+        const burstLift = stackIndex === burstStack ? burstEnvelope * 0.8 : 0;
+        stackHighlights[stackIndex] += (Math.max(target, burstLift) - highlightValue) * (reduceMotion ? 1 : 0.14);
+        const highlight = clamp(stackHighlights[stackIndex] + burstLift, 0, 1);
+        stackMaterials[stackIndex].color.lerpColors(stackIdleColor, stackActiveColor, highlight);
+        separatorMaterials[stackIndex].opacity = 0.26 + highlight * 0.62;
+        tsvMaterials[stackIndex].color.lerpColors(tsvIdleColor, tsvActiveColor, highlight);
+        routeMaterials[stackIndex].opacity = 0.18 + highlight * 0.67;
+      });
+      updateStackInstances(introSpread);
+
+      logicMaterial.color.lerpColors(logicIdleColor, logicActiveColor, burstEnvelope);
+      logicEdgeMaterial.opacity = 0.76 + burstEnvelope * 0.24;
+      logicEdge.scale.setScalar(1 + burstEnvelope * 0.035);
+      lightPoolTarget.set(pointerCurrent.x * 3.6, 0.72, -pointerCurrent.y * 2.25);
+      lightPool.position.lerp(lightPoolTarget, reduceMotion ? 1 : 0.09);
+      lightPoolMaterial.uniforms.uStrength.value = 0.105 + burstEnvelope * 0.055;
+
+      packageTarget.set(
+        layoutPosition.x + pointerCurrent.x * 0.055,
+        layoutPosition.y,
+        layoutPosition.z - pointerCurrent.y * 0.055,
+      );
+      packageRoot.position.lerp(packageTarget, reduceMotion ? 1 : 0.08);
+      packageRoot.rotation.set(0, 0, 0);
+      const departureScale = 1 - scrollProgress * 0.035;
+      packageRoot.scale.setScalar(baseScale * departureScale);
+
       renderer.render(scene, camera);
       if (!force && !reduceMotion && visible && !document.hidden) frameId = requestAnimationFrame(render);
     }
@@ -183,9 +409,29 @@ if (hero && heroSurface && canvas) {
     function resize() {
       const bounds = heroSurface.getBoundingClientRect();
       if (!bounds.width || !bounds.height) return;
+      mobile = window.innerWidth <= 780;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.05 : 1.3));
       renderer.setSize(bounds.width, bounds.height, false);
-      uniforms.uResolution.value.set(bounds.width, bounds.height);
-      uniforms.uMobile.value = bounds.width <= 780 ? 1 : 0;
+      const aspect = bounds.width / bounds.height;
+      const viewHeight = Math.max(8.35, 9.9 / aspect);
+      camera.left = -viewHeight * aspect / 2;
+      camera.right = viewHeight * aspect / 2;
+      camera.top = viewHeight / 2;
+      camera.bottom = -viewHeight / 2;
+      if (mobile) {
+        camera.position.set(0, 12, 0.001);
+        const compactPortrait = window.innerWidth <= 360 && window.innerHeight > window.innerWidth;
+        const tabletPortrait = window.innerWidth > 520 && window.innerHeight > window.innerWidth;
+        const shortLandscape = window.innerHeight <= 480 && window.innerWidth > window.innerHeight;
+        layoutPosition.set(0, 0, compactPortrait ? 1.02 : tabletPortrait ? 1.72 : shortLandscape ? 0 : 0.3);
+        baseScale = compactPortrait ? 0.76 : tabletPortrait ? 0.86 : shortLandscape ? 0.94 : 0.96;
+      } else {
+        camera.position.set(0, 12, 0.001);
+        layoutPosition.set(0.12, 0, 0);
+        baseScale = window.innerWidth < 1200 ? 0.82 : 0.86;
+      }
+      camera.lookAt(0, 0, 0);
+      camera.updateProjectionMatrix();
       render(performance.now(), true);
     }
 
@@ -198,92 +444,129 @@ if (hero && heroSurface && canvas) {
     function pointFromClient(clientX, clientY) {
       const bounds = heroSurface.getBoundingClientRect();
       return {
-        x: THREE.MathUtils.clamp((clientX - bounds.left) / bounds.width, 0, 1),
-        y: THREE.MathUtils.clamp(1 - (clientY - bounds.top) / bounds.height, 0, 1),
+        x: clamp(((clientX - bounds.left) / bounds.width) * 2 - 1, -1, 1),
+        y: clamp(-(((clientY - bounds.top) / bounds.height) * 2 - 1), -1, 1),
       };
     }
 
-    function pointFromEvent(event) {
-      return pointFromClient(event.clientX, event.clientY);
+    function stackFromPoint(point) {
+      pointerNdc.set(point.x, point.y);
+      raycaster.setFromCamera(pointerNdc, camera);
+      const hit = raycaster.intersectObjects(stackHitAreas, false)[0];
+      return hit ? hit.object.userData.stackIndex : -1;
     }
 
-    function setTouchPoint(touch, startRipple = false) {
-      let slot = touchSlots.get(touch.identifier);
-      if (slot === undefined) {
-        const usedSlots = new Set(touchSlots.values());
-        slot = usedSlots.has(0) ? (usedSlots.has(1) ? -1 : 1) : 0;
-        if (slot < 0) return;
-        touchSlots.set(touch.identifier, slot);
+    function updateActiveData() {
+      const indices = new Set(
+        [...activePointers.values()]
+          .map((pointer) => pointer.stackIndex)
+          .filter((stackIndex) => stackIndex >= 0),
+      );
+      if (activeStack >= 0) indices.add(activeStack);
+      heroSurface.dataset.activeStack = indices.size
+        ? [...indices].sort().map((stackIndex) => stackIndex + 1).join(",")
+        : "none";
+    }
+
+    function pickStack(point) {
+      activeStack = stackFromPoint(point);
+      updateActiveData();
+    }
+
+    function updatePointerAggregate() {
+      const points = [...activePointers.values()];
+      if (!points.length) return;
+      if (points.length === 1) {
+        pointerTarget.set(points[0].x, points[0].y);
+        return;
       }
-
-      const point = pointFromClient(touch.clientX, touch.clientY);
-      pointerActive[slot] = 1;
-      pointerTargets[slot].set(point.x, point.y);
-
-      if (startRipple) {
-        pointers[slot].set(point.x, point.y);
-        rippleOrigins[slot].set(point.x, point.y);
-        rippleStartedAt[slot] = performance.now();
-      }
+      const first = points[0];
+      const second = points[1];
+      pointerTarget.set((first.x + second.x) / 2, (first.y + second.y) / 2);
     }
 
-    function releaseTouch(touch) {
-      const slot = touchSlots.get(touch.identifier);
-      if (slot === undefined) return;
-      touchSlots.delete(touch.identifier);
-      pointerActive[slot] = 0;
-    }
-
-    function renderOnReducedMotion() {
+    function triggerBandwidth(stackIndex) {
+      if (stackIndex < 0) return;
+      const selected = stackIndex;
+      activeStack = selected;
+      updateActiveData();
+      burstStack = selected;
+      burstStartedAt = performance.now();
+      heroSurface.dataset.lastTrace = String(selected + 1);
+      heroSurface.dataset.traceCount = String(Number(heroSurface.dataset.traceCount) + 1);
+      start();
       if (reduceMotion) render(performance.now(), true);
     }
 
     heroSurface.addEventListener("pointermove", (event) => {
-      if (!finePointer || event.pointerType === "touch") return;
-      const point = pointFromEvent(event);
-      pointerActive[0] = 1;
-      pointerTargets[0].set(point.x, point.y);
-      renderOnReducedMotion();
+      const point = pointFromClient(event.clientX, event.clientY);
+      if (activePointers.has(event.pointerId)) {
+        activePointers.set(event.pointerId, {
+          ...point,
+          clientX: event.clientX,
+          clientY: event.clientY,
+          stackIndex: stackFromPoint(point),
+        });
+        updatePointerAggregate();
+        updateActiveData();
+      } else if (event.pointerType !== "touch") {
+        pointerTarget.set(point.x, point.y);
+        pickStack(point);
+      }
+      if (reduceMotion) render(performance.now(), true);
     });
 
     heroSurface.addEventListener("pointerleave", (event) => {
       if (event.pointerType === "touch") return;
-      pointerActive[0] = 0;
-      pointerTargets[0].set(0.22, 0.66);
-      renderOnReducedMotion();
+      activeStack = -1;
+      updateActiveData();
+      pointerTarget.set(0, 0.05);
+      if (reduceMotion) render(performance.now(), true);
     });
 
     heroSurface.addEventListener("pointerdown", (event) => {
-      if (event.pointerType === "touch") return;
       if (event.button !== undefined && event.button !== 0) return;
-      const point = pointFromEvent(event);
-      pointerActive[0] = 1;
-      rippleOrigins[0].set(point.x, point.y);
-      pointerTargets[0].set(point.x, point.y);
-      rippleStartedAt[0] = performance.now();
-      renderOnReducedMotion();
+      const point = pointFromClient(event.clientX, event.clientY);
+      const stackIndex = stackFromPoint(point);
+      activePointers.set(event.pointerId, {
+        ...point,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        stackIndex,
+      });
+      if (event.pointerType === "touch" && activePointers.size >= 2) multiTouchSequence = true;
+      pointerStarts.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY });
+      try { heroSurface.setPointerCapture(event.pointerId); } catch {}
+      updatePointerAggregate();
+      if (event.pointerType !== "touch") activeStack = stackIndex;
+      updateActiveData();
     });
 
-    heroSurface.addEventListener("touchstart", (event) => {
-      Array.from(event.changedTouches).forEach((touch) => setTouchPoint(touch, true));
-      renderOnReducedMotion();
-      start();
-    }, { passive: true });
+    const releasePointer = (event) => {
+      activePointers.delete(event.pointerId);
+      if (!activePointers.size && event.pointerType === "touch") {
+        activeStack = -1;
+        multiTouchSequence = false;
+      } else updatePointerAggregate();
+      pointerStarts.delete(event.pointerId);
+      if (heroSurface.hasPointerCapture(event.pointerId)) heroSurface.releasePointerCapture(event.pointerId);
+      updateActiveData();
+      if (reduceMotion) render(performance.now(), true);
+    };
 
-    heroSurface.addEventListener("touchmove", (event) => {
-      Array.from(event.changedTouches).forEach((touch) => setTouchPoint(touch));
-      renderOnReducedMotion();
-    }, { passive: true });
-
-    heroSurface.addEventListener("touchend", (event) => {
-      Array.from(event.changedTouches).forEach(releaseTouch);
-      renderOnReducedMotion();
-    }, { passive: true });
-
-    heroSurface.addEventListener("touchcancel", (event) => {
-      Array.from(event.changedTouches).forEach(releaseTouch);
-      renderOnReducedMotion();
-    }, { passive: true });
+    heroSurface.addEventListener("pointerup", (event) => {
+      const startPoint = pointerStarts.get(event.pointerId);
+      const pointer = activePointers.get(event.pointerId);
+      const wasSinglePointer = activePointers.size === 1;
+      if (startPoint && wasSinglePointer && !(event.pointerType === "touch" && multiTouchSequence)) {
+        const movement = Math.hypot(event.clientX - startPoint.clientX, event.clientY - startPoint.clientY);
+        if (movement <= 8) {
+          triggerBandwidth(pointer?.stackIndex ?? -1);
+        }
+      }
+      releasePointer(event);
+    });
+    heroSurface.addEventListener("pointercancel", releasePointer);
 
     function start() {
       if (frameId || reduceMotion || !visible || document.hidden) return;
@@ -326,38 +609,15 @@ if (hero && heroSurface && canvas) {
     });
 
     updateScroll();
+    updateStackInstances(0);
     resize();
     hero.classList.add("webgl-ready");
     render(performance.now(), true);
     start();
   } catch (error) {
-    console.warn("SF Memory light field fallback enabled.", error);
+    console.warn("SF Memory package fallback enabled.", error);
   }
 }
-
-const fieldToggle = document.querySelector(".field-toggle");
-const themeColor = document.querySelector('meta[name="theme-color"]');
-
-function applyFieldTheme(light) {
-  document.body.classList.toggle("theme-light", light);
-  fieldToggle?.setAttribute("aria-pressed", String(light));
-  fieldToggle?.setAttribute("aria-label", light ? "Switch to dark field" : "Switch to light field");
-  const label = fieldToggle?.querySelector("span");
-  if (label) label.textContent = light ? "Dark field" : "Light field";
-  themeColor?.setAttribute("content", light ? "#edf3fb" : "#05070a");
-  setFieldTheme(light);
-}
-
-fieldToggle?.addEventListener("click", () => {
-  const nextLight = !document.body.classList.contains("theme-light");
-  const bounds = fieldToggle.getBoundingClientRect();
-  document.documentElement.style.setProperty("--flip-x", `${bounds.left + bounds.width / 2}px`);
-  document.documentElement.style.setProperty("--flip-y", `${bounds.top + bounds.height / 2}px`);
-
-  const commitTheme = () => applyFieldTheme(nextLight);
-  if (document.startViewTransition && !reduceMotion) document.startViewTransition(commitTheme);
-  else commitTheme();
-});
 
 const approach = document.querySelector(".approach-editorial");
 const approachItems = [...document.querySelectorAll(".approach-item")];
@@ -555,8 +815,6 @@ function updateScrollMotion() {
     setMotionVariable("--hero-eyebrow-opacity", unit(1 - metaDeparture * 0.88), motionScenes.hero);
     setMotionVariable("--hero-meta-y", px(-30 * metaDeparture * amplitude), motionScenes.hero);
     setMotionVariable("--hero-meta-opacity", unit(1 - metaDeparture), motionScenes.hero);
-    setMotionVariable("--hero-canvas-y", px(-22 * departure * amplitude), motionScenes.hero);
-    setMotionVariable("--hero-canvas-scale", unit(1 + departure * (mobile ? 0.045 : 0.13)), motionScenes.hero);
   }
 
   if (motionScenes.approach) {
