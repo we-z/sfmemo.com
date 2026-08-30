@@ -3,949 +3,123 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#071b17">
-  <meta name="description" content="SF Memory is building from paid memory-design environments and proprietary RTL toward differentiated AI-memory systems, advanced packaging, and long-term domestic manufacturing.">
+  <meta name="theme-color" content="#05070a">
+  <meta name="description" content="SF Memory is building advanced memory systems and packaging for the next era of AI infrastructure.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://sfmemo.com/">
-  <meta property="og:title" content="SF Memory — AI Memory Systems">
-  <meta property="og:description" content="Paid design intelligence now. American AI memory next.">
+  <meta property="og:title" content="SF Memory — Memory for the Next Era of AI">
+  <meta property="og:description" content="Advanced memory systems. Built for AI. Built toward America.">
   <meta property="og:image" content="https://sfmemo.com/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="SF Memory — Paid design intelligence now. American AI memory next.">
+  <meta property="og:image:alt" content="SF Memory — Memory for the next era of AI.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="SF Memory — AI Memory Systems">
-  <meta name="twitter:description" content="Paid design intelligence now. American AI memory next.">
+  <meta name="twitter:title" content="SF Memory — Memory for the Next Era of AI">
+  <meta name="twitter:description" content="Advanced memory systems. Built for AI. Built toward America.">
   <meta name="twitter:image" content="https://sfmemo.com/og.png">
-  <meta name="twitter:image:alt" content="SF Memory — Paid design intelligence now. American AI memory next.">
+  <meta name="twitter:image:alt" content="SF Memory — Memory for the next era of AI.">
   <link rel="canonical" href="https://sfmemo.com/">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <title>SF Memory — AI Memory Systems</title>
+  <link rel="stylesheet" href="/styles.css">
+  <title>SF Memory — Memory for the Next Era of AI</title>
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "SF Memory",
       "url": "https://sfmemo.com/",
-      "description": "SF Memory is building from memory-chip-design environments and proprietary RTL toward differentiated AI-memory systems, advanced packaging, and long-term domestic manufacturing.",
-      "sameAs": ["https://sfmemory.net/"]
+      "description": "SF Memory is building advanced memory systems and packaging for the next era of AI infrastructure."
     }
   </script>
-  <style>
-    :root {
-      --ink: #f4efe4;
-      --muted: #a9b7ad;
-      --faint: #71847b;
-      --bg: #061713;
-      --bg-deep: #03100d;
-      --panel: #0a211c;
-      --panel-bright: #0d2a23;
-      --line: rgba(218, 236, 225, 0.16);
-      --line-strong: rgba(218, 236, 225, 0.28);
-      --acid: #c8ef4b;
-      --mint: #7bd5b5;
-      --amber: #e5b658;
-      --max: 1240px;
-      --gutter: clamp(1.25rem, 4vw, 4rem);
-      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-      --mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
-    }
-
-    * { box-sizing: border-box; }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      margin: 0;
-      min-width: 320px;
-      color: var(--ink);
-      background:
-        radial-gradient(circle at 77% 7%, rgba(90, 181, 145, 0.12), transparent 28rem),
-        linear-gradient(180deg, var(--bg) 0%, var(--bg-deep) 100%);
-      font-family: var(--sans);
-      font-weight: 350;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
-    }
-
-    a { color: inherit; }
-
-    .skip-link {
-      position: fixed;
-      left: 1rem;
-      top: 1rem;
-      z-index: 20;
-      padding: 0.75rem 1rem;
-      color: var(--bg-deep);
-      background: var(--acid);
-      transform: translateY(-160%);
-      transition: transform 160ms ease;
-    }
-
-    .skip-link:focus { transform: translateY(0); }
-
-    .site-shell {
-      position: relative;
-      overflow: hidden;
-    }
-
-    .site-shell::before {
-      content: "";
-      position: absolute;
-      inset: 0 0 auto 50%;
-      height: 58rem;
-      pointer-events: none;
-      opacity: 0.32;
-      background-image:
-        linear-gradient(rgba(166, 202, 182, 0.09) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(166, 202, 182, 0.09) 1px, transparent 1px);
-      background-size: 64px 64px;
-      mask-image: linear-gradient(to bottom, black 0%, transparent 80%);
-    }
-
-    .wrap {
-      width: min(100%, calc(var(--max) + (2 * var(--gutter))));
-      margin: 0 auto;
-      padding-inline: var(--gutter);
-    }
-
-    header {
-      position: relative;
-      z-index: 5;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      min-height: 6rem;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .brand {
-      display: inline-flex;
-      align-items: baseline;
-      gap: 0.58rem;
-      text-decoration: none;
-      letter-spacing: -0.02em;
-    }
-
-    .brand-mark {
-      color: var(--acid);
-      font-family: var(--mono);
-      font-size: 0.82rem;
-      letter-spacing: 0.08em;
-    }
-
-    .brand-name {
-      font-size: 1.02rem;
-      font-weight: 430;
-    }
-
-    nav {
-      display: flex;
-      align-items: center;
-      gap: clamp(1.1rem, 2.6vw, 2.25rem);
-    }
-
-    nav a {
-      color: var(--muted);
-      font-size: 0.78rem;
-      letter-spacing: 0.08em;
-      text-decoration: none;
-      text-transform: uppercase;
-      transition: color 160ms ease;
-    }
-
-    nav a:hover,
-    nav a:focus-visible { color: var(--ink); }
-
-    nav .external {
-      color: var(--acid);
-    }
-
-    .hero {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: minmax(0, 1.08fr) minmax(27rem, 0.92fr);
-      gap: clamp(3rem, 7vw, 7rem);
-      align-items: center;
-      min-height: calc(100svh - 6rem);
-      padding-block: clamp(4.5rem, 9vw, 8rem);
-    }
-
-    .eyebrow,
-    .section-label,
-    .status,
-    .proof-label {
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      letter-spacing: 0.11em;
-      line-height: 1.4;
-      text-transform: uppercase;
-    }
-
-    .eyebrow,
-    .section-label { color: var(--mint); }
-
-    h1,
-    h2,
-    h3,
-    p { margin-top: 0; }
-
-    h1 {
-      max-width: 12ch;
-      margin-bottom: 1.75rem;
-      font-family: var(--serif);
-      font-size: clamp(3.5rem, 7.2vw, 7.2rem);
-      font-weight: 400;
-      letter-spacing: -0.055em;
-      line-height: 0.93;
-    }
-
-    .hero-copy > p {
-      max-width: 42rem;
-      color: var(--muted);
-      font-size: clamp(1.08rem, 1.6vw, 1.35rem);
-      line-height: 1.55;
-    }
-
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-      margin-top: 2rem;
-    }
-
-    .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 3.1rem;
-      padding: 0.85rem 1.2rem;
-      border: 1px solid var(--line-strong);
-      color: var(--ink);
-      background: transparent;
-      font-size: 0.82rem;
-      letter-spacing: 0.05em;
-      text-decoration: none;
-      transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
-    }
-
-    .button.primary {
-      border-color: var(--acid);
-      color: var(--bg-deep);
-      background: var(--acid);
-    }
-
-    .button:hover,
-    .button:focus-visible {
-      border-color: var(--mint);
-      color: var(--bg-deep);
-      background: var(--mint);
-    }
-
-    .architecture {
-      position: relative;
-      padding: clamp(1.25rem, 2.2vw, 2rem);
-      border: 1px solid var(--line-strong);
-      background: linear-gradient(160deg, rgba(13, 42, 35, 0.96), rgba(5, 22, 18, 0.92));
-      box-shadow: 0 2rem 6rem rgba(0, 0, 0, 0.24);
-    }
-
-    .architecture::before,
-    .architecture::after {
-      content: "";
-      position: absolute;
-      width: 1.1rem;
-      height: 1.1rem;
-      border-color: var(--acid);
-    }
-
-    .architecture::before {
-      top: -1px;
-      right: -1px;
-      border-top: 2px solid var(--acid);
-      border-right: 2px solid var(--acid);
-    }
-
-    .architecture::after {
-      bottom: -1px;
-      left: -1px;
-      border-bottom: 2px solid var(--acid);
-      border-left: 2px solid var(--acid);
-    }
-
-    .architecture-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      padding-bottom: 1.25rem;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .architecture-head strong {
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      font-weight: 500;
-      letter-spacing: 0.1em;
-    }
-
-    .signal {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-      color: var(--mint);
-      font-family: var(--mono);
-      font-size: 0.67rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .signal::before {
-      content: "";
-      width: 0.42rem;
-      height: 0.42rem;
-      border-radius: 50%;
-      background: var(--acid);
-      box-shadow: 0 0 1.2rem rgba(200, 239, 75, 0.8);
-    }
-
-    .layer-stack {
-      display: grid;
-      gap: 0.65rem;
-      margin-top: 1.25rem;
-    }
-
-    .layer {
-      position: relative;
-      display: grid;
-      grid-template-columns: 2rem minmax(0, 1fr) auto;
-      gap: 0.9rem;
-      align-items: center;
-      min-height: 4.25rem;
-      padding: 0.8rem 0.9rem;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.025);
-    }
-
-    .layer.current { border-color: rgba(200, 239, 75, 0.42); }
-
-    .layer-number {
-      color: var(--faint);
-      font-family: var(--mono);
-      font-size: 0.7rem;
-    }
-
-    .layer strong {
-      display: block;
-      margin-bottom: 0.22rem;
-      font-size: 0.97rem;
-      font-weight: 450;
-    }
-
-    .layer small {
-      display: block;
-      color: var(--muted);
-      font-size: 0.75rem;
-      line-height: 1.35;
-    }
-
-    .status {
-      color: var(--faint);
-      white-space: nowrap;
-    }
-
-    .current .status { color: var(--acid); }
-    .proposed .status { color: var(--mint); }
-    .future .status { color: var(--amber); }
-
-    .architecture-note {
-      margin: 1rem 0 0;
-      color: var(--faint);
-      font-size: 0.72rem;
-      line-height: 1.55;
-    }
-
-    .proof-band {
-      border-block: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.015);
-    }
-
-    .proof-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-    }
-
-    .proof {
-      min-height: 9.5rem;
-      padding: 2rem 2.2rem 2rem 0;
-    }
-
-    .proof + .proof {
-      padding-left: 2.2rem;
-      border-left: 1px solid var(--line);
-    }
-
-    .proof strong {
-      display: block;
-      margin-top: 0.75rem;
-      font-family: var(--serif);
-      font-size: clamp(1.7rem, 3vw, 2.65rem);
-      font-weight: 400;
-      letter-spacing: -0.035em;
-      line-height: 1.05;
-    }
-
-    .proof-label { color: var(--faint); }
-
-    .proof-note {
-      grid-column: 1 / -1;
-      margin: 0;
-      padding: 0 0 1.35rem;
-      color: var(--faint);
-      font-size: 0.72rem;
-      line-height: 1.55;
-    }
-
-    section {
-      padding-block: clamp(5rem, 10vw, 9rem);
-    }
-
-    .section-heading {
-      display: grid;
-      grid-template-columns: minmax(12rem, 0.36fr) minmax(0, 0.64fr);
-      gap: clamp(2rem, 6vw, 6rem);
-      align-items: start;
-      margin-bottom: clamp(3rem, 6vw, 5.5rem);
-    }
-
-    h2 {
-      max-width: 14ch;
-      margin-bottom: 1.25rem;
-      font-family: var(--serif);
-      font-size: clamp(2.7rem, 5.2vw, 5.2rem);
-      font-weight: 400;
-      letter-spacing: -0.045em;
-      line-height: 0.98;
-    }
-
-    .section-intro {
-      max-width: 43rem;
-      color: var(--muted);
-      font-size: clamp(1rem, 1.5vw, 1.22rem);
-      line-height: 1.65;
-    }
-
-    .boundary-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      border-top: 1px solid var(--line-strong);
-    }
-
-    .boundary {
-      padding: 2.2rem 2.2rem 0 0;
-    }
-
-    .boundary + .boundary {
-      padding-left: 2.2rem;
-      border-left: 1px solid var(--line);
-    }
-
-    .boundary-index {
-      display: block;
-      margin-bottom: 4rem;
-      color: var(--acid);
-      font-family: var(--mono);
-      font-size: 0.72rem;
-    }
-
-    .boundary h3 {
-      margin-bottom: 0.85rem;
-      font-size: 1.25rem;
-      font-weight: 450;
-      letter-spacing: -0.02em;
-    }
-
-    .boundary p {
-      color: var(--muted);
-      font-size: 0.92rem;
-      line-height: 1.6;
-    }
-
-    .path-section {
-      border-block: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(13, 42, 35, 0.44), rgba(3, 16, 13, 0));
-    }
-
-    .pathway {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1rem;
-    }
-
-    .phase {
-      display: flex;
-      flex-direction: column;
-      min-height: 22rem;
-      padding: 1.6rem;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.018);
-    }
-
-    .phase.current { border-color: rgba(200, 239, 75, 0.52); }
-
-    .phase-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-    }
-
-    .phase-number {
-      color: var(--faint);
-      font-family: var(--mono);
-      font-size: 0.72rem;
-    }
-
-    .phase h3 {
-      max-width: 11ch;
-      margin: 4.5rem 0 1rem;
-      font-family: var(--serif);
-      font-size: clamp(2rem, 3.2vw, 3.25rem);
-      font-weight: 400;
-      letter-spacing: -0.04em;
-      line-height: 1;
-    }
-
-    .phase p {
-      margin-bottom: 0;
-      color: var(--muted);
-      font-size: 0.9rem;
-      line-height: 1.6;
-    }
-
-    .phase-rule {
-      margin-top: auto;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--line);
-      color: var(--faint);
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      letter-spacing: 0.06em;
-      line-height: 1.55;
-      text-transform: uppercase;
-    }
-
-    .focus-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      border-top: 1px solid var(--line-strong);
-    }
-
-    .focus-item {
-      display: grid;
-      grid-template-columns: 3.2rem minmax(0, 1fr);
-      gap: 1rem;
-      min-height: 12rem;
-      padding: 2rem;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .focus-item:nth-child(odd) {
-      padding-left: 0;
-      border-right: 1px solid var(--line);
-    }
-
-    .focus-item:nth-child(even) { padding-right: 0; }
-
-    .focus-code {
-      color: var(--acid);
-      font-family: var(--mono);
-      font-size: 0.72rem;
-    }
-
-    .focus-item h3 {
-      margin-bottom: 0.75rem;
-      font-size: 1.12rem;
-      font-weight: 450;
-    }
-
-    .focus-item p {
-      margin-bottom: 0;
-      color: var(--muted);
-      font-size: 0.9rem;
-      line-height: 1.6;
-    }
-
-    .manufacturing {
-      position: relative;
-      display: grid;
-      grid-template-columns: minmax(0, 0.9fr) minmax(22rem, 1.1fr);
-      gap: clamp(3rem, 8vw, 8rem);
-      align-items: start;
-      padding: clamp(2rem, 5vw, 4rem);
-      border: 1px solid var(--line-strong);
-      background: var(--panel);
-    }
-
-    .manufacturing h2 { margin-bottom: 1.5rem; }
-
-    .manufacturing-copy > p {
-      color: var(--muted);
-      line-height: 1.65;
-    }
-
-    .gate-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      border-top: 1px solid var(--line);
-    }
-
-    .gate-list li {
-      display: grid;
-      grid-template-columns: 3rem minmax(0, 1fr);
-      gap: 1rem;
-      padding-block: 1.4rem;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .gate-list span {
-      color: var(--amber);
-      font-family: var(--mono);
-      font-size: 0.72rem;
-    }
-
-    .gate-list strong {
-      display: block;
-      margin-bottom: 0.32rem;
-      font-size: 1rem;
-      font-weight: 460;
-    }
-
-    .gate-list p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.84rem;
-      line-height: 1.55;
-    }
-
-    .close {
-      display: grid;
-      grid-template-columns: minmax(0, 0.75fr) minmax(18rem, 0.25fr);
-      gap: 3rem;
-      align-items: end;
-      padding-bottom: clamp(4rem, 8vw, 7rem);
-    }
-
-    .close h2 { max-width: 13ch; }
-
-    .close-note {
-      padding-left: 1.5rem;
-      border-left: 1px solid var(--acid);
-      color: var(--muted);
-      font-size: 0.9rem;
-      line-height: 1.65;
-    }
-
-    footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 2rem;
-      min-height: 7rem;
-      border-top: 1px solid var(--line);
-      color: var(--faint);
-      font-family: var(--mono);
-      font-size: 0.66rem;
-      letter-spacing: 0.06em;
-      line-height: 1.5;
-      text-transform: uppercase;
-    }
-
-    footer a {
-      color: var(--muted);
-      text-underline-offset: 0.25rem;
-    }
-
-    @media (max-width: 960px) {
-      .hero,
-      .manufacturing,
-      .close { grid-template-columns: 1fr; }
-      .hero { min-height: auto; }
-      .architecture { max-width: 44rem; }
-      .section-heading { grid-template-columns: 1fr; }
-      .proof-grid,
-      .boundary-grid,
-      .pathway { grid-template-columns: 1fr; }
-      .proof,
-      .proof + .proof,
-      .boundary,
-      .boundary + .boundary {
-        min-height: auto;
-        padding: 1.6rem 0;
-        border-left: 0;
-        border-bottom: 1px solid var(--line);
-      }
-      .boundary-index { margin-bottom: 2rem; }
-      .phase { min-height: 18rem; }
-      .close-note { max-width: 32rem; }
-    }
-
-    @media (max-width: 680px) {
-      header { min-height: 5rem; }
-      nav a:not(.external) { display: none; }
-      .hero { padding-top: 4rem; }
-      h1 { font-size: clamp(3.3rem, 16vw, 5.4rem); }
-      .layer { grid-template-columns: 1.6rem minmax(0, 1fr); }
-      .layer .status {
-        grid-column: 2;
-        justify-self: start;
-        margin-top: 0.25rem;
-      }
-      .focus-grid { grid-template-columns: 1fr; }
-      .focus-item,
-      .focus-item:nth-child(odd),
-      .focus-item:nth-child(even) {
-        min-height: auto;
-        padding: 1.6rem 0;
-        border-right: 0;
-      }
-      .manufacturing { padding: 1.5rem; }
-      footer {
-        align-items: flex-start;
-        flex-direction: column;
-        justify-content: center;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      *, *::before, *::after { transition-duration: 0.01ms !important; }
-    }
-  </style>
+  <script type="module" src="/visual.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
+  <div class="page-grid" aria-hidden="true"></div>
 
-  <div class="site-shell">
-    <div class="wrap">
-      <header>
-        <a class="brand" href="#top" aria-label="SF Memory home">
-          <span class="brand-mark">SF</span>
-          <span class="brand-name">MEMORY</span>
-        </a>
+  <header class="site-header">
+    <a class="wordmark" href="#top" aria-label="SF Memory home"><span>SF</span> MEMORY</a>
+    <nav aria-label="Primary navigation">
+      <a href="#approach">Approach</a>
+      <a href="#vision">Vision</a>
+    </nav>
+  </header>
 
-        <nav aria-label="Primary navigation">
-          <a href="#platform">Platform</a>
-          <a href="#path">Build path</a>
-          <a href="#research">Research</a>
-          <a class="external" href="https://sfmemory.net/">Research brief ↗</a>
-        </nav>
-      </header>
-
-      <main id="main">
-        <section class="hero" id="top">
-          <div class="hero-copy">
-            <p class="eyebrow">AI memory systems · United States</p>
-            <h1>Paid design intelligence now. American AI memory next.</h1>
-            <p>SF Memory is building from memory-chip-design environments and proprietary RTL toward differentiated AI-memory subsystems, advanced packaging, and—after the evidence is earned—domestic manufacturing.</p>
-
-            <div class="hero-actions">
-              <a class="button primary" href="#path">See the build path</a>
-              <a class="button" href="#research">Explore the technical focus</a>
-            </div>
-          </div>
-
-          <aside class="architecture" aria-label="SF Memory platform path">
-            <div class="architecture-head">
-              <strong>PLATFORM PATH</strong>
-              <span class="signal">Evidence gated</span>
-            </div>
-
-            <div class="layer-stack">
-              <div class="layer current">
-                <span class="layer-number">01</span>
-                <span><strong>Memory-design environments</strong><small>Commercial learning before silicon</small></span>
-                <span class="status">Current*</span>
-              </div>
-              <div class="layer current">
-                <span class="layer-number">02</span>
-                <span><strong>Memory + processor RTL</strong><small>Architecture, control, and verification</small></span>
-                <span class="status">Current*</span>
-              </div>
-              <div class="layer proposed">
-                <span class="layer-number">03</span>
-                <span><strong>AI-memory system</strong><small>Subsystem, base die, package, test</small></span>
-                <span class="status">Proposed</span>
-              </div>
-              <div class="layer future">
-                <span class="layer-number">04</span>
-                <span><strong>Domestic production</strong><small>Packaging and differentiated manufacturing</small></span>
-                <span class="status">Future objective</span>
-              </div>
-            </div>
-
-            <p class="architecture-note">*Management-reported. Commercial terms, IP provenance, technical maturity, and disclosure permissions remain subject to diligence. No hardware design-in or silicon-performance claim is made.</p>
-          </aside>
-        </section>
-      </main>
-    </div>
-
-    <div class="proof-band">
-      <div class="wrap proof-grid" aria-label="Current company evidence">
-        <div class="proof">
-          <span class="proof-label">Commercial signal*</span>
-          <strong>Two paying organizations</strong>
-        </div>
-        <div class="proof">
-          <span class="proof-label">Technical foundation*</span>
-          <strong>Proprietary Verilog</strong>
-        </div>
-        <div class="proof">
-          <span class="proof-label">Capital strategy</span>
-          <strong>Traction before silicon</strong>
-        </div>
-        <p class="proof-note">*Management-reported. Customer identities and commercial terms are not disclosed here; customer evidence, current status, IP provenance, and technical maturity remain subject to diligence.</p>
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-copy">
+        <p class="eyebrow"><span></span> SF Memory · California</p>
+        <h1>Memory for the next era of AI.</h1>
+        <p class="hero-intro">We’re building advanced memory systems and packaging for AI infrastructure—with a long-term path to American manufacturing.</p>
+        <a class="button" href="#approach">Explore the vision <span aria-hidden="true">↓</span></a>
       </div>
-    </div>
 
-    <div class="wrap">
-      <section id="platform">
-        <div class="section-heading">
-          <p class="section-label">Why memory</p>
-          <div>
-            <h2>The accelerator is only as capable as its memory path.</h2>
-            <p class="section-intro">Advanced AI memory is a system problem. Bandwidth, power, thermals, package integration, test, repair, firmware, and qualification have to work together. SF Memory is focused on that system boundary—not commodity DRAM scale.</p>
-          </div>
+      <div class="scene-shell" id="memory-visual" aria-label="Conceptual three-dimensional AI memory package">
+        <canvas id="memory-canvas" aria-hidden="true"></canvas>
+        <div class="fallback-package" aria-hidden="true">
+          <div class="fallback-stack stack-a"><i></i><i></i><i></i><i></i></div>
+          <div class="fallback-stack stack-b"><i></i><i></i><i></i><i></i></div>
+          <div class="fallback-stack stack-c"><i></i><i></i><i></i><i></i></div>
+          <div class="fallback-stack stack-d"><i></i><i></i><i></i><i></i></div>
+          <div class="fallback-die">AI</div>
+          <div class="fallback-interposer"></div>
         </div>
-
-        <div class="boundary-grid">
-          <article class="boundary">
-            <span class="boundary-index">01 / ARCHITECTURE</span>
-            <h3>Move useful data, not just more bits.</h3>
-            <p>Memory architecture, control logic, interfaces, and workload behavior must be designed as one constraint system.</p>
-          </article>
-          <article class="boundary">
-            <span class="boundary-index">02 / PACKAGE</span>
-            <h3>Treat packaging as part of the product.</h3>
-            <p>Base-die choices, interconnects, signal and power integrity, thermal paths, test, and repair determine whether a design can scale.</p>
-          </article>
-          <article class="boundary">
-            <span class="boundary-index">03 / QUALIFICATION</span>
-            <h3>Convert simulation into accountable proof.</h3>
-            <p>Reproducible workloads, verification, test vehicles, reliability evidence, and customer qualification must precede volume claims.</p>
-          </article>
-        </div>
-      </section>
-    </div>
-
-    <section class="path-section" id="path">
-      <div class="wrap">
-        <div class="section-heading">
-          <p class="section-label">Company path</p>
-          <div>
-            <h2>Enter through design intelligence. Earn the right to manufacture.</h2>
-            <p class="section-intro">The sequence is designed to create learning and revenue before the most capital-intensive steps. Each stage has an explicit evidence gate.</p>
-          </div>
-        </div>
-
-        <div class="pathway">
-          <article class="phase current">
-            <div class="phase-top"><span class="phase-number">01</span><span class="status">Current*</span></div>
-            <h3>Design intelligence</h3>
-            <p>Paid memory-chip-design environments and proprietary Verilog create a commercial and technical starting point before a hardware program.</p>
-            <div class="phase-rule">Gate: customer evidence + IP provenance</div>
-          </article>
-          <article class="phase proposed">
-            <div class="phase-top"><span class="phase-number">02</span><span class="status">Proposed</span></div>
-            <h3>Memory systems</h3>
-            <p>Targeted control IP, base-die architecture, package-aware validation, telemetry, test, and repair for narrow, valuable AI workloads.</p>
-            <div class="phase-rule">Gate: measured advantage + package proof</div>
-          </article>
-          <article class="phase future">
-            <div class="phase-top"><span class="phase-number">03</span><span class="status">Future objective</span></div>
-            <h3>American production</h3>
-            <p>Advanced packaging and differentiated manufacturing in the United States after demand, yield, infrastructure, and financing evidence converge.</p>
-            <div class="phase-rule">Gate: qualification + economics + infrastructure</div>
-          </article>
-        </div>
+        <div class="scene-index scene-index-memory"><span>01</span> HBM</div>
+        <div class="scene-index scene-index-logic"><span>02</span> LOGIC</div>
+        <div class="scene-index scene-index-package"><span>03</span> PACKAGE</div>
+        <p class="scene-caption">Conceptual AI-memory system</p>
       </div>
     </section>
 
-    <div class="wrap">
-      <section id="research">
-        <div class="section-heading">
-          <p class="section-label">Areas of focus</p>
-          <div>
-            <h2>Research across the full memory-system boundary.</h2>
-            <p class="section-intro">These are active areas of investigation and platform direction. They are not claims of completed products, qualified silicon, or production readiness.</p>
-          </div>
-        </div>
+    <section class="approach" id="approach">
+      <div class="section-copy">
+        <p class="section-label">The system boundary</p>
+        <h2>Memory. Logic. Package. One architecture.</h2>
+        <p>AI performance increasingly depends on how data moves. SF Memory is designing across high-bandwidth memory, control silicon, advanced packaging, and the accelerator.</p>
+      </div>
 
-        <div class="focus-grid">
-          <article class="focus-item">
-            <span class="focus-code">M01</span>
-            <div><h3>Memory architecture + control</h3><p>Controller behavior, reliability, allocation, scheduling, health, repair, and the memory-side techniques that shape application-visible performance.</p></div>
-          </article>
-          <article class="focus-item">
-            <span class="focus-code">M02</span>
-            <div><h3>HBM + stacked DRAM</h3><p>HBM3E, HBM4, base-die interfaces, vertical interconnects, known-good-die strategy, stack assembly, and compound yield.</p></div>
-          </article>
-          <article class="focus-item">
-            <span class="focus-code">P01</span>
-            <div><h3>Advanced packaging + chiplets</h3><p>RDL and silicon interposers, fine-pitch assembly, die-to-wafer integration, package-aware architecture, and system-level co-design.</p></div>
-          </article>
-          <article class="focus-item">
-            <span class="focus-code">P02</span>
-            <div><h3>Signal, power + thermal integrity</h3><p>High-speed interfaces, power delivery, warpage, thermal paths, thermal-mechanical reliability, and the operating limits of dense packages.</p></div>
-          </article>
-          <article class="focus-item">
-            <span class="focus-code">Q01</span>
-            <div><h3>Test, repair + reliability</h3><p>Stack-level test, observability, redundancy, failure isolation, qualification, and evidence needed to convert a design into a dependable product.</p></div>
-          </article>
-          <article class="focus-item">
-            <span class="focus-code">F01</span>
-            <div><h3>Hybrid bonding + future 3D memory</h3><p>Die-to-wafer copper hybrid bonding and emerging 3D DRAM architectures as future interconnect and density paths.</p></div>
-          </article>
-        </div>
-      </section>
+      <div class="system-rail" aria-label="SF Memory technical focus">
+        <article><span>01</span><h3>Memory architecture</h3></article>
+        <article><span>02</span><h3>Control + telemetry</h3></article>
+        <article><span>03</span><h3>Advanced packaging</h3></article>
+        <article><span>04</span><h3>Test + reliability</h3></article>
+      </div>
+    </section>
 
-      <section aria-labelledby="manufacturing-title">
-        <div class="manufacturing">
-          <div class="manufacturing-copy">
-            <p class="section-label">Domestic manufacturing</p>
-            <h2 id="manufacturing-title">Manufacturing is the destination—not the opening move.</h2>
-            <p>The long-term objective is differentiated AI-memory production in California. The near-term strategy is to buy qualified capacity, co-develop where it creates leverage, and reserve irreversible manufacturing capital until the evidence supports it.</p>
-          </div>
+    <section class="vision" id="vision">
+      <p class="section-label">Built in stages</p>
+      <h2>Start with design.<br>Build toward production.</h2>
+      <div class="vision-line" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="vision-points">
+        <article>
+          <p class="point-status">At work today</p>
+          <h3>Design intelligence</h3>
+          <p>Commercial memory-chip-design RL environments and proprietary Verilog for advanced memory and processor techniques.</p>
+        </article>
+        <article>
+          <p class="point-status">What comes next</p>
+          <h3>AI memory systems</h3>
+          <p>Subsystem architecture, package-aware validation, test, repair, and telemetry for valuable AI workloads.</p>
+        </article>
+        <article class="future-point">
+          <p class="point-status">Long-term objective</p>
+          <h3>Built in America</h3>
+          <p>Differentiated AI-memory packaging and manufacturing capacity in California, earned through product and demand proof.</p>
+        </article>
+      </div>
+      <p class="company-note">Customer identities and commercial terms are not publicly disclosed. No production-silicon performance claim is made.</p>
+    </section>
 
-          <ol class="gate-list">
-            <li><span>01</span><div><strong>Demand</strong><p>Paid customer problems, repeatable qualification paths, and credible volume requirements.</p></div></li>
-            <li><span>02</span><div><strong>Yield</strong><p>Package, interconnect, test, repair, reliability, and known-good-unit economics.</p></div></li>
-            <li><span>03</span><div><strong>Infrastructure</strong><p>Power, water, permitting, workforce, suppliers, security, and schedule.</p></div></li>
-            <li><span>04</span><div><strong>Capital</strong><p>Public incentives, project finance, strategic capital, and a board-approved return case.</p></div></li>
-          </ol>
-        </div>
-      </section>
+    <section class="closing">
+      <p class="section-label">SF Memory</p>
+      <h2>Build the memory layer AI will need next.</h2>
+      <a class="closing-link" href="#top"><span>Return to the system</span><i aria-hidden="true">↑</i></a>
+    </section>
+  </main>
 
-      <section class="close">
-        <div>
-          <p class="section-label">SF Memory</p>
-          <h2>Build the memory layer AI cannot scale without.</h2>
-          <div class="hero-actions">
-            <a class="button primary" href="#top">Return to the platform</a>
-            <a class="button" href="https://sfmemory.net/">Read the original research brief ↗</a>
-          </div>
-        </div>
-        <p class="close-note">SF Memory is interested in technical conversations with accelerator teams, memory-system architects, packaging specialists, strategic investors, and public-sector manufacturing stakeholders.</p>
-      </section>
-
-      <footer>
-        <span>© 2026 SF Memory · Current, proposed, and future-objective labels distinguish company status.</span>
-        <a href="https://sfmemory.net/">sfmemory.net ↗</a>
-      </footer>
-    </div>
-  </div>
+  <footer>
+    <a class="wordmark" href="#top"><span>SF</span> MEMORY</a>
+    <p>San Francisco, California · © 2026</p>
+  </footer>
 </body>
 </html>
