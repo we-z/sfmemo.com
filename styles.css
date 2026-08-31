@@ -1656,6 +1656,13 @@ footer .wordmark {
   transform: translateX(var(--approach-orbit-shift-x));
 }
 
+@media (min-width: 781px) {
+  .approach-orbit {
+    --approach-orbit-size: clamp(38rem, 56vw, 58rem);
+    --approach-orbit-shift-x: clamp(5rem, 10vw, 14rem);
+  }
+}
+
 .orbit-guides path,
 .orbit-guides circle,
 .orbit-path {
