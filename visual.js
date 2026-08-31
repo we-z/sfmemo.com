@@ -38,82 +38,6 @@ themeToggle?.addEventListener("click", () => {
 });
 
 const approach = document.querySelector(".approach-editorial");
-const approachTrack = approach?.querySelector(".approach-track");
-const approachList = approach?.querySelector(".approach-list");
-const approachItems = [...document.querySelectorAll(".approach-item")];
-const approachStageThresholds = [0, 0.26, 0.52, 0.78];
-let activeApproachIndex = -1;
-
-function setApproachItem(nextIndex) {
-  if (!approachItems.length || nextIndex === activeApproachIndex) return;
-  activeApproachIndex = nextIndex;
-
-  approachItems.forEach((item, index) => {
-    const isOpen = index === nextIndex;
-    const trigger = item.querySelector(".approach-trigger");
-    const panel = item.querySelector(".approach-panel");
-    item.dataset.open = String(isOpen);
-    trigger?.setAttribute("aria-expanded", String(isOpen));
-    panel?.setAttribute("aria-hidden", String(!isOpen));
-  });
-
-  if (approach) approach.dataset.active = String(nextIndex);
-}
-
-function getApproachScrollRange() {
-  if (!approachTrack || !approachList) {
-    return { indicatorStart: 0, stageStart: 0, end: 1 };
-  }
-  const trackTop = approachTrack.getBoundingClientRect().top + window.scrollY;
-  const stickyTop = Number.parseFloat(getComputedStyle(approachList).top) || 0;
-  const indicatorStart = trackTop - Math.max(stickyTop, window.innerHeight * 0.72);
-  const stageStart = trackTop - stickyTop;
-  const stickyFootprint = Math.max(approachList.offsetHeight, window.innerHeight * 0.72);
-  const end = Math.max(stageStart + 1, trackTop + approachTrack.offsetHeight - stickyFootprint - stickyTop);
-  return { indicatorStart, stageStart, end };
-}
-
-function updateApproachFromScroll(scrollPosition = window.scrollY) {
-  if (!approachItems.length) return;
-  const { indicatorStart, stageStart, end } = getApproachScrollRange();
-  const indicatorProgress = Math.min(1, Math.max(0, (scrollPosition - indicatorStart) / (end - indicatorStart)));
-  const stageProgress = Math.min(1, Math.max(0, (scrollPosition - stageStart) / (end - stageStart)));
-  const stage = approachStageThresholds.reduce(
-    (current, threshold, index) => stageProgress >= threshold ? index : current,
-    0,
-  );
-  approach?.style.setProperty("--approach-stage-progress", indicatorProgress.toFixed(4));
-  setApproachItem(stage);
-}
-
-function scrollToApproachItem(index) {
-  const { stageStart: rangeStart, end } = getApproachScrollRange();
-  const thresholdStart = approachStageThresholds[index] ?? 0;
-  const thresholdEnd = approachStageThresholds[index + 1] ?? 1;
-  const stagePosition = thresholdStart + (thresholdEnd - thresholdStart) * 0.5;
-  window.scrollTo({
-    top: rangeStart + (end - rangeStart) * stagePosition,
-    behavior: reduceMotion ? "auto" : "smooth",
-  });
-}
-
-approachItems.forEach((item, index) => {
-  const trigger = item.querySelector(".approach-trigger");
-  trigger?.addEventListener("click", () => scrollToApproachItem(index));
-  trigger?.addEventListener("keydown", (event) => {
-    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
-    event.preventDefault();
-    const nextIndex = event.key === "Home"
-      ? 0
-      : event.key === "End"
-        ? approachItems.length - 1
-        : (index + (event.key === "ArrowDown" ? 1 : -1) + approachItems.length) % approachItems.length;
-    approachItems[nextIndex].querySelector(".approach-trigger")?.focus();
-    scrollToApproachItem(nextIndex);
-  });
-});
-
-setApproachItem(0);
 
 const vision = document.querySelector(".vision-editorial");
 const visionRouteItems = [...document.querySelectorAll(".vision-step")];
@@ -147,7 +71,6 @@ function setMotionVariable(name, value, target = motionRoot) {
 function updateScrollMotion() {
   motionFrame = 0;
   const targetScroll = Math.max(0, window.scrollY);
-  updateApproachFromScroll(targetScroll);
 
   if (reduceMotion) {
     motionRoot.classList.remove("scroll-motion");
@@ -281,8 +204,6 @@ const sceneResizeObserver = new ResizeObserver(() => scheduleScrollMotion(true))
   motionScenes.hero,
   motionScenes.hero?.querySelector(".hero-copy"),
   motionScenes.approach,
-  approachTrack,
-  approachList,
   motionScenes.vision,
   motionScenes.closing,
 ]
