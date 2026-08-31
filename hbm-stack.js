@@ -119,11 +119,11 @@ if (hero && surface && canvas) {
     baseDie.position.y = -1.05;
     stackRoot.add(baseDie);
 
-    const layerCount = 8;
+    const layerCount = 16;
     const layerWidth = 4.94;
     const layerDepth = 2.5;
-    const layerHeight = 0.15;
-    const layerPitch = 0.325;
+    const layerHeight = 0.105;
+    const layerPitch = 0.205;
     const firstLayerY = -0.78;
     const layerGeometry = createSlab(layerWidth, layerDepth, layerHeight, 0.11, 0.68);
     const layerMaterials = [];
@@ -366,6 +366,10 @@ if (hero && surface && canvas) {
     const layerActivity = new Float32Array(layerCount);
     const tempColor = new THREE.Color();
     const tempPoint = new THREE.Vector3();
+    const layerIdleColor = new THREE.Color(0x12345b);
+    const layerBoostColor = new THREE.Color(0x267ee5);
+    const layerIdleEmissive = new THREE.Color(0x0a2647);
+    const layerBoostEmissive = new THREE.Color(0x2a7ee0);
 
     function applyHBMTheme(light) {
       themeLight = light;
@@ -382,9 +386,13 @@ if (hero && surface && canvas) {
       interposerMaterial.color.set(light ? 0x1c5590 : 0x0d3159);
       baseMaterial.color.set(light ? 0x1f64ad : 0x123d6c);
       seamMaterial.color.set(light ? 0x0c2946 : 0x02060b);
+      layerIdleColor.set(light ? 0x1d5fa8 : 0x12345b);
+      layerBoostColor.set(light ? 0x3c8ee8 : 0x267ee5);
+      layerIdleEmissive.set(light ? 0x0e3f78 : 0x0a2647);
+      layerBoostEmissive.set(light ? 0x2372c4 : 0x2a7ee0);
       layerMaterials.forEach((material) => {
-        material.color.set(light ? 0x1d5fa8 : 0x12345b);
-        material.emissive.set(light ? 0x0e3f78 : 0x0a2647);
+        material.color.copy(layerIdleColor);
+        material.emissive.copy(layerIdleEmissive);
       });
       edgeIdle.set(light ? 0x356ca6 : 0x6a93bd);
       edgeActive.set(light ? 0x8abcf2 : 0xc7e2ff);
@@ -648,10 +656,14 @@ if (hero && surface && canvas) {
 
       for (let index = 0; index < layerCount; index += 1) {
         const activity = clamp(layerActivity[index], 0, 1);
-        const layerGlow = clamp(activity + boostAmount * 0.22, 0, 1);
+        const layerGlow = clamp(activity + boostAmount * 0.85, 0, 1);
         tempColor.copy(edgeIdle).lerp(edgeActive, layerGlow);
         edgeStrips.setColorAt(index, tempColor);
-        layerMaterials[index].emissiveIntensity = (themeLight ? 0.08 : 0.14) + activity * 0.48 + boostAmount * 0.22;
+        layerMaterials[index].color.copy(layerIdleColor).lerp(layerBoostColor, boostAmount);
+        layerMaterials[index].emissive.copy(layerIdleEmissive).lerp(layerBoostEmissive, boostAmount);
+        layerMaterials[index].emissiveIntensity = (themeLight ? 0.08 : 0.14)
+          + activity * 0.48
+          + boostAmount * (themeLight ? 0.62 : 0.9);
       }
       edgeStrips.instanceColor.needsUpdate = true;
 
@@ -659,7 +671,7 @@ if (hero && surface && canvas) {
       routeMaterial.opacity = (themeLight ? 0.64 : 0.27) + inspectAmount * 0.1 + boostAmount * 0.18;
       particleMaterial.opacity = (themeLight ? 0.95 : 0.9) + boostAmount * 0.05;
       particleHaloMaterial.opacity = (themeLight ? 0.28 : 0.2) + boostAmount * 0.5;
-      rimLight.intensity = (themeLight ? 23 : 31) + inspectAmount * 6 + boostAmount * 7;
+      rimLight.intensity = (themeLight ? 23 : 31) + inspectAmount * 6 + boostAmount * 13;
 
       renderer.render(scene, camera);
       if (!force && !reduceMotion && visible && !document.hidden) frameId = requestAnimationFrame(render);
@@ -674,7 +686,7 @@ if (hero && surface && canvas) {
         || (!finePointer && window.innerWidth <= 960 && window.innerHeight <= 480);
       touchNavigation = window.innerWidth <= 780 || touchNavigationPreference.matches;
       surface.dataset.touchNavigation = String(touchNavigation);
-      stackRoot.position.y = mobile ? 1.05 : 0;
+      stackRoot.position.y = mobile ? 0.68 : -0.38;
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.05 : finePointer ? 1.3 : 1.15));
       renderer.setSize(bounds.width, bounds.height, false);
 
