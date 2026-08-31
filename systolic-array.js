@@ -391,6 +391,8 @@ if (surface && canvas) {
     const boostBlueLight = new THREE.Color(0x2b78c6);
     const boostTopDark = new THREE.Color(0x77c6ff);
     const boostTopLight = new THREE.Color(0x3d8fd0);
+    const boostHbmTopDark = new THREE.Color(0x3e8bc7);
+    const boostHbmTopLight = new THREE.Color(0x377eb5);
     const boostSubstrateDark = new THREE.Color(0x123b69);
     const boostSubstrateLight = new THREE.Color(0x397db3);
     const boostInterposerDark = new THREE.Color(0x246ea9);
@@ -507,7 +509,7 @@ if (surface && canvas) {
         .lerp(lightTheme ? boostBlueLight : boostBlueDark, boost * 0.72);
       hbmTopMaterial.color
         .setHex(lightTheme ? 0x255f88 : 0x123b59)
-        .lerp(lightTheme ? 0x377eb5 : 0x3e8bc7, boost * 0.46);
+        .lerp(lightTheme ? boostHbmTopLight : boostHbmTopDark, boost * 0.46);
       hbmViaMaterial.color
         .setHex(lightTheme ? 0x9c6f37 : 0xc39252)
         .lerp(boostGold, boost * 0.46);

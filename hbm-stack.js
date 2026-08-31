@@ -219,7 +219,7 @@ if (hero && surface && canvas) {
     });
 
     const tsvLaneX = [1.04, 1.31, 1.58, 1.85];
-    const tsvLaneZ = 1.16;
+    const tsvLaneZ = 1.14;
     const peripheralBlocks = tsvLaneX.map((x, index) => ({
       x,
       z: 0.56,

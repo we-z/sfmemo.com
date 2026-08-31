@@ -205,7 +205,7 @@ if (mapFigure && mapCanvas && mapContext) {
 
     const cycle = reducedMotion ? 1 : (timestamp / 5200) % 1;
     const trunkProgress = reducedMotion ? 1 : clamp(cycle / 0.24);
-    const branchProgress = reducedMotion ? 1 : clamp((cycle - 0.2) / 0.68);
+    const branchProgress = reducedMotion ? 1 : clamp((cycle - 0.26) / 0.62);
     drawRouteSegment(trunk, trunkProgress, lightTheme, true);
     branches.forEach((geometry) => drawRouteSegment(geometry, branchProgress, lightTheme));
 
