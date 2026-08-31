@@ -218,12 +218,15 @@ if (hero && surface && canvas) {
       });
     });
 
-    const peripheralBlocks = [
-      { x: 1.2, z: -0.57, width: 0.82, depth: 0.24, tone: 0 },
-      { x: 1.2, z: -0.19, width: 0.82, depth: 0.24, tone: 1 },
-      { x: 1.2, z: 0.19, width: 0.82, depth: 0.24, tone: 0 },
-      { x: 1.2, z: 0.57, width: 0.82, depth: 0.24, tone: 1 },
-    ];
+    const tsvLaneX = [1.04, 1.31, 1.58, 1.85];
+    const tsvLaneZ = 1.16;
+    const peripheralBlocks = tsvLaneX.map((x, index) => ({
+      x,
+      z: 0.56,
+      width: 0.2,
+      depth: 0.3,
+      tone: index % 2,
+    }));
     const surfaceFeatures = [
       ...memoryBanks.map((bank) => ({ ...bank, kind: "bank" })),
       ...peripheralBlocks.map((block) => ({ ...block, kind: "phy" })),
@@ -261,7 +264,7 @@ if (hero && surface && canvas) {
     topFeatureMesh.instanceColor.needsUpdate = true;
     stackRoot.add(topFeatureMesh);
 
-    const topTraceY = topDieY + topPassivationHeight + 0.011;
+    const topTraceY = topDieY + topPassivationHeight + 0.009;
     const topGridSegments = [];
     const topRdlSegments = [];
     const addGridTrace = (x1, z1, x2, z2) => {
@@ -309,11 +312,9 @@ if (hero && surface && canvas) {
       addGridTrace(block.x + block.width / 6, block.z - block.depth / 2, block.x + block.width / 6, block.z + block.depth / 2);
     });
 
-    // Four short redistribution paths terminate directly at the TSV pads.
-    [1.04, 1.31, 1.58, 1.85].forEach((x, index) => {
-      const sourceX = 0.9 + index * 0.18;
-      addRdlTrace(sourceX, 0.69, x, 0.84);
-      addRdlTrace(x, 0.84, x, 1.218);
+    // One unambiguous redistribution lane connects each PHY block to one TSV.
+    peripheralBlocks.forEach((block, index) => {
+      addRdlTrace(block.x, block.z + block.depth / 2, tsvLaneX[index], tsvLaneZ);
     });
 
     const topGridMaterial = new THREE.MeshStandardMaterial({
@@ -361,12 +362,7 @@ if (hero && surface && canvas) {
     // of a silicon die and a narrower exposed connector in the inter-die gap.
     // The blue slabs remain complete and the conductor visibly traverses all
     // sixteen layers without becoming a detached exterior rail.
-    const tsvColumns = [
-      { x: 1.04, z: 1.218 },
-      { x: 1.31, z: 1.218 },
-      { x: 1.58, z: 1.218 },
-      { x: 1.85, z: 1.218 },
-    ];
+    const tsvColumns = tsvLaneX.map((x) => ({ x, z: tsvLaneZ }));
     const tsvMaterial = new THREE.MeshStandardMaterial({
       color: 0xd09a43,
       metalness: 0.82,

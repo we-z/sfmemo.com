@@ -4,19 +4,21 @@ const mapContext = mapCanvas?.getContext("2d", { alpha: true });
 const mapMotionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 if (mapFigure && mapCanvas && mapContext) {
-  const routes = [
-    { destination: [-71, 43], duration: 5.1, delay: 0.04, arc: 0.13 },
-    { destination: [-58, 18], duration: 6.4, delay: 0.42, arc: 0.18 },
-    { destination: [-78, -18], duration: 5.8, delay: 0.18, arc: 0.2 },
-    { destination: [-91, 67], duration: 6.7, delay: 0.62, arc: 0.2 },
-    { destination: [-178, 62], duration: 5.4, delay: 0.34, arc: 0.16 },
-    { destination: [-205, 42], duration: 7.1, delay: 0.76, arc: 0.24 },
-    { destination: [-224, 18], duration: 6.1, delay: 0.51, arc: 0.28 },
-    { destination: [-214, -23], duration: 7.4, delay: 0.88, arc: 0.25 },
-    { destination: [-188, 4], duration: 5.6, delay: 0.27, arc: 0.16 },
-    { destination: [-116, -30], duration: 6.9, delay: 0.7, arc: 0.12 },
+  const sanFrancisco = [-122.4194, 37.7749];
+  const southBay = [-121.8863, 37.3382];
+  const mapCenter = [-122.1, 37.55];
+  const mapAngle = -6 * Math.PI / 180;
+  const outboundRoutes = [
+    { destination: [-123.55, 38.42], bend: -0.2 },
+    { destination: [-123.72, 37.56], bend: -0.08 },
+    { destination: [-123.42, 36.58], bend: 0.16 },
+    { destination: [-121.02, 38.42], bend: 0.2 },
+    { destination: [-120.62, 37.62], bend: 0.1 },
+    { destination: [-120.94, 36.42], bend: -0.18 },
+    { destination: [-122.02, 39.02], bend: -0.22 },
+    { destination: [-121.7, 35.92], bend: 0.22 },
   ];
-  const origin = [-122.4194, 37.7749];
+
   let landGeometries = [];
   let width = 1;
   let height = 1;
@@ -26,18 +28,17 @@ if (mapFigure && mapCanvas && mapContext) {
   let frame = 0;
   let lastDraw = 0;
 
-  const projectionScale = () => {
-    const heightScale = height / 72;
-    if (width < 900) return Math.min(width / 105, heightScale);
-    return Math.max(width / 150, heightScale);
-  };
+  const clamp = (value, minimum = 0, maximum = 1) => Math.min(maximum, Math.max(minimum, value));
+
+  const projectionScale = () => Math.min(width / 2.6, height / 2.4);
 
   const project = ([longitude, latitude]) => {
     const scale = projectionScale();
-    return [
-      width * 0.44 + (longitude - origin[0]) * scale,
-      height * 0.54 - (latitude - origin[1]) * scale,
-    ];
+    const rawX = (longitude - mapCenter[0]) * scale;
+    const rawY = -(latitude - mapCenter[1]) * scale;
+    const rotatedX = rawX * Math.cos(mapAngle) - rawY * Math.sin(mapAngle);
+    const rotatedY = rawX * Math.sin(mapAngle) + rawY * Math.cos(mapAngle);
+    return [width * 0.51 + rotatedX, height * 0.5 + rotatedY];
   };
 
   const quadraticPoint = (start, control, end, amount) => {
@@ -48,28 +49,26 @@ if (mapFigure && mapCanvas && mapContext) {
     ];
   };
 
-  const routeGeometry = (route) => {
-    const start = project(origin);
-    const end = project(route.destination);
-    const horizontalDistance = end[0] - start[0];
-    const headsSouth = end[1] > start[1] + height * 0.06;
+  const routeGeometry = (startCoordinate, endCoordinate, bend = 0) => {
+    const start = project(startCoordinate);
+    const end = project(endCoordinate);
+    const deltaX = end[0] - start[0];
+    const deltaY = end[1] - start[1];
+    const distance = Math.hypot(deltaX, deltaY) || 1;
+    const normalX = -deltaY / distance;
+    const normalY = deltaX / distance;
     const control = [
-      start[0] + horizontalDistance * 0.48,
-      headsSouth
-        ? Math.max(start[1], end[1]) + height * route.arc * 0.68
-        : Math.min(start[1], end[1]) - height * route.arc,
+      (start[0] + end[0]) / 2 + normalX * distance * bend,
+      (start[1] + end[1]) / 2 + normalY * distance * bend,
     ];
     return { start, control, end };
   };
 
   function traceRing(ring) {
-    let previousX = null;
     ring.forEach((coordinate, index) => {
       const [x, y] = project(coordinate);
-      const crossesDateLine = previousX !== null && Math.abs(x - previousX) > width * 0.5;
-      if (index === 0 || crossesDateLine) mapContext.moveTo(x, y);
+      if (index === 0) mapContext.moveTo(x, y);
       else mapContext.lineTo(x, y);
-      previousX = x;
     });
     mapContext.closePath();
   }
@@ -85,28 +84,50 @@ if (mapFigure && mapCanvas && mapContext) {
 
   function drawGrid(lightTheme) {
     mapContext.save();
-    mapContext.strokeStyle = lightTheme ? "rgba(41, 78, 128, 0.16)" : "rgba(91, 126, 169, 0.12)";
+    mapContext.strokeStyle = lightTheme ? "rgba(36, 75, 126, 0.16)" : "rgba(100, 139, 187, 0.12)";
     mapContext.lineWidth = 1;
     mapContext.setLineDash([2, 8]);
-    for (let longitude = -210; longitude <= -45; longitude += 15) {
-      const [x] = project([longitude, 0]);
+    for (let longitude = -124.5; longitude <= -120.2; longitude += 0.5) {
+      const start = project([longitude, 35.8]);
+      const end = project([longitude, 39.4]);
       mapContext.beginPath();
-      mapContext.moveTo(x, -height * 0.1);
-      mapContext.lineTo(x, height * 1.1);
+      mapContext.moveTo(start[0], start[1]);
+      mapContext.lineTo(end[0], end[1]);
       mapContext.stroke();
     }
-    for (let latitude = -30; latitude <= 90; latitude += 15) {
-      const [, y] = project([0, latitude]);
+    for (let latitude = 36; latitude <= 39.25; latitude += 0.5) {
+      const start = project([-124.5, latitude]);
+      const end = project([-120.2, latitude]);
       mapContext.beginPath();
-      mapContext.moveTo(-width * 0.1, y);
-      mapContext.lineTo(width * 1.1, y);
+      mapContext.moveTo(start[0], start[1]);
+      mapContext.lineTo(end[0], end[1]);
       mapContext.stroke();
     }
     mapContext.restore();
   }
 
-  function drawRouteSegment(geometry, startAmount, endAmount, lightTheme) {
-    const steps = 22;
+  function drawRouteBase(geometry, lightTheme, emphasis = false) {
+    mapContext.beginPath();
+    mapContext.moveTo(geometry.start[0], geometry.start[1]);
+    mapContext.quadraticCurveTo(
+      geometry.control[0],
+      geometry.control[1],
+      geometry.end[0],
+      geometry.end[1],
+    );
+    mapContext.strokeStyle = lightTheme
+      ? `rgba(21, 89, 197, ${emphasis ? 0.56 : 0.32})`
+      : `rgba(96, 165, 250, ${emphasis ? 0.48 : 0.26})`;
+    mapContext.lineWidth = emphasis ? 1.8 : 1.1;
+    mapContext.setLineDash([]);
+    mapContext.stroke();
+  }
+
+  function drawRouteSegment(geometry, progress, lightTheme, emphasis = false) {
+    if (progress <= 0) return;
+    const endAmount = clamp(progress);
+    const startAmount = Math.max(0, endAmount - (emphasis ? 0.22 : 0.14));
+    const steps = 24;
     mapContext.beginPath();
     for (let step = 0; step <= steps; step += 1) {
       const amount = startAmount + (endAmount - startAmount) * (step / steps);
@@ -114,11 +135,50 @@ if (mapFigure && mapCanvas && mapContext) {
       if (step === 0) mapContext.moveTo(point[0], point[1]);
       else mapContext.lineTo(point[0], point[1]);
     }
-    mapContext.strokeStyle = lightTheme ? "rgba(21, 89, 197, 0.95)" : "rgba(149, 211, 255, 0.98)";
-    mapContext.lineWidth = lightTheme ? 2.2 : 2;
-    mapContext.shadowColor = lightTheme ? "rgba(21, 89, 197, 0.32)" : "rgba(75, 156, 255, 0.68)";
-    mapContext.shadowBlur = lightTheme ? 8 : 13;
+    mapContext.strokeStyle = lightTheme ? "rgba(19, 88, 202, 0.98)" : "rgba(165, 222, 255, 0.98)";
+    mapContext.lineWidth = emphasis ? 2.6 : 2;
+    mapContext.shadowColor = lightTheme ? "rgba(21, 89, 197, 0.38)" : "rgba(75, 156, 255, 0.82)";
+    mapContext.shadowBlur = emphasis ? 15 : 11;
     mapContext.stroke();
+    mapContext.shadowBlur = 0;
+
+    const head = quadraticPoint(geometry.start, geometry.control, geometry.end, endAmount);
+    mapContext.beginPath();
+    mapContext.arc(head[0], head[1], emphasis ? 3.4 : 2.5, 0, Math.PI * 2);
+    mapContext.fillStyle = lightTheme ? "#1559c5" : "#d7f1ff";
+    mapContext.fill();
+  }
+
+  function drawNode(point, label, sublabel, lightTheme, align = "left") {
+    const [x, y] = point;
+    const primary = lightTheme ? "#1559c5" : "#9fd7ff";
+    const text = lightTheme ? "rgba(19, 48, 84, 0.9)" : "rgba(221, 236, 252, 0.9)";
+    const muted = lightTheme ? "rgba(34, 69, 111, 0.72)" : "rgba(169, 190, 216, 0.72)";
+    const direction = align === "right" ? -1 : 1;
+    const textAlign = align === "right" ? "right" : "left";
+    const computed = getComputedStyle(mapFigure);
+    const labelSize = Math.max(9, Math.min(12, width * 0.018));
+
+    mapContext.beginPath();
+    mapContext.arc(x, y, 11, 0, Math.PI * 2);
+    mapContext.strokeStyle = lightTheme ? "rgba(21, 89, 197, 0.35)" : "rgba(96, 165, 250, 0.42)";
+    mapContext.lineWidth = 1;
+    mapContext.stroke();
+    mapContext.beginPath();
+    mapContext.arc(x, y, 4, 0, Math.PI * 2);
+    mapContext.fillStyle = primary;
+    mapContext.shadowColor = primary;
+    mapContext.shadowBlur = 12;
+    mapContext.fill();
+    mapContext.shadowBlur = 0;
+
+    mapContext.textAlign = textAlign;
+    mapContext.font = `600 ${labelSize}px ${computed.fontFamily}`;
+    mapContext.fillStyle = text;
+    mapContext.fillText(label, x + direction * 16, y - 10);
+    mapContext.font = `500 ${Math.max(8, labelSize - 2)}px ${computed.fontFamily}`;
+    mapContext.fillStyle = muted;
+    mapContext.fillText(sublabel, x + direction * 16, y + 8);
   }
 
   function draw(timestamp = 0) {
@@ -129,65 +189,35 @@ if (mapFigure && mapCanvas && mapContext) {
     const lightTheme = document.documentElement.dataset.theme === "light";
     mapContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     mapContext.clearRect(0, 0, width, height);
-    const [originX, originY] = project(origin);
-    mapContext.save();
-    mapContext.translate(originX, originY);
-    mapContext.rotate(-8 * Math.PI / 180);
-    mapContext.translate(-originX, -originY);
 
     drawGrid(lightTheme);
-
     traceLand();
-    mapContext.fillStyle = lightTheme ? "rgba(21, 89, 197, 0.13)" : "rgba(48, 83, 126, 0.3)";
-    mapContext.strokeStyle = lightTheme ? "rgba(39, 78, 130, 0.62)" : "rgba(142, 174, 214, 0.58)";
+    mapContext.fillStyle = lightTheme ? "rgba(21, 89, 197, 0.12)" : "rgba(43, 78, 120, 0.32)";
+    mapContext.strokeStyle = lightTheme ? "rgba(38, 76, 126, 0.6)" : "rgba(142, 174, 214, 0.6)";
     mapContext.lineWidth = lightTheme ? 1.2 : 1;
     mapContext.fill("evenodd");
     mapContext.stroke();
 
-    routes.forEach((route) => {
-      const geometry = routeGeometry(route);
-      mapContext.beginPath();
-      mapContext.moveTo(geometry.start[0], geometry.start[1]);
-      mapContext.quadraticCurveTo(geometry.control[0], geometry.control[1], geometry.end[0], geometry.end[1]);
-      mapContext.strokeStyle = lightTheme ? "rgba(21, 89, 197, 0.34)" : "rgba(96, 165, 250, 0.25)";
-      mapContext.lineWidth = 1.15;
-      mapContext.shadowBlur = 0;
-      mapContext.stroke();
+    const trunk = routeGeometry(sanFrancisco, southBay, -0.11);
+    const branches = outboundRoutes.map((route) => routeGeometry(southBay, route.destination, route.bend));
+    drawRouteBase(trunk, lightTheme, true);
+    branches.forEach((geometry) => drawRouteBase(geometry, lightTheme));
 
-      if (reducedMotion) return;
-      const progress = ((timestamp / 1000 / route.duration) + route.delay) % 1;
-      drawRouteSegment(geometry, Math.max(0, progress - 0.105), progress, lightTheme);
-    });
-    mapContext.restore();
+    const cycle = reducedMotion ? 1 : (timestamp / 5200) % 1;
+    const trunkProgress = reducedMotion ? 1 : clamp(cycle / 0.24);
+    const branchProgress = reducedMotion ? 1 : clamp((cycle - 0.2) / 0.68);
+    drawRouteSegment(trunk, trunkProgress, lightTheme, true);
+    branches.forEach((geometry) => drawRouteSegment(geometry, branchProgress, lightTheme));
 
-    const halo = reducedMotion ? 14 : 13 + Math.sin(timestamp * 0.0024) * 3;
-    mapContext.beginPath();
-    mapContext.arc(originX, originY, halo, 0, Math.PI * 2);
-    mapContext.strokeStyle = lightTheme ? "rgba(21, 89, 197, 0.4)" : "rgba(96, 165, 250, 0.46)";
-    mapContext.lineWidth = 1;
-    mapContext.stroke();
-
-    mapContext.beginPath();
-    mapContext.arc(originX, originY, 4.2, 0, Math.PI * 2);
-    mapContext.fillStyle = lightTheme ? "#1559c5" : "#a7dcff";
-    mapContext.shadowColor = lightTheme ? "rgba(21, 89, 197, 0.46)" : "rgba(96, 165, 250, 0.86)";
-    mapContext.shadowBlur = 14;
-    mapContext.fill();
-    mapContext.shadowBlur = 0;
-
-    const computed = getComputedStyle(mapFigure);
-    const labelSize = Math.max(10, Math.min(14, width * 0.012));
-    mapContext.font = `500 ${labelSize}px ${computed.fontFamily}`;
-    mapContext.fillStyle = lightTheme ? "rgba(19, 48, 84, 0.86)" : "rgba(212, 229, 249, 0.82)";
-    mapContext.letterSpacing = "0.08em";
-    mapContext.fillText("SAN FRANCISCO BAY AREA", originX + 14, originY - 15);
+    drawNode(project(sanFrancisco), "SAN FRANCISCO", "OPERATIONS", lightTheme, "right");
+    drawNode(project(southBay), "SOUTH BAY", "OUTBOUND NETWORK", lightTheme, "left");
   }
 
   function resizeMap() {
     const bounds = mapFigure.getBoundingClientRect();
     width = Math.max(1, Math.round(bounds.width));
     height = Math.max(1, Math.round(bounds.height));
-    pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+    pixelRatio = Math.min(window.devicePixelRatio || 1, 1.6);
     mapCanvas.width = Math.round(width * pixelRatio);
     mapCanvas.height = Math.round(height * pixelRatio);
     mapCanvas.style.width = `${width}px`;

@@ -3344,12 +3344,12 @@ html[data-theme="light"] .vision-compact .vision-chevron {
   display: block;
   width: 100%;
   height: 100%;
-  cursor: grab;
+  cursor: pointer;
   outline: 0;
   touch-action: pan-y pinch-zoom;
 }
 
-#systolic-canvas:active { cursor: grabbing; }
+#systolic-canvas:active { cursor: pointer; }
 .approach-systolic.is-unavailable { min-height: 18rem; }
 
 html[data-theme="light"] .approach-systolic::before {
@@ -3738,4 +3738,64 @@ html[data-theme="light"] .vision-map figcaption { color: rgba(31, 66, 108, 0.72)
 
 @media (prefers-reduced-motion: reduce) {
   .vision-map { transform: none !important; opacity: 1 !important; }
+}
+
+/* Canonical responsive Vision composition. */
+.vision.vision-editorial.vision-compact {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(24rem, 0.82fr) minmax(34rem, 1.18fr);
+  gap: clamp(3rem, 6vw, 6.5rem);
+  padding-top: clamp(6rem, 10vw, 9rem);
+  padding-bottom: clamp(6rem, 10vw, 9rem);
+  align-items: center;
+}
+
+.vision-compact .vision-heading {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0;
+  align-items: flex-start;
+  margin: 0;
+}
+
+.vision-compact .vision-heading .section-label {
+  margin: 0 0 clamp(1.75rem, 2.5vw, 2.75rem);
+}
+
+.vision-compact .vision-heading h2 {
+  width: auto;
+  max-width: 8.5ch;
+  margin: 0;
+  font-size: clamp(4.8rem, 6.4vw, 7.4rem);
+}
+
+.vision-compact .vision-heading > p:last-child {
+  max-width: 31rem;
+  margin: 2rem 0 0;
+}
+
+.vision-map {
+  width: 100%;
+  min-width: 0;
+  height: clamp(28rem, 36vw, 36rem);
+  align-self: center;
+  transform: none !important;
+}
+
+@media (max-width: 70rem) {
+  .vision.vision-editorial.vision-compact {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3rem;
+  }
+
+  .vision-compact .vision-heading { max-width: 48rem; }
+  .vision-map { height: clamp(24rem, 80vw, 32rem); }
+}
+
+@media (max-width: 780px) {
+  .vision.vision-editorial.vision-compact { gap: 2.5rem; }
+  .vision-compact .vision-heading h2 { font-size: clamp(4rem, 17vw, 5.2rem); }
+  .vision-map { height: clamp(23rem, 105vw, 29rem); }
 }

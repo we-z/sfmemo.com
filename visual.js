@@ -1,6 +1,6 @@
-import "./hbm-stack.js?v=39";
-import "./systolic-array.js?v=3";
-import "./vision-map.js?v=1";
+import "./hbm-stack.js?v=40";
+import "./systolic-array.js?v=4";
+import "./vision-map.js?v=2";
 
 const hero = document.querySelector(".hero-horizon");
 const heroSurface = hero?.querySelector(".hero-visual") ?? hero;
@@ -157,9 +157,7 @@ function updateScrollMotion() {
     });
 
     const mapReveal = smoothstep(clamp01((visionReveal - 0.18) / 0.82));
-    setMotionVariable("--vision-map-y", px((1 - mapReveal) * 32 * amplitude), motionScenes.visionMap);
     setMotionVariable("--vision-map-opacity", unit(0.08 + mapReveal * 0.92), motionScenes.visionMap);
-    setMotionVariable("--vision-map-scale", unit(0.985 + mapReveal * 0.015), motionScenes.visionMap);
   }
 
   if (motionScenes.closing) {
