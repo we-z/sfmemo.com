@@ -85,10 +85,6 @@ if (hero && surface && canvas) {
     rimLight.position.set(4.4, 1.8, 3.8);
     scene.add(rimLight);
 
-    const copperLight = new THREE.PointLight(0xc69258, 9, 8, 2);
-    copperLight.position.set(2.2, 0.8, 4.5);
-    scene.add(copperLight);
-
     const substrateMaterial = new THREE.MeshStandardMaterial({
       color: 0x09111d,
       metalness: 0.48,
@@ -367,9 +363,9 @@ if (hero && surface && canvas) {
     const tempColor = new THREE.Color();
     const tempPoint = new THREE.Vector3();
     const layerIdleColor = new THREE.Color(0x12345b);
-    const layerBoostColor = new THREE.Color(0x267ee5);
+    const layerBoostColor = new THREE.Color(0x1c5fae);
     const layerIdleEmissive = new THREE.Color(0x0a2647);
-    const layerBoostEmissive = new THREE.Color(0x2a7ee0);
+    const layerBoostEmissive = new THREE.Color(0x154d91);
 
     function applyHBMTheme(light) {
       themeLight = light;
@@ -380,16 +376,15 @@ if (hero && surface && canvas) {
       keyLight.color.set(light ? 0xffffff : 0xf4f8ff);
       keyLight.intensity = light ? 4.2 : 4.6;
       rimLight.color.set(light ? 0x1769d2 : 0x4389ff);
-      copperLight.intensity = light ? 7 : 9;
 
       substrateMaterial.color.set(light ? 0x173451 : 0x09111d);
       interposerMaterial.color.set(light ? 0x1c5590 : 0x0d3159);
       baseMaterial.color.set(light ? 0x1f64ad : 0x123d6c);
       seamMaterial.color.set(light ? 0x0c2946 : 0x02060b);
       layerIdleColor.set(light ? 0x1d5fa8 : 0x12345b);
-      layerBoostColor.set(light ? 0x3c8ee8 : 0x267ee5);
+      layerBoostColor.set(light ? 0x2f75bc : 0x1c5fae);
       layerIdleEmissive.set(light ? 0x0e3f78 : 0x0a2647);
-      layerBoostEmissive.set(light ? 0x2372c4 : 0x2a7ee0);
+      layerBoostEmissive.set(light ? 0x1c5fa5 : 0x154d91);
       layerMaterials.forEach((material) => {
         material.color.copy(layerIdleColor);
         material.emissive.copy(layerIdleEmissive);
@@ -663,7 +658,7 @@ if (hero && surface && canvas) {
         layerMaterials[index].emissive.copy(layerIdleEmissive).lerp(layerBoostEmissive, boostAmount);
         layerMaterials[index].emissiveIntensity = (themeLight ? 0.08 : 0.14)
           + activity * 0.48
-          + boostAmount * (themeLight ? 0.62 : 0.9);
+          + boostAmount * (themeLight ? 0.38 : 0.52);
       }
       edgeStrips.instanceColor.needsUpdate = true;
 
@@ -671,7 +666,7 @@ if (hero && surface && canvas) {
       routeMaterial.opacity = (themeLight ? 0.64 : 0.27) + inspectAmount * 0.1 + boostAmount * 0.18;
       particleMaterial.opacity = (themeLight ? 0.95 : 0.9) + boostAmount * 0.05;
       particleHaloMaterial.opacity = (themeLight ? 0.28 : 0.2) + boostAmount * 0.5;
-      rimLight.intensity = (themeLight ? 23 : 31) + inspectAmount * 6 + boostAmount * 13;
+      rimLight.intensity = (themeLight ? 23 : 31) + inspectAmount * 6 + boostAmount * 9;
 
       renderer.render(scene, camera);
       if (!force && !reduceMotion && visible && !document.hidden) frameId = requestAnimationFrame(render);
