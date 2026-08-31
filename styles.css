@@ -848,7 +848,8 @@ footer p { margin: 0; }
 
   .closing .section-label,
   .closing h2,
-  .closing-link { grid-column: 1; grid-row: auto; }
+  .closing-link,
+  .closing-word-reveal { grid-column: 1; grid-row: auto; }
   .closing-link { min-height: 7rem; }
 
   footer {
@@ -1392,8 +1393,8 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   }
 
   .hero-horizon h1 {
-    font-size: clamp(4.35rem, 16.8vw, 6.4rem);
-    line-height: 0.94;
+    font-size: clamp(4.75rem, 18vw, 6.6rem);
+    line-height: 0.9;
   }
 
   .hero-meta {
@@ -1416,7 +1417,7 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   .site-header nav a { font-size: 0.8rem; }
   .hero.hero-horizon { padding-top: calc(7.7rem + env(safe-area-inset-top, 0px)); }
   .hero-horizon .eyebrow { margin-bottom: 2rem; font-size: 0.65rem; }
-  .hero-horizon h1 { font-size: clamp(4rem, 18vw, 4.8rem); }
+  .hero-horizon h1 { font-size: clamp(4.6rem, 21vw, 5.25rem); }
   .hero-meta { margin-top: 2.3rem; }
 }
 
@@ -2300,20 +2301,25 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   isolation: isolate;
 }
 
-.closing::before {
-  content: "SF MEMORY";
-  position: absolute;
-  z-index: -2;
-  right: -0.055em;
-  bottom: -0.12em;
-  color: var(--blue-2);
-  font-size: clamp(8rem, 20vw, 22rem);
-  font-weight: 400;
-  letter-spacing: -0.08em;
-  line-height: 0.78;
-  opacity: var(--closing-word-opacity, 0.025);
+.closing-word-reveal {
+  height: clamp(7rem, 16vw, 15rem);
+  grid-column: 1 / -1;
+  margin-top: clamp(1.5rem, 4vh, 3rem);
+  overflow: hidden;
   pointer-events: none;
-  transform: translate3d(var(--closing-word-x, 0px), 0, 0) scale(var(--closing-word-scale, 1));
+}
+
+.closing-word-reveal span {
+  display: block;
+  width: max-content;
+  margin-left: auto;
+  color: var(--blue-2);
+  font-size: clamp(7rem, 18vw, 19rem);
+  font-weight: 400;
+  letter-spacing: -0.07em;
+  line-height: 0.78;
+  opacity: var(--closing-word-opacity, 0.02);
+  transform: translate3d(var(--closing-word-x, 0px), var(--closing-word-y, 110%), 0) scale(var(--closing-word-scale, 0.94));
   transform-origin: right bottom;
   white-space: nowrap;
 }
@@ -2413,7 +2419,11 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   .hero-visual-label { display: none; }
   .vision-stages::after { width: 34%; }
   .closing { min-height: 78svh; }
-  .closing::before { font-size: 29vw; }
+  .closing-word-reveal {
+    height: clamp(6.5rem, 29vw, 8.5rem);
+    margin-top: 0.25rem;
+  }
+  .closing-word-reveal span { font-size: clamp(6.5rem, 29vw, 8.5rem); }
 }
 
 @media (min-width: 521px) and (max-width: 780px) and (orientation: portrait) {
@@ -2421,7 +2431,7 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   .hero-frame { min-height: max(100svh, 60rem); }
   .hero-frame { grid-template-rows: auto clamp(20rem, 36svh, 24rem); }
   .hero-horizon .eyebrow { margin-bottom: 1.5rem; }
-  .hero-horizon h1 { font-size: clamp(4.6rem, 14vw, 5.75rem); }
+  .hero-horizon h1 { font-size: clamp(5.2rem, 15.5vw, 6.5rem); }
   .hero-meta { gap: 1.2rem; margin-top: 1.8rem; }
   .hero-visual-label { display: none; }
 }
@@ -2500,7 +2510,7 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   .hero-frame { min-height: max(100svh, 50rem); }
   .hero-frame { padding-top: calc(6.4rem + env(safe-area-inset-top, 0px)); }
   .hero-horizon .eyebrow { margin-bottom: 1.2rem; }
-  .hero-horizon h1 { font-size: clamp(3.55rem, 17.5vw, 4.1rem); }
+  .hero-horizon h1 { font-size: clamp(4.25rem, 20vw, 4.6rem); }
   .hero-meta { gap: 0.9rem; margin-top: 1.45rem; }
   .hero-horizon .hero-intro { font-size: 0.9rem; line-height: 1.48; }
   .hero-link { min-height: 2.75rem; }
@@ -2526,7 +2536,8 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   .vision-trigger,
   .closing h2 span,
   .closing .section-label,
-  .closing-link {
+  .closing-link,
+  .closing-word-reveal span {
     opacity: 1 !important;
     transform: none !important;
   }
