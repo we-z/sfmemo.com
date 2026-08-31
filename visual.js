@@ -4,15 +4,20 @@ const hero = document.querySelector(".hero-horizon");
 const heroSurface = hero?.querySelector(".hero-visual") ?? hero;
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 let reduceMotion = motionPreference.matches;
-const finePointer = window.matchMedia("(pointer: fine)").matches;
 
 const approach = document.querySelector(".approach-editorial");
+const approachTrack = approach?.querySelector(".approach-track");
+const approachList = approach?.querySelector(".approach-list");
 const approachItems = [...document.querySelectorAll(".approach-item")];
 const approachWord = approach?.querySelector(".approach-watermark span");
+let activeApproachIndex = -1;
 
-function setApproachItem(nextItem, open) {
-  approachItems.forEach((item) => {
-    const isOpen = item === nextItem && open;
+function setApproachItem(nextIndex) {
+  if (!approachItems.length || nextIndex === activeApproachIndex) return;
+  activeApproachIndex = nextIndex;
+
+  approachItems.forEach((item, index) => {
+    const isOpen = index === nextIndex;
     const trigger = item.querySelector(".approach-trigger");
     const panel = item.querySelector(".approach-panel");
     item.dataset.open = String(isOpen);
@@ -20,51 +25,68 @@ function setApproachItem(nextItem, open) {
     panel?.setAttribute("aria-hidden", String(!isOpen));
   });
 
-  approach?.classList.toggle("has-selection", open);
-  if (approachWord) approachWord.textContent = open ? nextItem?.dataset.word ?? "BOUNDARY" : "BOUNDARY";
+  approach?.classList.add("has-selection");
+  if (approach) approach.dataset.active = String(nextIndex);
+  if (approachWord) approachWord.textContent = approachItems[nextIndex]?.dataset.word ?? "BOUNDARY";
+}
+
+function getApproachScrollRange() {
+  if (!approachTrack || !approachList) return { start: 0, end: 1 };
+  const trackTop = approachTrack.getBoundingClientRect().top + window.scrollY;
+  const stickyTop = Number.parseFloat(getComputedStyle(approachList).top) || 0;
+  const start = trackTop - stickyTop;
+  const end = Math.max(start + 1, trackTop + approachTrack.offsetHeight - window.innerHeight);
+  return { start, end };
+}
+
+function updateApproachFromScroll(scrollPosition = window.scrollY) {
+  if (!approachItems.length) return;
+  const { start, end } = getApproachScrollRange();
+  const progress = Math.min(1, Math.max(0, (scrollPosition - start) / (end - start)));
+  const stage = Math.min(approachItems.length - 1, Math.floor(progress * approachItems.length));
+  approach?.style.setProperty("--approach-stage-progress", progress.toFixed(4));
+  setApproachItem(stage);
+}
+
+function scrollToApproachItem(index) {
+  const { start, end } = getApproachScrollRange();
+  const stagePosition = (index + 0.5) / approachItems.length;
+  window.scrollTo({
+    top: start + (end - start) * stagePosition,
+    behavior: reduceMotion ? "auto" : "smooth",
+  });
 }
 
 approachItems.forEach((item, index) => {
   const trigger = item.querySelector(".approach-trigger");
-  item.dataset.open = "false";
-
-  trigger?.addEventListener("click", () => {
-    const shouldOpen = item.dataset.open !== "true";
-    setApproachItem(item, shouldOpen);
-  });
-
+  trigger?.addEventListener("click", () => scrollToApproachItem(index));
   trigger?.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      setApproachItem(item, false);
-      return;
-    }
-    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
-    const direction = event.key === "ArrowDown" ? 1 : -1;
-    const nextIndex = (index + direction + approachItems.length) % approachItems.length;
+    const nextIndex = event.key === "Home"
+      ? 0
+      : event.key === "End"
+        ? approachItems.length - 1
+        : (index + (event.key === "ArrowDown" ? 1 : -1) + approachItems.length) % approachItems.length;
     approachItems[nextIndex].querySelector(".approach-trigger")?.focus();
+    scrollToApproachItem(nextIndex);
   });
-
-  const previewWord = () => {
-    const openItem = approachItems.find((candidate) => candidate.dataset.open === "true");
-    if (approachWord) {
-      approachWord.textContent = openItem?.dataset.word ?? item.dataset.word ?? "BOUNDARY";
-    }
-  };
-  trigger?.addEventListener("mouseenter", previewWord);
-  trigger?.addEventListener("focus", previewWord);
 });
 
-approach?.addEventListener("mouseleave", () => {
-  const openItem = approachItems.find((item) => item.dataset.open === "true");
-  if (approachWord) approachWord.textContent = openItem?.dataset.word ?? "BOUNDARY";
-});
+setApproachItem(0);
 
 const vision = document.querySelector(".vision-editorial");
 const visionStages = [...document.querySelectorAll(".vision-stage")];
 
+function syncVisionBodyHeight(stage) {
+  const body = stage?.querySelector(".vision-body");
+  const inner = body?.querySelector(".vision-body-inner");
+  if (!body || !inner) return;
+  body.style.setProperty("--vision-body-height", `${inner.scrollHeight}px`);
+}
+
 function setVisionStage(nextStage, open) {
+  if (open) syncVisionBodyHeight(nextStage);
   visionStages.forEach((stage) => {
     const isOpen = stage === nextStage && open;
     const trigger = stage.querySelector(".vision-trigger");
@@ -82,6 +104,7 @@ function setVisionStage(nextStage, open) {
 visionStages.forEach((stage, index) => {
   const trigger = stage.querySelector(".vision-trigger");
   stage.dataset.open = "false";
+  syncVisionBodyHeight(stage);
 
   trigger?.addEventListener("click", () => {
     const shouldOpen = stage.dataset.open !== "true";
@@ -102,23 +125,20 @@ visionStages.forEach((stage, index) => {
   });
 });
 
-document.querySelectorAll("[data-ambient]").forEach((section) => {
-  section.addEventListener("pointermove", (event) => {
-    if (!finePointer) return;
-    const bounds = section.getBoundingClientRect();
-    const x = ((event.clientX - bounds.left) / bounds.width) * 100;
-    const y = ((event.clientY - bounds.top) / bounds.height) * 100;
-    section.style.setProperty("--spot-x", `${x.toFixed(1)}%`);
-    section.style.setProperty("--spot-y", `${y.toFixed(1)}%`);
-  });
+const visionBodyResizeObserver = new ResizeObserver((entries) => {
+  entries.forEach((entry) => syncVisionBodyHeight(entry.target.closest(".vision-stage")));
 });
+visionStages.forEach((stage) => {
+  const inner = stage.querySelector(".vision-body-inner");
+  if (inner) visionBodyResizeObserver.observe(inner);
+});
+document.fonts?.ready.then(() => visionStages.forEach(syncVisionBodyHeight));
 
 const motionRoot = document.documentElement;
 const motionScenes = {
   hero,
   heroSurface,
   approach,
-  approachItems,
   vision,
   visionStages,
   closing: document.querySelector(".closing"),
@@ -142,13 +162,14 @@ function setMotionVariable(name, value, target = motionRoot) {
 
 function updateScrollMotion() {
   motionFrame = 0;
+  const targetScroll = Math.max(0, window.scrollY);
+  updateApproachFromScroll(targetScroll);
 
   if (reduceMotion) {
     motionRoot.classList.remove("scroll-motion");
     return;
   }
 
-  const targetScroll = Math.max(0, window.scrollY);
   visualScroll = forceMotionFrame
     ? targetScroll
     : visualScroll + (targetScroll - visualScroll) * 0.14;
@@ -165,7 +186,6 @@ function updateScrollMotion() {
     motionScenes.approach,
     motionScenes.vision,
     motionScenes.closing,
-    ...motionScenes.approachItems,
     ...motionScenes.visionStages,
   ].filter(Boolean);
 
@@ -209,14 +229,6 @@ function updateScrollMotion() {
     setMotionVariable("--approach-heading-opacity", unit(0.2 + approachReveal * 0.8), motionScenes.approach);
     setMotionVariable("--approach-watermark-x", px((0.5 - approachTravel) * 110 * amplitude), motionScenes.approach);
 
-    motionScenes.approachItems.forEach((item, index) => {
-      const itemMetrics = measurements.get(item);
-      const itemTop = itemMetrics.top - visualScroll;
-      const reveal = smoothstep(clamp01((viewportHeight * 0.92 - itemTop) / (viewportHeight * 0.42)));
-      setMotionVariable("--item-y", px((1 - reveal) * (42 + index * 7) * amplitude), item);
-      setMotionVariable("--item-opacity", unit(0.16 + reveal * 0.84), item);
-      setMotionVariable("--item-scale", unit(0.978 + reveal * 0.022), item);
-    });
   }
 
   if (motionScenes.vision) {
