@@ -5,6 +5,7 @@ const heroFrame = hero?.querySelector(".hero-frame");
 const surface = hero?.querySelector(".hero-visual");
 const canvas = document.querySelector("#hero-canvas");
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+const touchNavigationPreference = window.matchMedia("(hover: none) and (pointer: coarse)");
 const finePointer = window.matchMedia("(pointer: fine)").matches;
 const INITIAL_ROTATION_X = 0.18;
 const INITIAL_ROTATION_Y = 0.46;
@@ -367,6 +368,7 @@ if (hero && surface && canvas) {
 
     let reduceMotion = motionPreference.matches;
     let mobile = false;
+    let touchNavigation = touchNavigationPreference.matches;
     let visible = true;
     let frameId = 0;
     let lastFrameAt = performance.now();
@@ -477,7 +479,7 @@ if (hero && surface && canvas) {
       const wrappedYaw = wrapAngle(rotationTarget.y);
       rotationCurrent.y += wrappedYaw - rotationTarget.y;
       rotationTarget.y = wrappedYaw;
-      if (!mobile) {
+      if (!touchNavigation) {
         desktopRotationOffset.set(
           rotationTarget.x - scrollRotation.x,
           rotationTarget.y - scrollRotation.y,
@@ -539,8 +541,8 @@ if (hero && surface && canvas) {
       );
       if (dragging) return;
       rotationTarget.set(
-        scrollRotation.x + (mobile ? 0 : desktopRotationOffset.x),
-        scrollRotation.y + (mobile ? 0 : desktopRotationOffset.y),
+        scrollRotation.x + (touchNavigation ? 0 : desktopRotationOffset.x),
+        scrollRotation.y + (touchNavigation ? 0 : desktopRotationOffset.y),
       );
       baseRotation.copy(rotationTarget);
     }
@@ -631,8 +633,11 @@ if (hero && surface && canvas) {
       const bounds = surface.getBoundingClientRect();
       if (!bounds.width || !bounds.height) return;
       const wasMobile = mobile;
+      const wasTouchNavigation = touchNavigation;
       mobile = window.innerWidth <= 780
-        || (!finePointer && window.innerWidth <= 900 && window.innerHeight <= 480);
+        || (!finePointer && window.innerWidth <= 960 && window.innerHeight <= 480);
+      touchNavigation = window.innerWidth <= 780 || touchNavigationPreference.matches;
+      surface.dataset.touchNavigation = String(touchNavigation);
       stackRoot.position.y = mobile ? 1.05 : 0;
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.05 : finePointer ? 1.3 : 1.15));
       renderer.setSize(bounds.width, bounds.height, false);
@@ -648,13 +653,15 @@ if (hero && surface && canvas) {
       camera.position.set(0, 1.6, 12);
       camera.lookAt(0, -0.08, 0);
       camera.updateProjectionMatrix();
-      if (wasMobile !== mobile) desktopRotationOffset.set(0, 0);
+      if (wasMobile !== mobile || wasTouchNavigation !== touchNavigation) {
+        desktopRotationOffset.set(0, 0);
+      }
       updateScrollRotation();
       render(performance.now(), true);
     }
 
     surface.addEventListener("pointermove", (event) => {
-      if (mobile) {
+      if (touchNavigation) {
         const tap = mobileTapPointers.get(event.pointerId);
         if (tap && Math.hypot(event.clientX - tap.startX, event.clientY - tap.startY) > 10) {
           mobileTapPointers.delete(event.pointerId);
@@ -701,7 +708,7 @@ if (hero && surface && canvas) {
     }, { passive: false });
 
     surface.addEventListener("pointerdown", (event) => {
-      if (mobile) {
+      if (touchNavigation) {
         if (event.pointerType === "touch") {
           const point = pointFromClient(event.clientX, event.clientY);
           if (hitsStack(point)) {
@@ -795,7 +802,7 @@ if (hero && surface && canvas) {
       if (tracked && tracked.mode !== "multi") releasePointer(event);
     });
     surface.addEventListener("dblclick", (event) => {
-      if (mobile) return;
+      if (touchNavigation) return;
       const point = pointFromClient(event.clientX, event.clientY);
       if (!hitsStack(point)) return;
       event.preventDefault();

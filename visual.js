@@ -1,4 +1,4 @@
-import "./hbm-stack.js?v=15";
+import "./hbm-stack.js?v=16";
 
 const hero = document.querySelector(".hero-horizon");
 const heroSurface = hero?.querySelector(".hero-visual") ?? hero;

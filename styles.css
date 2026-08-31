@@ -2023,7 +2023,7 @@ footer p { margin: 0; }
   .hero-visual-label { display: none; }
 }
 
-@media (orientation: landscape) and (max-height: 480px) and (max-width: 900px) {
+@media (orientation: landscape) and (max-height: 480px) and (max-width: 960px) {
   .hero.hero-horizon { min-height: calc(max(100svh, 23rem) + 45svh); }
   .hero-frame { min-height: max(100svh, 23rem); }
 
@@ -2081,6 +2081,11 @@ footer p { margin: 0; }
     right: var(--gutter);
     bottom: calc(0.8rem + env(safe-area-inset-bottom, 0px));
   }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .hero-visual #hero-canvas { cursor: default; }
+  .hero-visual-label { display: none; }
 }
 
 @media (max-width: 420px) {
