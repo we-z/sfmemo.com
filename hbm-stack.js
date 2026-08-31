@@ -124,15 +124,21 @@ if (hero && surface && canvas) {
     const layerGeometry = createSlab(layerWidth, layerDepth, layerHeight, 0.11, 0.68);
     const layerMaterials = [];
     const layerMeshes = [];
+    const darkLayerPalette = [0x0b2949, 0x0f3156, 0x12385f, 0x0d2c50, 0x153d68, 0x10355d];
+    const lightLayerPalette = [0x174f89, 0x1b5a98, 0x205f9e, 0x194f87, 0x2367a8, 0x1b5a96];
+    const darkLayerEmissivePalette = [0x041426, 0x061a30, 0x071f38, 0x05172b, 0x08223d, 0x061c33];
+    const lightLayerEmissivePalette = [0x092b4f, 0x0b3560, 0x0d3a68, 0x0a2e54, 0x0f4171, 0x0b3763];
+    const darkLayerBoostPalette = [0x154875, 0x195283, 0x1c598d, 0x174c7c, 0x205f96, 0x1a5588];
+    const lightLayerBoostPalette = [0x246aa9, 0x2a73b5, 0x2f79bb, 0x286faf, 0x337fc1, 0x2b75b8];
 
     for (let index = 0; index < layerCount; index += 1) {
       const material = new THREE.MeshPhysicalMaterial({
-        color: 0x12345b,
-        metalness: 0.34,
-        roughness: 0.27,
-        clearcoat: 0.68,
-        clearcoatRoughness: 0.25,
-        emissive: 0x0a2647,
+        color: darkLayerPalette[index % darkLayerPalette.length],
+        metalness: 0.28 + (index % 4) * 0.025,
+        roughness: 0.235 + ((index + 2) % 5) * 0.018,
+        clearcoat: 0.56 + (index % 3) * 0.055,
+        clearcoatRoughness: 0.22 + ((index + 1) % 4) * 0.022,
+        emissive: darkLayerEmissivePalette[index % darkLayerEmissivePalette.length],
         emissiveIntensity: 0.14,
       });
       const layer = new THREE.Mesh(layerGeometry, material);
@@ -177,6 +183,145 @@ if (hero && surface && canvas) {
     }
     edgeStrips.instanceColor.needsUpdate = true;
     stackRoot.add(edgeStrips);
+
+    const fabricationDetails = [];
+    const frontDetailPattern = [
+      { x: -1.82, width: 0.28, tone: 0 },
+      { x: -1.39, width: 0.13, tone: 2 },
+      { x: -1.04, width: 0.38, tone: 1 },
+      { x: -0.49, width: 0.2, tone: 0 },
+    ];
+
+    for (let index = 0; index < layerCount; index += 1) {
+      const layerY = firstLayerY + index * layerPitch;
+      frontDetailPattern.forEach((detail, detailIndex) => {
+        fabricationDetails.push({
+          x: detail.x + (index % 2) * 0.035,
+          y: layerY + 0.005,
+          z: layerDepth / 2 + 0.012,
+          width: detail.width,
+          height: 0.021,
+          depth: 0.022,
+          kind: "edge",
+          tone: (detail.tone + index + detailIndex) % 3,
+        });
+      });
+
+      fabricationDetails.push(
+        {
+          x: layerWidth / 2 + 0.012,
+          y: layerY + 0.005,
+          z: -0.52 + (index % 3) * 0.035,
+          width: 0.022,
+          height: 0.021,
+          depth: 0.36,
+          kind: "edge",
+          tone: index % 3,
+        },
+        {
+          x: layerWidth / 2 + 0.012,
+          y: layerY + 0.005,
+          z: -0.04 + (index % 2) * 0.035,
+          width: 0.022,
+          height: 0.021,
+          depth: 0.18,
+          kind: "edge",
+          tone: (index + 1) % 3,
+        },
+      );
+    }
+
+    const topDieY = firstLayerY + (layerCount - 1) * layerPitch + layerHeight / 2;
+    [
+      { x: -1.5, z: -0.5, width: 0.72, depth: 0.52, tone: 0 },
+      { x: -0.62, z: -0.5, width: 0.76, depth: 0.52, tone: 1 },
+      { x: 0.28, z: -0.5, width: 0.78, depth: 0.52, tone: 2 },
+      { x: -1.43, z: 0.33, width: 0.85, depth: 0.58, tone: 2 },
+      { x: -0.39, z: 0.33, width: 0.92, depth: 0.58, tone: 0 },
+      { x: 0.69, z: 0.24, width: 0.72, depth: 0.76, tone: 1 },
+    ].forEach((macro) => {
+      fabricationDetails.push({
+        ...macro,
+        y: topDieY + 0.013,
+        height: 0.018,
+        kind: "macro",
+      });
+    });
+
+    for (let row = 0; row < 4; row += 1) {
+      for (let column = 0; column < 6; column += 1) {
+        fabricationDetails.push({
+          x: 1.05 + column * 0.145,
+          y: topDieY + 0.02,
+          z: -0.91 + row * 0.145,
+          width: 0.058,
+          height: 0.026,
+          depth: 0.058,
+          kind: "pad",
+          tone: (row + column) % 2,
+        });
+      }
+    }
+
+    const fabricationDetailMaterial = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      metalness: 0.52,
+      roughness: 0.34,
+    });
+    const fabricationDetailMesh = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      fabricationDetailMaterial,
+      fabricationDetails.length,
+    );
+    const darkDetailPalettes = {
+      edge: [0x1d466f, 0x2d5d8a, 0x426f99],
+      macro: [0x071b31, 0x0b2744, 0x103355],
+      pad: [0x6688aa, 0x87a5c2],
+    };
+    const lightDetailPalettes = {
+      edge: [0x255b8e, 0x3773aa, 0x4c86bb],
+      macro: [0x0d3154, 0x12416c, 0x18517f],
+      pad: [0x54789e, 0x7494b4],
+    };
+
+    fabricationDetails.forEach((detail, index) => {
+      helper.position.set(detail.x, detail.y, detail.z);
+      helper.rotation.set(0, 0, 0);
+      helper.scale.set(detail.width, detail.height, detail.depth);
+      helper.updateMatrix();
+      fabricationDetailMesh.setMatrixAt(index, helper.matrix);
+      fabricationDetailMesh.setColorAt(index, new THREE.Color(
+        darkDetailPalettes[detail.kind][detail.tone % darkDetailPalettes[detail.kind].length],
+      ));
+    });
+    fabricationDetailMesh.instanceColor.needsUpdate = true;
+    stackRoot.add(fabricationDetailMesh);
+
+    const topTraceY = topDieY + 0.026;
+    const topTraceSegments = [];
+    const addTopTrace = (x1, z1, x2, z2) => {
+      topTraceSegments.push(x1, topTraceY, z1, x2, topTraceY, z2);
+    };
+    addTopTrace(-2.18, -1.02, 1.74, -1.02);
+    addTopTrace(-2.18, 1.02, 1.74, 1.02);
+    addTopTrace(-2.18, -1.02, -2.18, 1.02);
+    addTopTrace(1.74, -1.02, 1.74, 0.56);
+    addTopTrace(1.74, 0.56, 2.18, 0.56);
+    addTopTrace(-1.94, -0.12, 0.72, -0.12);
+    addTopTrace(-1.94, -0.12, -1.94, 0.78);
+    addTopTrace(-0.96, -0.86, -0.96, -0.12);
+    addTopTrace(-0.07, -0.86, -0.07, -0.12);
+    addTopTrace(0.79, -0.86, 0.79, -0.12);
+    addTopTrace(0.72, -0.12, 0.72, 0.86);
+    addTopTrace(0.72, 0.86, 1.53, 0.86);
+
+    const topTraceGeometry = new THREE.BufferGeometry();
+    topTraceGeometry.setAttribute("position", new THREE.Float32BufferAttribute(topTraceSegments, 3));
+    const topTraceMaterial = new THREE.LineBasicMaterial({
+      color: 0x3d6f9e,
+      toneMapped: false,
+    });
+    stackRoot.add(new THREE.LineSegments(topTraceGeometry, topTraceMaterial));
 
     const tsvColumns = [
       { x: 1.49, z: 0.82 },
@@ -362,10 +507,10 @@ if (hero && surface && canvas) {
     const layerActivity = new Float32Array(layerCount);
     const tempColor = new THREE.Color();
     const tempPoint = new THREE.Vector3();
-    const layerIdleColor = new THREE.Color(0x12345b);
-    const layerBoostColor = new THREE.Color(0x1c5fae);
-    const layerIdleEmissive = new THREE.Color(0x0a2647);
-    const layerBoostEmissive = new THREE.Color(0x154d91);
+    const layerIdleColors = Array.from({ length: layerCount }, () => new THREE.Color());
+    const layerBoostColors = Array.from({ length: layerCount }, () => new THREE.Color());
+    const layerIdleEmissives = Array.from({ length: layerCount }, () => new THREE.Color());
+    const layerBoostEmissives = Array.from({ length: layerCount }, () => new THREE.Color());
 
     function applyHBMTheme(light) {
       themeLight = light;
@@ -381,14 +526,25 @@ if (hero && surface && canvas) {
       interposerMaterial.color.set(light ? 0x1c5590 : 0x0d3159);
       baseMaterial.color.set(light ? 0x1f64ad : 0x123d6c);
       seamMaterial.color.set(light ? 0x0c2946 : 0x02060b);
-      layerIdleColor.set(light ? 0x1d5fa8 : 0x12345b);
-      layerBoostColor.set(light ? 0x2f75bc : 0x1c5fae);
-      layerIdleEmissive.set(light ? 0x0e3f78 : 0x0a2647);
-      layerBoostEmissive.set(light ? 0x1c5fa5 : 0x154d91);
-      layerMaterials.forEach((material) => {
-        material.color.copy(layerIdleColor);
-        material.emissive.copy(layerIdleEmissive);
+      const layerPalette = light ? lightLayerPalette : darkLayerPalette;
+      const emissivePalette = light ? lightLayerEmissivePalette : darkLayerEmissivePalette;
+      const boostPalette = light ? lightLayerBoostPalette : darkLayerBoostPalette;
+      layerMaterials.forEach((material, index) => {
+        const paletteIndex = index % layerPalette.length;
+        layerIdleColors[index].setHex(layerPalette[paletteIndex]);
+        layerBoostColors[index].setHex(boostPalette[paletteIndex]);
+        layerIdleEmissives[index].setHex(emissivePalette[paletteIndex]);
+        layerBoostEmissives[index].copy(layerIdleEmissives[index]).lerp(layerBoostColors[index], 0.42);
+        material.color.copy(layerIdleColors[index]);
+        material.emissive.copy(layerIdleEmissives[index]);
       });
+      const detailPalettes = light ? lightDetailPalettes : darkDetailPalettes;
+      fabricationDetails.forEach((detail, index) => {
+        const palette = detailPalettes[detail.kind];
+        fabricationDetailMesh.setColorAt(index, tempColor.setHex(palette[detail.tone % palette.length]));
+      });
+      fabricationDetailMesh.instanceColor.needsUpdate = true;
+      topTraceMaterial.color.set(light ? 0x215c96 : 0x3d6f9e);
       edgeIdle.set(light ? 0x356ca6 : 0x6a93bd);
       edgeActive.set(light ? 0x8abcf2 : 0xc7e2ff);
       tsvMaterial.color.set(light ? 0xb47b38 : 0xd0a269);
@@ -654,8 +810,8 @@ if (hero && surface && canvas) {
         const layerGlow = clamp(activity + boostAmount * 0.85, 0, 1);
         tempColor.copy(edgeIdle).lerp(edgeActive, layerGlow);
         edgeStrips.setColorAt(index, tempColor);
-        layerMaterials[index].color.copy(layerIdleColor).lerp(layerBoostColor, boostAmount);
-        layerMaterials[index].emissive.copy(layerIdleEmissive).lerp(layerBoostEmissive, boostAmount);
+        layerMaterials[index].color.copy(layerIdleColors[index]).lerp(layerBoostColors[index], boostAmount);
+        layerMaterials[index].emissive.copy(layerIdleEmissives[index]).lerp(layerBoostEmissives[index], boostAmount);
         layerMaterials[index].emissiveIntensity = (themeLight ? 0.08 : 0.14)
           + activity * 0.48
           + boostAmount * (themeLight ? 0.38 : 0.52);
