@@ -1083,24 +1083,38 @@ html[data-theme="light"] .approach-trigger:focus-visible {
   outline-color: rgba(21, 89, 197, 0.58);
 }
 
-html[data-theme="light"] .approach-progress,
+html[data-theme="light"] .approach-progress {
+  width: 2px;
+  background: rgba(21, 89, 197, 0.42);
+}
+
 html[data-theme="light"] .scroll-rail { background: rgba(21, 89, 197, 0.24); }
 
 html[data-theme="light"] .approach-progress span,
 html[data-theme="light"] .scroll-rail span {
-  background: linear-gradient(180deg, #6f9ee5 0%, var(--blue-2) 48%, rgba(21, 89, 197, 0) 100%);
-  box-shadow: 0 0 1rem rgba(21, 89, 197, 0.28);
+  background: linear-gradient(180deg, #0d4aa6 0%, #1559c5 52%, #1e63d5 100%);
+  box-shadow: 0 0 0.75rem rgba(21, 89, 197, 0.52);
 }
 
 html[data-theme="light"] .orbit-guides path,
-html[data-theme="light"] .orbit-guides circle { stroke: rgba(21, 89, 197, 0.2); }
+html[data-theme="light"] .orbit-guides circle {
+  stroke: rgba(21, 89, 197, 0.32);
+  stroke-width: 1.2;
+}
 
-html[data-theme="light"] .orbit-path { stroke: rgba(21, 89, 197, 0.68); }
-html[data-theme="light"] .orbit-path-secondary { stroke: rgba(30, 99, 213, 0.58); }
-html[data-theme="light"] .orbit-path-tertiary { stroke: rgba(18, 72, 164, 0.5); }
-html[data-theme="light"] .orbit-path-quaternary { stroke: rgba(18, 72, 164, 0.42); }
-html[data-theme="light"] .orbit-path-quinary { stroke: rgba(18, 72, 164, 0.34); }
-html[data-theme="light"] .orbit-path-senary { stroke: rgba(18, 72, 164, 0.27); }
+html[data-theme="light"] .approach-orbit { opacity: 1; }
+
+html[data-theme="light"] .orbit-path {
+  stroke: rgba(7, 73, 174, 0.92);
+  stroke-width: 1.55;
+  stroke-dasharray: 3 7;
+}
+
+html[data-theme="light"] .orbit-path-secondary { stroke: rgba(7, 73, 174, 0.84); }
+html[data-theme="light"] .orbit-path-tertiary { stroke: rgba(7, 65, 157, 0.76); }
+html[data-theme="light"] .orbit-path-quaternary { stroke: rgba(7, 65, 157, 0.68); }
+html[data-theme="light"] .orbit-path-quinary { stroke: rgba(7, 65, 157, 0.6); }
+html[data-theme="light"] .orbit-path-senary { stroke: rgba(7, 65, 157, 0.52); }
 
 html[data-theme="light"] .orbit-electron {
   fill: #ffffff;
