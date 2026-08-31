@@ -14,6 +14,7 @@ const SCROLL_REVEAL_ROTATION_Y = -0.82;
 
 if (hero && surface && canvas) {
   try {
+    let themeLight = document.documentElement.dataset.theme === "light";
     const renderer = new THREE.WebGLRenderer({
       canvas,
       alpha: true,
@@ -23,7 +24,7 @@ if (hero && surface && canvas) {
     renderer.setClearColor(0x05070a, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.18;
+    renderer.toneMappingExposure = themeLight ? 1.06 : 1.18;
 
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-4, 4, 3, -3, 0.1, 40);
@@ -366,6 +367,40 @@ if (hero && surface && canvas) {
     const tempColor = new THREE.Color();
     const tempPoint = new THREE.Vector3();
 
+    function applyHBMTheme(light) {
+      themeLight = light;
+      renderer.toneMappingExposure = light ? 1.06 : 1.18;
+      ambient.color.set(light ? 0xffffff : 0xd8e8ff);
+      ambient.groundColor.set(light ? 0xb8c8dc : 0x030710);
+      ambient.intensity = light ? 2.45 : 2.15;
+      keyLight.color.set(light ? 0xffffff : 0xf4f8ff);
+      keyLight.intensity = light ? 4.2 : 4.6;
+      rimLight.color.set(light ? 0x1769d2 : 0x4389ff);
+      copperLight.intensity = light ? 7 : 9;
+
+      substrateMaterial.color.set(light ? 0x173451 : 0x09111d);
+      interposerMaterial.color.set(light ? 0x1c5590 : 0x0d3159);
+      baseMaterial.color.set(light ? 0x1f64ad : 0x123d6c);
+      seamMaterial.color.set(light ? 0x0c2946 : 0x02060b);
+      layerMaterials.forEach((material) => {
+        material.color.set(light ? 0x1d5fa8 : 0x12345b);
+        material.emissive.set(light ? 0x0e3f78 : 0x0a2647);
+      });
+      edgeIdle.set(light ? 0x356ca6 : 0x6a93bd);
+      edgeActive.set(light ? 0x8abcf2 : 0xc7e2ff);
+      tsvMaterial.color.set(light ? 0xb47b38 : 0xd0a269);
+      routeMaterial.color.set(light ? 0x0e55b7 : 0x6b9dde);
+      routeMaterial.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
+      routeMaterial.needsUpdate = true;
+      particleMaterial.color.set(light ? 0x0b4fb2 : 0xd8eaff);
+      particleMaterial.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
+      particleMaterial.needsUpdate = true;
+      particleHaloMaterial.color.set(light ? 0x6b9fe5 : 0x5fa3ff);
+      particleHaloMaterial.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
+      particleHaloMaterial.needsUpdate = true;
+      shadowMaterial.uniforms.uOpacity.value = light ? 0.14 : 0.32;
+    }
+
     let reduceMotion = motionPreference.matches;
     let mobile = false;
     let touchNavigation = touchNavigationPreference.matches;
@@ -591,11 +626,11 @@ if (hero && surface && canvas) {
 
         helper.position.copy(tempPoint);
         helper.rotation.set(0, 0, 0);
-        helper.scale.setScalar(scale * (1 + boostAmount * 0.48));
+        helper.scale.setScalar(scale * (themeLight ? 1.18 : 1) * (1 + boostAmount * 0.48));
         helper.updateMatrix();
         particles.setMatrixAt(index, helper.matrix);
 
-        helper.scale.setScalar(scale * (1.18 + boostAmount * 1.15));
+        helper.scale.setScalar(scale * ((themeLight ? 1.45 : 1.18) + boostAmount * 1.15));
         helper.updateMatrix();
         particleHalos.setMatrixAt(index, helper.matrix);
 
@@ -616,15 +651,15 @@ if (hero && surface && canvas) {
         const layerGlow = clamp(activity + boostAmount * 0.22, 0, 1);
         tempColor.copy(edgeIdle).lerp(edgeActive, layerGlow);
         edgeStrips.setColorAt(index, tempColor);
-        layerMaterials[index].emissiveIntensity = 0.14 + activity * 0.48 + boostAmount * 0.22;
+        layerMaterials[index].emissiveIntensity = (themeLight ? 0.08 : 0.14) + activity * 0.48 + boostAmount * 0.22;
       }
       edgeStrips.instanceColor.needsUpdate = true;
 
-      tsvMaterial.emissiveIntensity = 0.2 + inspectAmount * 0.18 + boostAmount * 0.32;
-      routeMaterial.opacity = 0.27 + inspectAmount * 0.1 + boostAmount * 0.18;
-      particleMaterial.opacity = 0.9 + boostAmount * 0.1;
-      particleHaloMaterial.opacity = 0.2 + boostAmount * 0.5;
-      rimLight.intensity = 31 + inspectAmount * 6 + boostAmount * 7;
+      tsvMaterial.emissiveIntensity = (themeLight ? 0.08 : 0.2) + inspectAmount * 0.18 + boostAmount * 0.32;
+      routeMaterial.opacity = (themeLight ? 0.64 : 0.27) + inspectAmount * 0.1 + boostAmount * 0.18;
+      particleMaterial.opacity = (themeLight ? 0.95 : 0.9) + boostAmount * 0.05;
+      particleHaloMaterial.opacity = (themeLight ? 0.28 : 0.2) + boostAmount * 0.5;
+      rimLight.intensity = (themeLight ? 23 : 31) + inspectAmount * 6 + boostAmount * 7;
 
       renderer.render(scene, camera);
       if (!force && !reduceMotion && visible && !document.hidden) frameId = requestAnimationFrame(render);
@@ -901,6 +936,13 @@ if (hero && surface && canvas) {
       }
     });
 
+    window.addEventListener("sfmemo:themechange", (event) => {
+      applyHBMTheme(event.detail?.theme === "light");
+      render(performance.now(), true);
+      if (!reduceMotion) start();
+    });
+
+    applyHBMTheme(themeLight);
     resize();
     hero.classList.add("webgl-ready");
     render(performance.now(), true);

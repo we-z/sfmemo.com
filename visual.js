@@ -1,15 +1,47 @@
-import "./hbm-stack.js?v=17";
+import "./hbm-stack.js?v=18";
 
 const hero = document.querySelector(".hero-horizon");
 const heroSurface = hero?.querySelector(".hero-visual") ?? hero;
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 let reduceMotion = motionPreference.matches;
 
+const themeRoot = document.documentElement;
+const themeToggle = document.querySelector(".theme-toggle");
+const themeColor = document.querySelector('meta[name="theme-color"]');
+
+function applyTheme(theme, persist = false) {
+  const nextTheme = theme === "light" ? "light" : "dark";
+  const light = nextTheme === "light";
+  themeRoot.dataset.theme = nextTheme;
+  themeRoot.style.colorScheme = nextTheme;
+  themeColor?.setAttribute("content", light ? "#f4f7fb" : "#05070a");
+  themeToggle?.setAttribute("aria-pressed", String(light));
+  themeToggle?.setAttribute("aria-label", light ? "Switch to dark mode" : "Switch to light mode");
+  const label = themeToggle?.querySelector(".theme-toggle-text");
+  if (label) label.textContent = light ? "Dark" : "Light";
+  if (persist) {
+    try { localStorage.setItem("sfmemo-theme", nextTheme); } catch {}
+  }
+  window.dispatchEvent(new CustomEvent("sfmemo:themechange", { detail: { theme: nextTheme } }));
+}
+
+applyTheme(themeRoot.dataset.theme);
+
+themeToggle?.addEventListener("click", () => {
+  const nextTheme = themeRoot.dataset.theme === "light" ? "dark" : "light";
+  const bounds = themeToggle.getBoundingClientRect();
+  themeRoot.style.setProperty("--theme-origin-x", `${bounds.left + bounds.width / 2}px`);
+  themeRoot.style.setProperty("--theme-origin-y", `${bounds.top + bounds.height / 2}px`);
+  const commitTheme = () => applyTheme(nextTheme, true);
+  if (document.startViewTransition && !reduceMotion) document.startViewTransition(commitTheme);
+  else commitTheme();
+});
+
 const approach = document.querySelector(".approach-editorial");
 const approachTrack = approach?.querySelector(".approach-track");
 const approachList = approach?.querySelector(".approach-list");
 const approachItems = [...document.querySelectorAll(".approach-item")];
-const approachStageThresholds = [0, 0.16, 0.42, 0.68];
+const approachStageThresholds = [0, 0.26, 0.52, 0.78];
 let activeApproachIndex = -1;
 
 function setApproachItem(nextIndex) {
@@ -29,34 +61,38 @@ function setApproachItem(nextIndex) {
 }
 
 function getApproachScrollRange() {
-  if (!approachTrack || !approachList) return { start: 0, end: 1 };
+  if (!approachTrack || !approachList) {
+    return { indicatorStart: 0, stageStart: 0, end: 1 };
+  }
   const trackTop = approachTrack.getBoundingClientRect().top + window.scrollY;
   const stickyTop = Number.parseFloat(getComputedStyle(approachList).top) || 0;
-  const activationLead = Math.max(stickyTop, window.innerHeight * 0.72);
-  const start = trackTop - activationLead;
-  const end = Math.max(start + 1, trackTop + approachTrack.offsetHeight - window.innerHeight * 1.08);
-  return { start, end };
+  const indicatorStart = trackTop - Math.max(stickyTop, window.innerHeight * 0.72);
+  const stageStart = trackTop - stickyTop;
+  const stickyFootprint = Math.max(approachList.offsetHeight, window.innerHeight * 0.72);
+  const end = Math.max(stageStart + 1, trackTop + approachTrack.offsetHeight - stickyFootprint - stickyTop);
+  return { indicatorStart, stageStart, end };
 }
 
 function updateApproachFromScroll(scrollPosition = window.scrollY) {
   if (!approachItems.length) return;
-  const { start, end } = getApproachScrollRange();
-  const progress = Math.min(1, Math.max(0, (scrollPosition - start) / (end - start)));
+  const { indicatorStart, stageStart, end } = getApproachScrollRange();
+  const indicatorProgress = Math.min(1, Math.max(0, (scrollPosition - indicatorStart) / (end - indicatorStart)));
+  const stageProgress = Math.min(1, Math.max(0, (scrollPosition - stageStart) / (end - stageStart)));
   const stage = approachStageThresholds.reduce(
-    (current, threshold, index) => progress >= threshold ? index : current,
+    (current, threshold, index) => stageProgress >= threshold ? index : current,
     0,
   );
-  approach?.style.setProperty("--approach-stage-progress", progress.toFixed(4));
+  approach?.style.setProperty("--approach-stage-progress", indicatorProgress.toFixed(4));
   setApproachItem(stage);
 }
 
 function scrollToApproachItem(index) {
-  const { start, end } = getApproachScrollRange();
-  const stageStart = approachStageThresholds[index] ?? 0;
-  const stageEnd = approachStageThresholds[index + 1] ?? 1;
-  const stagePosition = stageStart + (stageEnd - stageStart) * 0.5;
+  const { stageStart: rangeStart, end } = getApproachScrollRange();
+  const thresholdStart = approachStageThresholds[index] ?? 0;
+  const thresholdEnd = approachStageThresholds[index + 1] ?? 1;
+  const stagePosition = thresholdStart + (thresholdEnd - thresholdStart) * 0.5;
   window.scrollTo({
-    top: start + (end - start) * stagePosition,
+    top: rangeStart + (end - rangeStart) * stagePosition,
     behavior: reduceMotion ? "auto" : "smooth",
   });
 }
@@ -305,9 +341,19 @@ window.addEventListener("hashchange", () => scheduleScrollMotion(true));
 window.visualViewport?.addEventListener("resize", () => scheduleScrollMotion(true), { passive: true });
 
 const sceneResizeObserver = new ResizeObserver(() => scheduleScrollMotion(true));
-[motionScenes.hero, motionScenes.approach, motionScenes.vision, motionScenes.closing]
+[
+  motionScenes.hero,
+  motionScenes.hero?.querySelector(".hero-copy"),
+  motionScenes.approach,
+  approachTrack,
+  approachList,
+  motionScenes.vision,
+  motionScenes.closing,
+]
   .filter(Boolean)
   .forEach((scene) => sceneResizeObserver.observe(scene));
+
+document.fonts?.ready.then(() => scheduleScrollMotion(true));
 
 motionPreference.addEventListener("change", (event) => {
   reduceMotion = event.matches;
