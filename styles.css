@@ -1671,15 +1671,9 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
 .orbit-path-secondary { stroke: rgba(96, 165, 250, 0.34); }
 .orbit-path-tertiary { stroke: rgba(58, 129, 235, 0.28); }
 
-.orbit-rotor {
-  transform-box: view-box;
-  transform-origin: 50% 50%;
+.orbit-electron-runner {
   will-change: transform;
 }
-
-.orbit-rotor-a { animation: approach-orbit-spin 17s linear infinite; }
-.orbit-rotor-b { animation: approach-orbit-spin-reverse 11s linear infinite; }
-.orbit-rotor-c { animation: approach-orbit-spin 7s linear infinite; }
 
 .orbit-electron-halo {
   fill: rgba(95, 163, 255, 0.18);
@@ -1692,12 +1686,6 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
   filter: drop-shadow(0 0 0.45rem rgba(111, 174, 255, 0.95));
-}
-
-.orbit-package {
-  transform-box: view-box;
-  transform-origin: 50% 50%;
-  animation: approach-package-breathe 4.8s ease-in-out infinite;
 }
 
 .orbit-package-base {
@@ -1730,19 +1718,6 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   font-size: 0.58rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-}
-
-@keyframes approach-orbit-spin {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes approach-orbit-spin-reverse {
-  to { transform: rotate(-360deg); }
-}
-
-@keyframes approach-package-breathe {
-  0%, 100% { opacity: 0.76; transform: scale(0.98); }
-  50% { opacity: 1; transform: scale(1.035); }
 }
 
 /* Three Horizons vision */
@@ -2069,11 +2044,7 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   .vision-body,
   .vision-word { transition: none !important; }
 
-  .orbit-rotor,
-  .orbit-package { animation: none !important; }
-  .orbit-rotor-a { transform: rotate(18deg); }
-  .orbit-rotor-b { transform: rotate(-32deg); }
-  .orbit-rotor-c { transform: rotate(54deg); }
+  .orbit-electron-runner { will-change: auto; }
 }
 
 /* Scroll-directed motion system: native scroll, no input hijacking */
