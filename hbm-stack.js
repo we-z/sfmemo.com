@@ -478,6 +478,15 @@ if (hero && surface && canvas) {
       renderDirectlyWhenReduced();
     }
 
+    function resetHeroFromTouch() {
+      resetRotation();
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: reduceMotion ? "auto" : "smooth",
+      });
+    }
+
     function registerTouchTap(event) {
       const now = performance.now();
       const closeToPrevious = Math.hypot(
@@ -487,7 +496,7 @@ if (hero && surface && canvas) {
 
       if (now - lastTouchTapAt <= 330 && closeToPrevious) {
         lastTouchTapAt = 0;
-        resetRotation();
+        resetHeroFromTouch();
         return;
       }
 
@@ -762,7 +771,8 @@ if (hero && surface && canvas) {
       const point = pointFromClient(event.clientX, event.clientY);
       if (!startsOnGestureTarget(event) && !hitsStack(point)) return;
       event.preventDefault();
-      resetRotation();
+      if (mobile) resetHeroFromTouch();
+      else resetRotation();
     });
 
     function start() {
