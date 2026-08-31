@@ -52,17 +52,13 @@ function updateApproachOrbit(progress) {
   const fullTurn = Math.PI * 2;
 
   approachOrbitRunners.forEach((runner) => {
-    const radiusX = Number.parseFloat(runner.dataset.rx ?? "0");
-    const radiusY = Number.parseFloat(runner.dataset.ry ?? "0");
-    const ringAngle = Number.parseFloat(runner.dataset.angle ?? "0") * Math.PI / 180;
+    const radius = Number.parseFloat(runner.dataset.radius ?? "0");
     const phase = Number.parseFloat(runner.dataset.phase ?? "0");
     const revolutions = Number.parseFloat(runner.dataset.revolutions ?? "1");
     const direction = Number.parseFloat(runner.dataset.direction ?? "1");
     const theta = fullTurn * (phase + scrubProgress * revolutions * direction);
-    const localX = Math.cos(theta) * radiusX;
-    const localY = Math.sin(theta) * radiusY;
-    const x = centerX + localX * Math.cos(ringAngle) - localY * Math.sin(ringAngle);
-    const y = centerY + localX * Math.sin(ringAngle) + localY * Math.cos(ringAngle);
+    const x = centerX + Math.cos(theta) * radius;
+    const y = centerY + Math.sin(theta) * radius;
     runner.setAttribute("transform", `translate(${x.toFixed(2)} ${y.toFixed(2)})`);
   });
 }

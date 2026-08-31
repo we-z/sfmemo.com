@@ -1089,10 +1089,6 @@ html[data-theme="light"] .scroll-rail span {
   box-shadow: 0 0 1rem rgba(21, 89, 197, 0.28);
 }
 
-html[data-theme="light"] .approach-orbit::before {
-  background: linear-gradient(90deg, transparent, rgba(21, 89, 197, 0.28) 22%, rgba(21, 89, 197, 0.08) 72%, transparent);
-}
-
 html[data-theme="light"] .orbit-guides path,
 html[data-theme="light"] .orbit-guides circle { stroke: rgba(21, 89, 197, 0.12); }
 
@@ -1107,6 +1103,9 @@ html[data-theme="light"] .orbit-electron {
 }
 
 html[data-theme="light"] .orbit-electron-halo { fill: rgba(21, 89, 197, 0.16); }
+html[data-theme="light"] .orbit-tsv-keepout { stroke: rgba(21, 89, 197, 0.34); }
+html[data-theme="light"] .orbit-tsv-silicon { fill: rgba(224, 234, 247, 0.88); stroke: rgba(21, 89, 197, 0.62); }
+html[data-theme="light"] .orbit-tsv-traces { stroke: rgba(21, 89, 197, 0.66); }
 
 html[data-theme="light"] .vision-plane {
   background: linear-gradient(180deg, transparent, rgba(199, 214, 234, 0.62));
@@ -1605,11 +1604,13 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
 
 .approach-orbit {
   --approach-orbit-height: clamp(10rem, 25svh, 19rem);
+  --approach-orbit-gap: 0.25rem;
+  --approach-orbit-lift: clamp(2.5rem, 6svh, 4.5rem);
   position: absolute;
   z-index: 1;
   top: max(
-    calc(100% + 0.75rem),
-    calc(100svh - var(--approach-sticky-top) - var(--approach-orbit-height) - 1rem)
+    calc(100% + var(--approach-orbit-gap)),
+    calc(100svh - var(--approach-sticky-top) - var(--approach-orbit-height) - var(--approach-orbit-lift))
   );
   right: 0;
   left: 0;
@@ -1619,16 +1620,6 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   opacity: 0.9;
   overflow: visible;
   pointer-events: none;
-}
-
-.approach-orbit::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: 0;
-  left: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.28) 22%, rgba(96, 165, 250, 0.08) 72%, transparent);
 }
 
 .approach-orbit-graphic {
@@ -1677,6 +1668,41 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
   filter: drop-shadow(0 0 0.45rem rgba(111, 174, 255, 0.95));
+}
+
+.orbit-tsv-keepout,
+.orbit-tsv-silicon,
+.orbit-tsv-traces,
+.orbit-tsv-via {
+  vector-effect: non-scaling-stroke;
+}
+
+.orbit-tsv-keepout {
+  fill: rgba(7, 15, 27, 0.46);
+  stroke: rgba(96, 165, 250, 0.32);
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+}
+
+.orbit-tsv-silicon {
+  fill: rgba(8, 26, 49, 0.94);
+  stroke: rgba(115, 178, 255, 0.62);
+  stroke-width: 1;
+  filter: drop-shadow(0 0 0.75rem rgba(60, 130, 246, 0.22));
+}
+
+.orbit-tsv-traces {
+  fill: none;
+  stroke: rgba(115, 178, 255, 0.58);
+  stroke-width: 1;
+  stroke-linecap: round;
+}
+
+.orbit-tsv-via {
+  fill: var(--amber);
+  stroke: rgba(255, 231, 194, 0.78);
+  stroke-width: 0.75;
+  filter: drop-shadow(0 0 0.22rem rgba(244, 184, 96, 0.58));
 }
 
 .approach-orbit-label {
@@ -1957,10 +1983,8 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
 
   .approach-orbit {
     --approach-orbit-height: clamp(10rem, 23svh, 15rem);
-    top: max(
-      calc(100% + 0.5rem),
-      calc(100svh - var(--approach-sticky-top) - var(--approach-orbit-height) - 0.75rem)
-    );
+    --approach-orbit-gap: 0.25rem;
+    --approach-orbit-lift: clamp(2rem, 6svh, 3.5rem);
   }
 
   .approach-orbit-graphic { width: calc(100% + 1rem); }
@@ -2003,7 +2027,11 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   .item-number { font-size: 1rem; }
   .item-title { font-size: clamp(1.05rem, 2.6vw, 1.3rem); line-height: 1.05; }
   .approach-panel p { padding-bottom: 0.65rem; font-size: 0.78rem; line-height: 1.4; }
-  .approach-orbit { --approach-orbit-height: clamp(8rem, 22svh, 10rem); }
+  .approach-orbit {
+    --approach-orbit-height: clamp(8rem, 22svh, 10rem);
+    --approach-orbit-gap: 0.2rem;
+    --approach-orbit-lift: 1rem;
+  }
   .approach-orbit-label { display: none; }
 }
 
