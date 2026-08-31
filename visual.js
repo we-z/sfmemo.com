@@ -1,4 +1,5 @@
 import "./hbm-stack.js?v=39";
+import "./systolic-array.js?v=1";
 
 const hero = document.querySelector(".hero-horizon");
 const heroSurface = hero?.querySelector(".hero-visual") ?? hero;

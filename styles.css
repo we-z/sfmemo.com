@@ -3291,3 +3291,252 @@ html[data-theme="light"] .vision-compact .vision-chevron {
   .approach.approach-editorial h2 { font-size: clamp(3.55rem, 14.8vw, 4.3rem); }
   .vision-compact .vision-heading h2 { font-size: clamp(4.15rem, 17vw, 4.8rem); }
 }
+
+/* Interactive systolic-array Approach visual. */
+.approach.approach-editorial {
+  grid-template-columns: minmax(22rem, 0.82fr) minmax(34rem, 1.18fr);
+  gap: clamp(3.5rem, 6vw, 7rem);
+  overflow: visible;
+}
+
+.approach-systolic {
+  position: relative;
+  min-width: 0;
+  height: clamp(33rem, 43vw, 43rem);
+  align-self: center;
+  overflow: visible;
+  isolation: isolate;
+}
+
+.approach-systolic::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 10% 2% 4%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(40, 112, 222, 0.14), rgba(15, 45, 89, 0.055) 45%, transparent 72%);
+  filter: blur(1.3rem);
+  pointer-events: none;
+}
+
+#systolic-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  outline: 0;
+  touch-action: pan-y pinch-zoom;
+}
+
+#systolic-canvas:active { cursor: grabbing; }
+.approach-systolic.is-unavailable { min-height: 18rem; }
+
+html[data-theme="light"] .approach-systolic::before {
+  background: radial-gradient(circle, rgba(21, 89, 197, 0.13), rgba(96, 165, 250, 0.04) 48%, transparent 72%);
+}
+
+/* Canonical three-stage Vision timeline. */
+.vision-compact .vision-route-window { overflow: visible; }
+
+.vision-compact .vision-route {
+  --rail-y: clamp(6.8rem, 8.5vw, 8.2rem);
+  position: relative;
+  display: grid;
+  min-height: clamp(13rem, 18vw, 16rem);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid rgba(116, 131, 151, 0.28);
+}
+
+.vision-compact .vision-route::before,
+.vision-compact .vision-route::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: var(--rail-y);
+  right: 16.667%;
+  left: 16.667%;
+  width: auto;
+  height: 1px;
+  transform-origin: left center;
+}
+
+.vision-compact .vision-route::before {
+  background: linear-gradient(90deg, rgba(116, 131, 151, 0.38), rgba(96, 165, 250, 0.58), rgba(116, 131, 151, 0.38));
+}
+
+.vision-compact .vision-route::after {
+  background: linear-gradient(90deg, var(--blue-2), #b9dcff);
+  box-shadow: 0 0 1rem rgba(96, 165, 250, 0.38);
+  transform: scaleX(var(--vision-route-progress, 1));
+}
+
+.vision-compact .vision-step,
+.vision-compact .vision-step:nth-child(2),
+.vision-compact .vision-step:nth-child(3) {
+  --node-x: 50%;
+  position: relative;
+  display: block;
+  min-width: 0;
+  min-height: clamp(13rem, 18vw, 16rem);
+  padding: 0 clamp(0.5rem, 1.5vw, 1.5rem);
+  border: 0;
+  text-align: center;
+}
+
+.vision-compact .vision-step:nth-of-type(1) { grid-column: 1; grid-row: 1; }
+.vision-compact .vision-step:nth-of-type(2) { grid-column: 2; grid-row: 1; }
+.vision-compact .vision-step:nth-of-type(3) { grid-column: 3; grid-row: 1; }
+
+.vision-compact .vision-step::before,
+.vision-compact .vision-step:nth-child(3)::before {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  top: calc(var(--rail-y) - 0.43rem);
+  left: 50%;
+  width: 0.86rem;
+  height: 0.86rem;
+  border: 1px solid var(--blue-2);
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: inset 0 0 0 3px var(--bg), inset 0 0 0 5px var(--blue-2), 0 0 1rem rgba(96, 165, 250, 0.58);
+  transform: translateX(-50%);
+}
+
+.vision-compact .vision-step::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: var(--rail-y);
+  left: 50%;
+  width: 1px;
+  height: 1.4rem;
+  background: linear-gradient(180deg, var(--blue-2), rgba(96, 165, 250, 0.08));
+  transform: translateX(-50%);
+}
+
+.vision-compact .vision-step-index {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: block;
+  margin: 0;
+  color: rgba(96, 165, 250, 0.92);
+  font-family: var(--sans);
+  font-size: clamp(4.5rem, 7vw, 6.75rem);
+  font-weight: 300;
+  letter-spacing: -0.075em;
+  line-height: 0.8;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.vision-compact .vision-step strong {
+  position: absolute;
+  top: calc(var(--rail-y) + 2rem);
+  right: 0;
+  left: 0;
+  display: block;
+  color: var(--text);
+  font-size: clamp(1.35rem, 2vw, 2rem);
+  font-weight: 350;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.vision-compact .vision-chevron {
+  position: absolute;
+  z-index: 6;
+  top: var(--rail-y);
+  width: 1.1rem;
+  height: 1.1rem;
+  border-top: 2px solid rgba(185, 220, 255, 0.94);
+  border-right: 2px solid rgba(185, 220, 255, 0.94);
+  opacity: 0.9;
+  filter: drop-shadow(0 0 0.38rem rgba(96, 165, 250, 0.75));
+  pointer-events: none;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.vision-compact .vision-chevron-one { left: 33.333%; }
+.vision-compact .vision-chevron-two { left: 66.667%; }
+
+html[data-theme="light"] .vision-compact .vision-route::before {
+  background: linear-gradient(90deg, rgba(49, 70, 98, 0.42), rgba(21, 89, 197, 0.65), rgba(49, 70, 98, 0.42));
+}
+
+html[data-theme="light"] .vision-compact .vision-chevron {
+  border-color: rgba(21, 89, 197, 0.94);
+  filter: drop-shadow(0 0 0.3rem rgba(21, 89, 197, 0.42));
+}
+
+@media (max-width: 70rem) {
+  .approach.approach-editorial {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+
+  .approach-editorial .section-copy { max-width: 46rem; }
+  .approach-systolic { width: 100%; height: clamp(28rem, 66vw, 38rem); }
+}
+
+@media (max-width: 780px) {
+  .approach-systolic {
+    height: clamp(23rem, 94vw, 30rem);
+    margin-top: -0.5rem;
+  }
+
+  #systolic-canvas { cursor: default; }
+
+  .vision-compact .vision-route {
+    --rail-y: 4.5rem;
+    min-height: 9.75rem;
+  }
+
+  .vision-compact .vision-step,
+  .vision-compact .vision-step:nth-child(2),
+  .vision-compact .vision-step:nth-child(3) {
+    min-height: 9.75rem;
+    padding-inline: 0.15rem;
+  }
+
+  .vision-compact .vision-step::before,
+  .vision-compact .vision-step:nth-child(3)::before {
+    top: calc(var(--rail-y) - 0.36rem);
+    width: 0.72rem;
+    height: 0.72rem;
+  }
+
+  .vision-compact .vision-step::after { height: 1rem; }
+
+  .vision-compact .vision-step-index {
+    font-size: clamp(2.7rem, 11vw, 4rem);
+    line-height: 0.82;
+  }
+
+  .vision-compact .vision-step strong {
+    top: calc(var(--rail-y) + 1.55rem);
+    font-size: clamp(0.72rem, 3.1vw, 1rem);
+    letter-spacing: -0.025em;
+  }
+
+  .vision-compact .vision-chevron {
+    width: 0.82rem;
+    height: 0.82rem;
+    border-width: 1.75px;
+  }
+}
+
+@media (max-width: 360px) {
+  .vision-compact .vision-step strong { font-size: 0.68rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vision-compact .vision-route::after { transform: scaleX(1) !important; }
+}

@@ -34,7 +34,7 @@
   <meta name="twitter:image:alt" content="SF Memo wordmark.">
   <link rel="canonical" href="https://sfmemo.com/">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/styles.css?v=56">
+  <link rel="stylesheet" href="/styles.css?v=57">
   <title>SF Memo: Memory for AI</title>
   <script type="application/ld+json">
     {
@@ -45,7 +45,7 @@
       "description": "SF Memo is building HBM chips for GPUs, AI Accelerators and SOCs."
     }
   </script>
-  <script type="module" src="/visual.js?v=65"></script>
+  <script type="module" src="/visual.js?v=66"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -90,50 +90,11 @@
       <div class="section-copy">
         <p class="section-label">01 / Approach</p>
         <h2 id="approach-title">Design is the greatest differentiator.</h2>
-        <p class="section-intro">Performance depends on co-design across memory architecture, controller logic, packaging, and reliability. SF Memo is active today with proprietary RTL + chip-design methodology trusted by the largest U.S. frontier AI labs for chip-design work targeting LLM and AI workloads.</p>
+        <p class="section-intro">SF Memo is active today with proprietary RTL + chip-design methodology trusted by the largest U.S. frontier AI labs for chip-design work targeting LLM and AI workloads.</p>
       </div>
 
-      <div class="approach-list" aria-label="SF Memo technical focus">
-        <details class="approach-item">
-          <summary class="approach-trigger">
-            <span class="item-number">01</span>
-            <span class="item-title">Memory-system architecture</span>
-            <span class="item-symbol" aria-hidden="true"></span>
-          </summary>
-          <div class="approach-panel">
-            <div class="approach-panel-inner"><p>Workload-aware memory architecture spanning address mapping, request scheduling, error management, and repair.</p></div>
-          </div>
-        </details>
-        <details class="approach-item">
-          <summary class="approach-trigger">
-            <span class="item-number">02</span>
-            <span class="item-title">Controller logic + telemetry</span>
-            <span class="item-symbol" aria-hidden="true"></span>
-          </summary>
-          <div class="approach-panel">
-            <div class="approach-panel-inner"><p>Control logic and telemetry that expose memory utilization, health, and fault data to the host system.</p></div>
-          </div>
-        </details>
-        <details class="approach-item">
-          <summary class="approach-trigger">
-            <span class="item-number">03</span>
-            <span class="item-title">Package architecture</span>
-            <span class="item-symbol" aria-hidden="true"></span>
-          </summary>
-          <div class="approach-panel">
-            <div class="approach-panel-inner"><p>Package-level co-design of memory, logic, power delivery, signal integrity, and thermal management.</p></div>
-          </div>
-        </details>
-        <details class="approach-item">
-          <summary class="approach-trigger">
-            <span class="item-number">04</span>
-            <span class="item-title">Test + reliability engineering</span>
-            <span class="item-symbol" aria-hidden="true"></span>
-          </summary>
-          <div class="approach-panel">
-            <div class="approach-panel-inner"><p>Design-for-test, fault isolation, recovery mechanisms, and repeatable qualification data.</p></div>
-          </div>
-        </details>
+      <div class="approach-systolic" role="img" aria-label="Interactive three-dimensional systolic array showing matrix data flowing through multiply-accumulate cells">
+        <canvas id="systolic-canvas"></canvas>
       </div>
     </section>
 
@@ -146,11 +107,11 @@
       </div>
       <div class="vision-route-window">
         <div class="vision-route" role="list" aria-label="SF Memo vision from architecture to manufacturing">
-          <span class="vision-chevron vision-chevron-one" aria-hidden="true"></span>
-          <span class="vision-chevron vision-chevron-two" aria-hidden="true"></span>
           <div class="vision-step" role="listitem"><span class="vision-step-index">01</span><strong>Architecture</strong></div>
           <div class="vision-step" role="listitem"><span class="vision-step-index">02</span><strong>Packaging</strong></div>
           <div class="vision-step" role="listitem"><span class="vision-step-index">03</span><strong>Manufacturing</strong></div>
+          <span class="vision-chevron vision-chevron-one" aria-hidden="true"></span>
+          <span class="vision-chevron vision-chevron-two" aria-hidden="true"></span>
         </div>
       </div>
     </section>
