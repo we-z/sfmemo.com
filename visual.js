@@ -48,7 +48,7 @@ let activeApproachIndex = -1;
 function updateApproachOrbit(progress) {
   const scrubProgress = reduceMotion ? 0 : Math.min(1, Math.max(0, progress));
   const centerX = 360;
-  const centerY = 150;
+  const centerY = 360;
   const fullTurn = Math.PI * 2;
 
   approachOrbitRunners.forEach((runner) => {

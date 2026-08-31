@@ -1095,6 +1095,9 @@ html[data-theme="light"] .orbit-guides circle { stroke: rgba(21, 89, 197, 0.12);
 html[data-theme="light"] .orbit-path { stroke: rgba(21, 89, 197, 0.4); }
 html[data-theme="light"] .orbit-path-secondary { stroke: rgba(30, 99, 213, 0.32); }
 html[data-theme="light"] .orbit-path-tertiary { stroke: rgba(18, 72, 164, 0.26); }
+html[data-theme="light"] .orbit-path-quaternary { stroke: rgba(18, 72, 164, 0.22); }
+html[data-theme="light"] .orbit-path-quinary { stroke: rgba(18, 72, 164, 0.18); }
+html[data-theme="light"] .orbit-path-senary { stroke: rgba(18, 72, 164, 0.14); }
 
 html[data-theme="light"] .orbit-electron {
   fill: #eaf4ff;
@@ -1603,9 +1606,11 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
 }
 
 .approach-orbit {
-  --approach-orbit-height: clamp(10rem, 25svh, 19rem);
+  --approach-orbit-size: clamp(38rem, 62vw, 64rem);
+  --approach-orbit-height: var(--approach-orbit-size);
   --approach-orbit-gap: 0.25rem;
   --approach-orbit-lift: clamp(2.5rem, 6svh, 4.5rem);
+  --approach-orbit-shift-x: clamp(7rem, 16vw, 24rem);
   position: absolute;
   z-index: 1;
   top: max(
@@ -1623,9 +1628,11 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
 }
 
 .approach-orbit-graphic {
-  width: min(100%, 45rem);
-  height: 100%;
+  width: var(--approach-orbit-size);
+  max-width: none;
+  height: var(--approach-orbit-size);
   overflow: visible;
+  transform: translateX(var(--approach-orbit-shift-x));
 }
 
 .orbit-guides path,
@@ -1652,6 +1659,9 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
 
 .orbit-path-secondary { stroke: rgba(96, 165, 250, 0.34); }
 .orbit-path-tertiary { stroke: rgba(58, 129, 235, 0.28); }
+.orbit-path-quaternary { stroke: rgba(58, 129, 235, 0.23); }
+.orbit-path-quinary { stroke: rgba(58, 129, 235, 0.18); }
+.orbit-path-senary { stroke: rgba(58, 129, 235, 0.14); }
 
 .orbit-electron-runner {
   will-change: transform;
@@ -1703,17 +1713,6 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   stroke: rgba(255, 231, 194, 0.78);
   stroke-width: 0.75;
   filter: drop-shadow(0 0 0.22rem rgba(244, 184, 96, 0.58));
-}
-
-.approach-orbit-label {
-  position: absolute;
-  right: 0;
-  bottom: 0.35rem;
-  color: var(--blue-2);
-  font-family: var(--mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
 }
 
 /* Three Horizons vision */
@@ -1982,12 +1981,11 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   .approach-panel p { padding-bottom: clamp(1rem, 2.4svh, 1.5rem); font-size: 0.95rem; }
 
   .approach-orbit {
-    --approach-orbit-height: clamp(10rem, 23svh, 15rem);
+    --approach-orbit-size: clamp(32rem, 72svh, 42rem);
     --approach-orbit-gap: 0.25rem;
     --approach-orbit-lift: clamp(2rem, 6svh, 3.5rem);
+    --approach-orbit-shift-x: 28vw;
   }
-
-  .approach-orbit-graphic { width: calc(100% + 1rem); }
 
   .closing h2 { line-height: 1.02; }
 }
@@ -2007,7 +2005,6 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   }
   .approach-trigger { grid-template-columns: 3.1rem minmax(0, 1fr) 1.1rem; padding-inline: 1rem; }
   .approach-panel-inner { grid-template-columns: 3.1rem minmax(0, 1fr) 1.1rem; padding-inline: 1rem; }
-  .approach-orbit-label { right: 0.25rem; font-size: 0.52rem; }
 }
 
 @media (orientation: landscape) and (max-height: 600px) {
@@ -2028,11 +2025,11 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   .item-title { font-size: clamp(1.05rem, 2.6vw, 1.3rem); line-height: 1.05; }
   .approach-panel p { padding-bottom: 0.65rem; font-size: 0.78rem; line-height: 1.4; }
   .approach-orbit {
-    --approach-orbit-height: clamp(8rem, 22svh, 10rem);
+    --approach-orbit-size: clamp(26rem, 92svh, 34rem);
     --approach-orbit-gap: 0.2rem;
     --approach-orbit-lift: 1rem;
+    --approach-orbit-shift-x: 22vw;
   }
-  .approach-orbit-label { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
