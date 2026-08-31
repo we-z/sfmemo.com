@@ -41,27 +41,8 @@ const approach = document.querySelector(".approach-editorial");
 const approachTrack = approach?.querySelector(".approach-track");
 const approachList = approach?.querySelector(".approach-list");
 const approachItems = [...document.querySelectorAll(".approach-item")];
-const approachOrbitRunners = [...(approach?.querySelectorAll(".orbit-electron-runner") ?? [])];
 const approachStageThresholds = [0, 0.26, 0.52, 0.78];
 let activeApproachIndex = -1;
-
-function updateApproachOrbit(progress) {
-  const scrubProgress = reduceMotion ? 0 : Math.min(1, Math.max(0, progress));
-  const centerX = 360;
-  const centerY = 360;
-  const fullTurn = Math.PI * 2;
-
-  approachOrbitRunners.forEach((runner) => {
-    const radius = Number.parseFloat(runner.dataset.radius ?? "0");
-    const phase = Number.parseFloat(runner.dataset.phase ?? "0");
-    const revolutions = Number.parseFloat(runner.dataset.revolutions ?? "1");
-    const direction = Number.parseFloat(runner.dataset.direction ?? "1");
-    const theta = fullTurn * (phase + scrubProgress * revolutions * direction);
-    const x = centerX + Math.cos(theta) * radius;
-    const y = centerY + Math.sin(theta) * radius;
-    runner.setAttribute("transform", `translate(${x.toFixed(2)} ${y.toFixed(2)})`);
-  });
-}
 
 function setApproachItem(nextIndex) {
   if (!approachItems.length || nextIndex === activeApproachIndex) return;
@@ -102,7 +83,6 @@ function updateApproachFromScroll(scrollPosition = window.scrollY) {
     0,
   );
   approach?.style.setProperty("--approach-stage-progress", indicatorProgress.toFixed(4));
-  updateApproachOrbit(stageProgress);
   setApproachItem(stage);
 }
 
@@ -134,7 +114,6 @@ approachItems.forEach((item, index) => {
 });
 
 setApproachItem(0);
-updateApproachOrbit(0);
 
 const vision = document.querySelector(".vision-editorial");
 const visionRouteItems = [...document.querySelectorAll(".vision-step")];
