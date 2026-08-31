@@ -955,7 +955,7 @@ if (hero && surface && canvas) {
       const shortMobile = mobile && window.innerWidth <= 780 && window.innerHeight <= 720;
       touchNavigation = window.innerWidth <= 780 || touchNavigationPreference.matches;
       surface.dataset.touchNavigation = String(touchNavigation);
-      stackRoot.position.y = mobile ? (shortMobile ? -1 : 0) : 0.04;
+      stackRoot.position.y = mobile ? (shortMobile ? -1 : 0) : -0.22;
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.05 : finePointer ? 1.3 : 1.15));
       renderer.setSize(bounds.width, bounds.height, false);
 
