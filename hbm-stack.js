@@ -392,10 +392,10 @@ if (hero && surface && canvas) {
       routeMaterial.color.set(light ? 0x0e55b7 : 0x6b9dde);
       routeMaterial.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
       routeMaterial.needsUpdate = true;
-      particleMaterial.color.set(light ? 0x0b4fb2 : 0xd8eaff);
+      particleMaterial.color.set(0xd8eaff);
       particleMaterial.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
       particleMaterial.needsUpdate = true;
-      particleHaloMaterial.color.set(light ? 0x6b9fe5 : 0x5fa3ff);
+      particleHaloMaterial.color.set(0x5fa3ff);
       particleHaloMaterial.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
       particleHaloMaterial.needsUpdate = true;
       shadowMaterial.uniforms.uOpacity.value = light ? 0.14 : 0.32;

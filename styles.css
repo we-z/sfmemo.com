@@ -1089,6 +1089,30 @@ html[data-theme="light"] .scroll-rail span {
   box-shadow: 0 0 1rem rgba(21, 89, 197, 0.28);
 }
 
+html[data-theme="light"] .approach-orbit::before {
+  background: linear-gradient(90deg, transparent, rgba(21, 89, 197, 0.28) 22%, rgba(21, 89, 197, 0.08) 72%, transparent);
+}
+
+html[data-theme="light"] .orbit-guides path,
+html[data-theme="light"] .orbit-guides circle { stroke: rgba(21, 89, 197, 0.12); }
+
+html[data-theme="light"] .orbit-path { stroke: rgba(21, 89, 197, 0.4); }
+html[data-theme="light"] .orbit-path-secondary { stroke: rgba(30, 99, 213, 0.32); }
+html[data-theme="light"] .orbit-path-tertiary { stroke: rgba(18, 72, 164, 0.26); }
+
+html[data-theme="light"] .orbit-electron {
+  fill: #eaf4ff;
+  stroke: #1559c5;
+  filter: drop-shadow(0 0 0.35rem rgba(21, 89, 197, 0.58));
+}
+
+html[data-theme="light"] .orbit-electron-halo { fill: rgba(21, 89, 197, 0.16); }
+html[data-theme="light"] .orbit-package-base { fill: rgba(19, 52, 89, 0.96); stroke: rgba(21, 89, 197, 0.48); }
+html[data-theme="light"] .orbit-package-layer { fill: rgba(24, 82, 145, 0.96); stroke: rgba(234, 244, 255, 0.76); }
+html[data-theme="light"] .orbit-package-layer-top { fill: rgba(30, 99, 213, 0.98); }
+html[data-theme="light"] .orbit-package-trace,
+html[data-theme="light"] .orbit-package-vias { stroke: rgba(234, 244, 255, 0.82); }
+
 html[data-theme="light"] .vision-plane {
   background: linear-gradient(180deg, transparent, rgba(199, 214, 234, 0.62));
 }
@@ -1273,7 +1297,7 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   flex-direction: column;
   margin: 0;
   color: var(--white);
-  font-size: clamp(5.2rem, 9vw, 9.5rem);
+  font-size: clamp(5.5rem, 9.75vw, 10.25rem);
   font-weight: 400;
   letter-spacing: -0.015em;
   line-height: 0.83;
@@ -1353,7 +1377,7 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   }
 
   .hero-horizon h1 {
-    font-size: clamp(4rem, 15.5vw, 6rem);
+    font-size: clamp(4.35rem, 16.8vw, 6.4rem);
     line-height: 0.94;
   }
 
@@ -1377,7 +1401,7 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   .site-header nav a { font-size: 0.8rem; }
   .hero.hero-horizon { padding-top: calc(7.7rem + env(safe-area-inset-top, 0px)); }
   .hero-horizon .eyebrow { margin-bottom: 2rem; font-size: 0.65rem; }
-  .hero-horizon h1 { font-size: clamp(3.7rem, 16.2vw, 4.25rem); }
+  .hero-horizon h1 { font-size: clamp(4rem, 18vw, 4.8rem); }
   .hero-meta { margin-top: 2.3rem; }
 }
 
@@ -1582,6 +1606,143 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   color: #a7b1bf;
   font-size: 1rem;
   line-height: 1.62;
+}
+
+.approach-orbit {
+  --approach-orbit-height: clamp(10rem, 25svh, 19rem);
+  position: absolute;
+  z-index: 1;
+  top: max(
+    calc(100% + 0.75rem),
+    calc(100svh - var(--approach-sticky-top) - var(--approach-orbit-height) - 1rem)
+  );
+  right: 0;
+  left: 0;
+  display: grid;
+  height: var(--approach-orbit-height);
+  place-items: center;
+  opacity: 0.9;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.approach-orbit::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.28) 22%, rgba(96, 165, 250, 0.08) 72%, transparent);
+}
+
+.approach-orbit-graphic {
+  width: min(100%, 45rem);
+  height: 100%;
+  overflow: visible;
+}
+
+.orbit-guides path,
+.orbit-guides circle,
+.orbit-path,
+.orbit-package-base,
+.orbit-package-layer,
+.orbit-package-trace,
+.orbit-package-vias {
+  vector-effect: non-scaling-stroke;
+}
+
+.orbit-guides path,
+.orbit-guides circle {
+  fill: none;
+  stroke: rgba(96, 165, 250, 0.09);
+  stroke-width: 1;
+}
+
+.orbit-guides circle { stroke-dasharray: 2 13; }
+
+.orbit-path {
+  fill: none;
+  stroke: rgba(168, 204, 255, 0.43);
+  stroke-width: 1.1;
+  stroke-dasharray: 2 8;
+}
+
+.orbit-path-secondary { stroke: rgba(96, 165, 250, 0.34); }
+.orbit-path-tertiary { stroke: rgba(58, 129, 235, 0.28); }
+
+.orbit-rotor {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+.orbit-rotor-a { animation: approach-orbit-spin 17s linear infinite; }
+.orbit-rotor-b { animation: approach-orbit-spin-reverse 11s linear infinite; }
+.orbit-rotor-c { animation: approach-orbit-spin 7s linear infinite; }
+
+.orbit-electron-halo {
+  fill: rgba(95, 163, 255, 0.18);
+  stroke: none;
+}
+
+.orbit-electron {
+  fill: #eaf4ff;
+  stroke: #73b2ff;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 0.45rem rgba(111, 174, 255, 0.95));
+}
+
+.orbit-package {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: approach-package-breathe 4.8s ease-in-out infinite;
+}
+
+.orbit-package-base {
+  fill: rgba(8, 28, 53, 0.96);
+  stroke: rgba(96, 165, 250, 0.44);
+  stroke-width: 1;
+}
+
+.orbit-package-layer {
+  fill: rgba(13, 53, 98, 0.97);
+  stroke: rgba(114, 178, 255, 0.62);
+  stroke-width: 1;
+}
+
+.orbit-package-layer-top { fill: rgba(18, 80, 145, 0.98); }
+
+.orbit-package-trace,
+.orbit-package-vias {
+  fill: none;
+  stroke: rgba(213, 234, 255, 0.68);
+  stroke-width: 0.8;
+}
+
+.approach-orbit-label {
+  position: absolute;
+  right: 0;
+  bottom: 0.35rem;
+  color: var(--blue-2);
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+@keyframes approach-orbit-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes approach-orbit-spin-reverse {
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes approach-package-breathe {
+  0%, 100% { opacity: 0.76; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1.035); }
 }
 
 /* Three Horizons vision */
@@ -1849,6 +2010,16 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
 
   .approach-panel p { padding-bottom: clamp(1rem, 2.4svh, 1.5rem); font-size: 0.95rem; }
 
+  .approach-orbit {
+    --approach-orbit-height: clamp(10rem, 23svh, 15rem);
+    top: max(
+      calc(100% + 0.5rem),
+      calc(100svh - var(--approach-sticky-top) - var(--approach-orbit-height) - 0.75rem)
+    );
+  }
+
+  .approach-orbit-graphic { width: calc(100% + 1rem); }
+
   .closing h2 { line-height: 1.02; }
 }
 
@@ -1867,6 +2038,7 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   }
   .approach-trigger { grid-template-columns: 3.1rem minmax(0, 1fr) 1.1rem; padding-inline: 1rem; }
   .approach-panel-inner { grid-template-columns: 3.1rem minmax(0, 1fr) 1.1rem; padding-inline: 1rem; }
+  .approach-orbit-label { right: 0.25rem; font-size: 0.52rem; }
 }
 
 @media (orientation: landscape) and (max-height: 600px) {
@@ -1886,6 +2058,8 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   .item-number { font-size: 1rem; }
   .item-title { font-size: clamp(1.05rem, 2.6vw, 1.3rem); line-height: 1.05; }
   .approach-panel p { padding-bottom: 0.65rem; font-size: 0.78rem; line-height: 1.4; }
+  .approach-orbit { --approach-orbit-height: clamp(8rem, 22svh, 10rem); }
+  .approach-orbit-label { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1894,6 +2068,12 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   .vision-stages,
   .vision-body,
   .vision-word { transition: none !important; }
+
+  .orbit-rotor,
+  .orbit-package { animation: none !important; }
+  .orbit-rotor-a { transform: rotate(18deg); }
+  .orbit-rotor-b { transform: rotate(-32deg); }
+  .orbit-rotor-c { transform: rotate(54deg); }
 }
 
 /* Scroll-directed motion system: native scroll, no input hijacking */
@@ -2247,7 +2427,7 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   .hero-frame { min-height: max(100svh, 60rem); }
   .hero-frame { grid-template-rows: auto clamp(20rem, 36svh, 24rem); }
   .hero-horizon .eyebrow { margin-bottom: 1.5rem; }
-  .hero-horizon h1 { font-size: clamp(4rem, 12.5vw, 5rem); }
+  .hero-horizon h1 { font-size: clamp(4.6rem, 14vw, 5.75rem); }
   .hero-meta { gap: 1.2rem; margin-top: 1.8rem; }
   .hero-visual-label { display: none; }
 }
@@ -2278,7 +2458,7 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   }
 
   .hero-horizon h1 {
-    font-size: clamp(2.45rem, 7.2vw, 3.8rem);
+    font-size: clamp(2.7rem, 7.8vw, 4.15rem);
     line-height: 0.86;
   }
 
@@ -2326,7 +2506,7 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   .hero-frame { min-height: max(100svh, 50rem); }
   .hero-frame { padding-top: calc(6.4rem + env(safe-area-inset-top, 0px)); }
   .hero-horizon .eyebrow { margin-bottom: 1.2rem; }
-  .hero-horizon h1 { font-size: clamp(3.25rem, 16vw, 3.75rem); }
+  .hero-horizon h1 { font-size: clamp(3.55rem, 17.5vw, 4.1rem); }
   .hero-meta { gap: 0.9rem; margin-top: 1.45rem; }
   .hero-horizon .hero-intro { font-size: 0.9rem; line-height: 1.48; }
   .hero-link { min-height: 2.75rem; }
