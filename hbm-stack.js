@@ -134,12 +134,12 @@ if (hero && surface && canvas) {
     for (let index = 0; index < layerCount; index += 1) {
       const material = new THREE.MeshPhysicalMaterial({
         color: darkLayerPalette[index % darkLayerPalette.length],
-        metalness: 0.28 + (index % 4) * 0.025,
-        roughness: 0.235 + ((index + 2) % 5) * 0.018,
-        clearcoat: 0.56 + (index % 3) * 0.055,
-        clearcoatRoughness: 0.22 + ((index + 1) % 4) * 0.022,
+        metalness: 0.14 + (index % 4) * 0.012,
+        roughness: 0.38 + ((index + 2) % 5) * 0.022,
+        clearcoat: 0.22 + (index % 3) * 0.025,
+        clearcoatRoughness: 0.42 + ((index + 1) % 4) * 0.025,
         emissive: darkLayerEmissivePalette[index % darkLayerEmissivePalette.length],
-        emissiveIntensity: 0.14,
+        emissiveIntensity: 0.035,
       });
       const layer = new THREE.Mesh(layerGeometry, material);
       layer.position.y = firstLayerY + index * layerPitch;
@@ -196,7 +196,7 @@ if (hero && surface && canvas) {
       const layerY = firstLayerY + index * layerPitch;
       frontDetailPattern.forEach((detail, detailIndex) => {
         fabricationDetails.push({
-          x: detail.x + (index % 2) * 0.035,
+          x: detail.x,
           y: layerY + 0.005,
           z: layerDepth / 2 + 0.012,
           width: detail.width,
@@ -242,8 +242,8 @@ if (hero && surface && canvas) {
     ].forEach((macro) => {
       fabricationDetails.push({
         ...macro,
-        y: topDieY + 0.013,
-        height: 0.018,
+        y: topDieY + 0.003,
+        height: 0.006,
         kind: "macro",
       });
     });
@@ -252,10 +252,10 @@ if (hero && surface && canvas) {
       for (let column = 0; column < 6; column += 1) {
         fabricationDetails.push({
           x: 1.05 + column * 0.145,
-          y: topDieY + 0.02,
+          y: topDieY + 0.003,
           z: -0.91 + row * 0.145,
           width: 0.058,
-          height: 0.026,
+          height: 0.006,
           depth: 0.058,
           kind: "pad",
           tone: (row + column) % 2,
@@ -265,8 +265,8 @@ if (hero && surface && canvas) {
 
     const fabricationDetailMaterial = new THREE.MeshStandardMaterial({
       vertexColors: true,
-      metalness: 0.52,
-      roughness: 0.34,
+      metalness: 0.22,
+      roughness: 0.48,
     });
     const fabricationDetailMesh = new THREE.InstancedMesh(
       new THREE.BoxGeometry(1, 1, 1),
@@ -297,7 +297,7 @@ if (hero && surface && canvas) {
     fabricationDetailMesh.instanceColor.needsUpdate = true;
     stackRoot.add(fabricationDetailMesh);
 
-    const topTraceY = topDieY + 0.026;
+    const topTraceY = topDieY + 0.007;
     const topTraceSegments = [];
     const addTopTrace = (x1, z1, x2, z2) => {
       topTraceSegments.push(x1, topTraceY, z1, x2, topTraceY, z2);
@@ -319,6 +319,9 @@ if (hero && surface && canvas) {
     topTraceGeometry.setAttribute("position", new THREE.Float32BufferAttribute(topTraceSegments, 3));
     const topTraceMaterial = new THREE.LineBasicMaterial({
       color: 0x3d6f9e,
+      transparent: true,
+      opacity: 0.32,
+      depthWrite: false,
       toneMapped: false,
     });
     stackRoot.add(new THREE.LineSegments(topTraceGeometry, topTraceMaterial));
@@ -812,9 +815,9 @@ if (hero && surface && canvas) {
         edgeStrips.setColorAt(index, tempColor);
         layerMaterials[index].color.copy(layerIdleColors[index]).lerp(layerBoostColors[index], boostAmount);
         layerMaterials[index].emissive.copy(layerIdleEmissives[index]).lerp(layerBoostEmissives[index], boostAmount);
-        layerMaterials[index].emissiveIntensity = (themeLight ? 0.08 : 0.14)
-          + activity * 0.48
-          + boostAmount * (themeLight ? 0.38 : 0.52);
+        layerMaterials[index].emissiveIntensity = (themeLight ? 0.02 : 0.035)
+          + activity * 0.18
+          + boostAmount * 0.22;
       }
       edgeStrips.instanceColor.needsUpdate = true;
 

@@ -1283,7 +1283,7 @@ footer .wordmark {
   background: repeating-linear-gradient(90deg, transparent 0 19%, rgba(185, 149, 98, 0.72) 20% 23%);
 }
 
-.hero-horizon.webgl-ready .hero-package-fallback { opacity: 0.08; }
+.hero-horizon.webgl-ready .hero-package-fallback { opacity: 0; }
 
 .hero-horizon .hero-copy {
   position: relative;
