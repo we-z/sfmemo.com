@@ -74,6 +74,35 @@ if (hero && surface && canvas) {
       return geometry;
     }
 
+    function createSectionedSlab(width, depth, height, chamfer, slot) {
+      const halfWidth = width / 2;
+      const halfDepth = depth / 2;
+      const shape = new THREE.Shape();
+      shape.moveTo(-halfWidth + chamfer, -halfDepth);
+      shape.lineTo(slot.startX, -halfDepth);
+      shape.lineTo(slot.startX, -halfDepth + slot.depth);
+      shape.lineTo(slot.endX, -halfDepth + slot.depth);
+      shape.lineTo(slot.endX, -halfDepth);
+      shape.lineTo(halfWidth - chamfer, -halfDepth);
+      shape.lineTo(halfWidth, -halfDepth + chamfer);
+      shape.lineTo(halfWidth, halfDepth - chamfer);
+      shape.lineTo(halfWidth - chamfer, halfDepth);
+      shape.lineTo(-halfWidth + chamfer, halfDepth);
+      shape.lineTo(-halfWidth, halfDepth - chamfer);
+      shape.lineTo(-halfWidth, -halfDepth + chamfer);
+      shape.closePath();
+
+      const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth: height,
+        bevelEnabled: false,
+        curveSegments: 1,
+      });
+      geometry.rotateX(-Math.PI / 2);
+      geometry.translate(0, -height / 2, 0);
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
     const ambient = new THREE.HemisphereLight(0xd8e8ff, 0x030710, 2.15);
     scene.add(ambient);
 
@@ -111,18 +140,27 @@ if (hero && surface && canvas) {
     interposer.position.y = -1.245;
     stackRoot.add(interposer);
 
-    const baseDie = new THREE.Mesh(createSlab(5.08, 2.58, 0.23, 0.12, 0.7), baseMaterial);
+    const inspectionSlot = { startX: 0.85, endX: 1.95 };
+    const baseDie = new THREE.Mesh(
+      createSectionedSlab(5.08, 2.58, 0.23, 0.12, { ...inspectionSlot, depth: 0.62 }),
+      baseMaterial,
+    );
     baseDie.position.y = -1.05;
     stackRoot.add(baseDie);
 
     const layerCount = 16;
     const layerWidth = 4.94;
     const layerDepth = 2.5;
-    const layerHeight = 0.12;
-    const layerPitch = 0.15;
-    const firstLayerY = -0.8;
-    const layerGeometry = createSlab(layerWidth, layerDepth, layerHeight, 0.11, 0.68);
-    const topLayerGeometry = createSlab(layerWidth, layerDepth, layerHeight, 0.11);
+    const layerHeight = 0.13;
+    const layerPitch = 0.19;
+    const firstLayerY = -0.83;
+    const layerGeometry = createSectionedSlab(
+      layerWidth,
+      layerDepth,
+      layerHeight,
+      0.11,
+      { ...inspectionSlot, depth: 0.58 },
+    );
     const layerMaterials = [];
     const layerMeshes = [];
     const darkLayerPalette = [0x0e3154, 0x10365b, 0x123a62, 0x143e68];
@@ -142,17 +180,20 @@ if (hero && surface && canvas) {
         emissive: darkLayerEmissivePalette[index % darkLayerEmissivePalette.length],
         emissiveIntensity: 0.035,
       });
-      const layer = new THREE.Mesh(
-        index === layerCount - 1 ? topLayerGeometry : layerGeometry,
-        material,
-      );
+      const layer = new THREE.Mesh(layerGeometry, material);
       layer.position.y = firstLayerY + index * layerPitch;
       layerMaterials.push(material);
       layerMeshes.push(layer);
       stackRoot.add(layer);
     }
 
-    const seamGeometry = createSlab(4.9, 2.47, 0.026, 0.1, 0.67);
+    const seamGeometry = createSectionedSlab(
+      4.9,
+      2.47,
+      0.026,
+      0.1,
+      { ...inspectionSlot, depth: 0.565 },
+    );
     const seamMaterial = new THREE.MeshBasicMaterial({
       color: 0x0c3154,
       toneMapped: false,
@@ -169,20 +210,27 @@ if (hero && surface && canvas) {
     stackRoot.add(seams);
 
     const edgeMaterial = new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false });
+    const frontEdgeSegments = [
+      { x: -0.765, width: 3.13 },
+      { x: 2.165, width: 0.35 },
+    ];
     const edgeStrips = new THREE.InstancedMesh(
-      new THREE.BoxGeometry(4.13, 0.022, 0.028),
+      new THREE.BoxGeometry(1, 0.022, 0.028),
       edgeMaterial,
-      layerCount,
+      layerCount * frontEdgeSegments.length,
     );
     const edgeIdle = new THREE.Color(0x6a93bd);
     const edgeActive = new THREE.Color(0xc7e2ff);
     for (let index = 0; index < layerCount; index += 1) {
-      helper.position.set(-0.39, firstLayerY + index * layerPitch + layerHeight / 2 + 0.002, 1.258);
-      helper.rotation.set(0, 0, 0);
-      helper.scale.set(1, 1, 1);
-      helper.updateMatrix();
-      edgeStrips.setMatrixAt(index, helper.matrix);
-      edgeStrips.setColorAt(index, edgeIdle);
+      frontEdgeSegments.forEach((segment, segmentIndex) => {
+        const instanceIndex = index * frontEdgeSegments.length + segmentIndex;
+        helper.position.set(segment.x, firstLayerY + index * layerPitch + layerHeight / 2 + 0.002, 1.258);
+        helper.rotation.set(0, 0, 0);
+        helper.scale.set(segment.width, 1, 1);
+        helper.updateMatrix();
+        edgeStrips.setMatrixAt(instanceIndex, helper.matrix);
+        edgeStrips.setColorAt(instanceIndex, edgeIdle);
+      });
     }
     edgeStrips.instanceColor.needsUpdate = true;
     stackRoot.add(edgeStrips);
@@ -205,8 +253,8 @@ if (hero && surface && canvas) {
     }
 
     const controllerBlocks = [
-      { x: 1.13, z: 0.33, width: 1.08, depth: 0.14, tone: 0 },
-      { x: 1.13, z: 0.62, width: 1.08, depth: 0.14, tone: 1 },
+      { x: 1.0, z: 0.2, width: 0.72, depth: 0.14, tone: 0 },
+      { x: 1.0, z: 0.45, width: 0.72, depth: 0.14, tone: 1 },
     ];
     for (let row = 0; row < 4; row += 1) {
       for (let column = 0; column < 4; column += 1) {
@@ -268,11 +316,15 @@ if (hero && surface && canvas) {
       addTopTrace(left, back, left, front);
     };
 
-    // The etched top die is a continuous cap over the exposed lower cutaway,
-    // so every seal-ring segment is supported by silicon at every rotation.
+    // Follow the recessed inspection bay with a conservative silicon inset.
+    // Every segment remains supported by the top die.
     addTopTrace(-2.18, -1.02, 2.18, -1.02);
     addTopTrace(2.18, -1.02, 2.18, 1.02);
-    addTopTrace(2.18, 1.02, -2.18, 1.02);
+    addTopTrace(2.18, 1.02, 2.05, 1.02);
+    addTopTrace(2.05, 1.02, 2.05, 0.62);
+    addTopTrace(2.05, 0.62, 0.75, 0.62);
+    addTopTrace(0.75, 0.62, 0.75, 1.02);
+    addTopTrace(0.75, 1.02, -2.18, 1.02);
     addTopTrace(-2.18, 1.02, -2.18, -1.02);
     memoryBanks.forEach(addTopTraceRectangle);
     controllerBlocks.forEach(addTopTraceRectangle);
@@ -285,9 +337,9 @@ if (hero && surface && canvas) {
       addTopTrace(controller.x + controller.width / 6, controller.z - controller.depth / 2, controller.x + controller.width / 6, controller.z + controller.depth / 2);
     });
     addTopTrace(0.54, -0.91, 0.54, 0.91);
-    addTopTrace(0.54, -0.04, 1.68, -0.04);
-    addTopTrace(0.82, -0.91, 1.68, -0.91);
-    addTopTrace(1.68, -0.91, 1.68, -0.04);
+    addTopTrace(0.54, -0.04, 1.4, -0.04);
+    addTopTrace(0.82, -0.91, 1.4, -0.91);
+    addTopTrace(1.4, -0.91, 1.4, -0.04);
 
     const topTraceGeometry = new THREE.BufferGeometry();
     topTraceGeometry.setAttribute("position", new THREE.Float32BufferAttribute(topTraceSegments, 3));
@@ -300,56 +352,119 @@ if (hero && surface && canvas) {
     });
     stackRoot.add(new THREE.LineSegments(topTraceGeometry, topTraceMaterial));
 
-    // Four through-silicon vias occupy the exposed front-right cutaway. Their
-    // placement is outside the opaque die polygon, so the columns remain
-    // visible from the default and cutaway-facing views while remaining
-    // correctly occluded by silicon in the far-side view.
+    // Four TSV barrels sit directly on the front sectional plane. Half of each
+    // plug is embedded in silicon and half is exposed, so every die visibly
+    // wraps around the conductor instead of leaving a freestanding via cage.
     const tsvColumns = [
-      { x: 2.02, z: 0.79 },
-      { x: 2.29, z: 0.79 },
-      { x: 2.02, z: 1.06 },
-      { x: 2.29, z: 1.06 },
+      { x: 1.05, z: 0.67 },
+      { x: 1.3, z: 0.67 },
+      { x: 1.55, z: 0.67 },
+      { x: 1.8, z: 0.67 },
     ];
-    const towerBottom = -1.115;
-    // Terminate inside the continuous top die, which visibly bonds the vias to
-    // the cap and prevents detached antenna-like tips in the far-side view.
-    const towerTop = topDieY - layerHeight + 0.012;
-    const towerHeight = towerTop - towerBottom;
     const tsvMaterial = new THREE.MeshStandardMaterial({
-      color: 0x6f99bb,
+      color: 0x7499b7,
       metalness: 0.68,
-      roughness: 0.3,
+      roughness: 0.31,
       emissive: 0x0f2f49,
-      emissiveIntensity: 0.07,
+      emissiveIntensity: 0.055,
     });
-    const tsvs = new THREE.InstancedMesh(
-      new THREE.CylinderGeometry(0.048, 0.048, towerHeight, 14),
-      tsvMaterial,
-      tsvColumns.length,
+    const tsvPlugGeometry = new THREE.CylinderGeometry(
+      0.047,
+      0.047,
+      layerHeight + 0.008,
+      16,
     );
-    tsvColumns.forEach((column, index) => {
-      helper.position.set(column.x, towerBottom + towerHeight / 2, column.z);
+    const tsvs = new THREE.InstancedMesh(
+      tsvPlugGeometry,
+      tsvMaterial,
+      tsvColumns.length * layerCount,
+    );
+    let tsvIndex = 0;
+    for (let layer = 0; layer < layerCount; layer += 1) {
+      tsvColumns.forEach((column) => {
+        helper.position.set(column.x, firstLayerY + layer * layerPitch, column.z);
+        helper.rotation.set(0, 0, 0);
+        helper.scale.set(1, 1, 1);
+        helper.updateMatrix();
+        tsvs.setMatrixAt(tsvIndex, helper.matrix);
+        tsvIndex += 1;
+      });
+    }
+    stackRoot.add(tsvs);
+
+    const viaRingMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8eb1cc,
+      metalness: 0.64,
+      roughness: 0.3,
+      emissive: 0x102f47,
+      emissiveIntensity: 0.045,
+    });
+    const viaRingGeometry = new THREE.TorusGeometry(0.06, 0.011, 7, 18);
+    viaRingGeometry.rotateX(Math.PI / 2);
+    const viaRings = new THREE.InstancedMesh(
+      viaRingGeometry,
+      viaRingMaterial,
+      tsvColumns.length * layerCount,
+    );
+    let viaRingIndex = 0;
+    for (let layer = 0; layer < layerCount; layer += 1) {
+      tsvColumns.forEach((column) => {
+        helper.position.set(
+          column.x,
+          firstLayerY + layer * layerPitch + layerHeight / 2 + 0.004,
+          column.z,
+        );
+        helper.rotation.set(0, 0, 0);
+        helper.scale.set(1, 1, 1);
+        helper.updateMatrix();
+        viaRings.setMatrixAt(viaRingIndex, helper.matrix);
+        viaRingIndex += 1;
+      });
+    }
+    stackRoot.add(viaRings);
+
+    const cutFaceMaterial = new THREE.MeshBasicMaterial({
+      color: 0x28577e,
+      toneMapped: false,
+    });
+    const cutFaceStrips = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(1.1, layerHeight * 0.86, 0.018),
+      cutFaceMaterial,
+      layerCount,
+    );
+    for (let layer = 0; layer < layerCount; layer += 1) {
+      helper.position.set(1.4, firstLayerY + layer * layerPitch, 0.665);
       helper.rotation.set(0, 0, 0);
       helper.scale.set(1, 1, 1);
       helper.updateMatrix();
-      tsvs.setMatrixAt(index, helper.matrix);
-    });
-    stackRoot.add(tsvs);
+      cutFaceStrips.setMatrixAt(layer, helper.matrix);
+    }
+    stackRoot.add(cutFaceStrips);
 
-    const bumpCount = tsvColumns.length * (layerCount - 1);
+    const bumpCount = tsvColumns.length * layerCount;
     const bumpMaterial = new THREE.MeshStandardMaterial({
-      color: 0x87abc8,
+      color: 0x86a9c4,
       metalness: 0.64,
       roughness: 0.32,
       emissive: 0x102d43,
-      emissiveIntensity: 0.06,
+      emissiveIntensity: 0.045,
     });
     const bumps = new THREE.InstancedMesh(
-      new THREE.CylinderGeometry(0.065, 0.065, 0.026, 14),
+      new THREE.CylinderGeometry(0.062, 0.062, 0.036, 16),
       bumpMaterial,
       bumpCount,
     );
     let bumpIndex = 0;
+    const baseTop = baseDie.position.y + 0.23 / 2;
+    const firstLayerBottom = firstLayerY - layerHeight / 2;
+    tsvColumns.forEach((column) => {
+      helper.position.set(column.x, (baseTop + firstLayerBottom) / 2, column.z);
+      helper.rotation.set(0, 0, 0);
+      helper.scale.set(1, 1, 1);
+      helper.updateMatrix();
+      bumps.setMatrixAt(bumpIndex, helper.matrix);
+      bumpIndex += 1;
+    });
     for (let layer = 0; layer < layerCount - 1; layer += 1) {
       tsvColumns.forEach((column) => {
         helper.position.set(column.x, firstLayerY + layer * layerPitch + layerPitch / 2, column.z);
@@ -379,7 +494,7 @@ if (hero && surface && canvas) {
       const start = new THREE.Vector3(-2.42, -0.9, entryZ[index]);
       const elbow = new THREE.Vector3(column.x, -0.9, entryZ[index]);
       const base = new THREE.Vector3(column.x, -0.9, column.z);
-      const top = new THREE.Vector3(column.x, towerTop, column.z);
+      const top = new THREE.Vector3(column.x, topDieY + 0.002, column.z);
       const route = new THREE.CurvePath();
       route.add(new THREE.LineCurve3(start, elbow));
       route.add(new THREE.LineCurve3(elbow, base));
@@ -476,6 +591,8 @@ if (hero && surface && canvas) {
       seams,
       edgeStrips,
       tsvs,
+      viaRings,
+      cutFaceStrips,
       bumps,
     ];
 
@@ -531,8 +648,10 @@ if (hero && surface && canvas) {
       topTraceMaterial.color.set(light ? 0x245f98 : 0x70afe8);
       edgeIdle.set(light ? 0x356ca6 : 0x6a93bd);
       edgeActive.set(light ? 0x8abcf2 : 0xc7e2ff);
-      tsvMaterial.color.set(light ? 0x395e7e : 0x6f99bb);
-      bumpMaterial.color.set(light ? 0x416986 : 0x87abc8);
+      tsvMaterial.color.set(light ? 0x3d6686 : 0x7499b7);
+      viaRingMaterial.color.set(light ? 0x456f8f : 0x8eb1cc);
+      cutFaceMaterial.color.set(light ? 0x2f6e9f : 0x28577e);
+      bumpMaterial.color.set(light ? 0x456d8b : 0x86a9c4);
       routeMaterial.color.set(light ? 0x0e55b7 : 0x6b9dde);
       routeMaterial.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
       routeMaterial.needsUpdate = true;
@@ -794,7 +913,9 @@ if (hero && surface && canvas) {
         const activity = clamp(layerActivity[index], 0, 1);
         const layerGlow = clamp(activity + boostAmount * 0.85, 0, 1);
         tempColor.copy(edgeIdle).lerp(edgeActive, layerGlow);
-        edgeStrips.setColorAt(index, tempColor);
+        for (let segmentIndex = 0; segmentIndex < frontEdgeSegments.length; segmentIndex += 1) {
+          edgeStrips.setColorAt(index * frontEdgeSegments.length + segmentIndex, tempColor);
+        }
         layerMaterials[index].color.copy(layerIdleColors[index]).lerp(layerBoostColors[index], boostAmount);
         layerMaterials[index].emissive.copy(layerIdleEmissives[index]).lerp(layerBoostEmissives[index], boostAmount);
         layerMaterials[index].emissiveIntensity = (themeLight ? 0.02 : 0.035)
@@ -803,8 +924,9 @@ if (hero && surface && canvas) {
       }
       edgeStrips.instanceColor.needsUpdate = true;
 
-      tsvMaterial.emissiveIntensity = (themeLight ? 0.02 : 0.06) + inspectAmount * 0.05 + boostAmount * 0.1;
-      bumpMaterial.emissiveIntensity = (themeLight ? 0.01 : 0.04) + boostAmount * 0.06;
+      tsvMaterial.emissiveIntensity = (themeLight ? 0.015 : 0.055) + inspectAmount * 0.04 + boostAmount * 0.08;
+      viaRingMaterial.emissiveIntensity = (themeLight ? 0.01 : 0.045) + boostAmount * 0.07;
+      bumpMaterial.emissiveIntensity = (themeLight ? 0.01 : 0.045) + boostAmount * 0.055;
       routeMaterial.opacity = (themeLight ? 0.64 : 0.27) + inspectAmount * 0.1 + boostAmount * 0.18;
       particleMaterial.opacity = (themeLight ? 0.95 : 0.9) + boostAmount * 0.05;
       particleHaloMaterial.opacity = (themeLight ? 0.28 : 0.2) + boostAmount * 0.5;
