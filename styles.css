@@ -1139,10 +1139,6 @@ html[data-theme="light"] .vision-stages::after {
   box-shadow: 0 0 1.4rem rgba(21, 89, 197, 0.3);
 }
 
-html[data-theme="light"] .closing::after {
-  background: linear-gradient(90deg, transparent, rgba(21, 89, 197, 0.52), transparent);
-}
-
 html[data-theme="light"] .closing-link:hover,
 html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
 
@@ -1195,7 +1191,8 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
 }
 
 /* Blue Horizon hero */
-.site-header .wordmark {
+.site-header .wordmark,
+footer .wordmark {
   gap: 0;
   font-size: clamp(1.25rem, 1.55vw, 1.5rem);
   letter-spacing: 0.055em;
@@ -1412,7 +1409,8 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
 }
 
 @media (max-width: 420px) {
-  .site-header .wordmark { font-size: 1.15rem; }
+  .site-header .wordmark,
+  footer .wordmark { font-size: 1.15rem; }
   .site-header nav a { font-size: 0.8rem; }
   .hero.hero-horizon { padding-top: calc(7.7rem + env(safe-area-inset-top, 0px)); }
   .hero-horizon .eyebrow { margin-bottom: 2rem; font-size: 0.65rem; }
@@ -2298,20 +2296,6 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   min-height: 88svh;
   overflow: hidden;
   isolation: isolate;
-}
-
-.closing::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  right: 0;
-  bottom: 14%;
-  left: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.7), transparent);
-  opacity: var(--closing-horizon-opacity, 0);
-  pointer-events: none;
-  transform: scaleX(var(--closing-horizon-scale, 0));
 }
 
 .closing > * { position: relative; z-index: 2; }

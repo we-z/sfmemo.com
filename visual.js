@@ -333,8 +333,6 @@ function updateScrollMotion() {
     setMotionVariable("--closing-label-opacity", unit(0.15 + labelReveal * 0.85), motionScenes.closing);
     setMotionVariable("--closing-link-x", px((1 - closingReveal) * 64 * amplitude), motionScenes.closing);
     setMotionVariable("--closing-link-opacity", unit(0.1 + closingReveal * 0.9), motionScenes.closing);
-    setMotionVariable("--closing-horizon-scale", unit(closingReveal), motionScenes.closing);
-    setMotionVariable("--closing-horizon-opacity", unit(closingReveal * 0.7), motionScenes.closing);
   }
 
   motionRoot.classList.add("scroll-motion");
