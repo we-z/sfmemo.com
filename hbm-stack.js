@@ -938,8 +938,8 @@ if (hero && surface && canvas) {
 
     window.addEventListener("sfmemo:themechange", (event) => {
       applyHBMTheme(event.detail?.theme === "light");
-      render(performance.now(), true);
-      if (!reduceMotion) start();
+      if (reduceMotion) render(performance.now(), true);
+      else start();
     });
 
     applyHBMTheme(themeLight);
