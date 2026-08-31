@@ -5,7 +5,7 @@ await mkdir("dist/client", { recursive: true });
 await mkdir("dist/server", { recursive: true });
 await mkdir("dist/client/vendor", { recursive: true });
 
-const publicFiles = ["index.html", "styles.css", "visual.js", "hbm-stack.js", "favicon.svg", "robots.txt", "sitemap.xml"];
+const publicFiles = ["index.html", "styles.css", "visual.js", "hbm-stack.js", "favicon.svg", "og-sfmemo-2026.png", "robots.txt", "sitemap.xml"];
 
 await Promise.all([
   ...publicFiles.map((file) => copyFile(file, `dist/client/${file}`)),
@@ -13,9 +13,3 @@ await Promise.all([
   copyFile("node_modules/three/build/three.module.min.js", "dist/client/vendor/three.module.js"),
   copyFile("node_modules/three/build/three.core.min.js", "dist/client/vendor/three.core.min.js"),
 ]);
-
-try {
-  await copyFile("og.png", "dist/client/og.png");
-} catch (error) {
-  if (error?.code !== "ENOENT") throw error;
-}

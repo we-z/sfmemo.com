@@ -955,6 +955,6 @@ if (hero && surface && canvas) {
     render(performance.now(), true);
     start();
   } catch (error) {
-    console.warn("SF Memory HBM stack fallback enabled.", error);
+    console.warn("SF Memo HBM stack fallback enabled.", error);
   }
 }
