@@ -3169,6 +3169,11 @@ footer .wordmark {
 }
 
 /* Final vision timeline hierarchy and directional cues. */
+.approach.approach-editorial {
+  padding-top: clamp(6rem, 9vw, 9rem);
+  padding-bottom: clamp(6rem, 9vw, 9rem);
+}
+
 .vision-compact .vision-route,
 .vision-compact .vision-step {
   min-height: clamp(13rem, 19vw, 17rem);
@@ -3217,6 +3222,8 @@ html[data-theme="light"] .vision-compact .vision-chevron {
 }
 
 @media (max-width: 780px) {
+  .approach.approach-editorial { padding-block: 5.5rem; }
+
   .vision-compact .vision-route,
   .vision-compact .vision-step,
   .vision-compact .vision-step:nth-child(2),
@@ -3248,4 +3255,11 @@ html[data-theme="light"] .vision-compact .vision-chevron {
     width: 0.46rem;
     height: 0.46rem;
   }
+
+  .vision-compact .vision-chevron-one { left: 33.333%; }
+  .vision-compact .vision-chevron-two { left: 66.667%; }
+}
+
+@media (max-width: 420px) {
+  .approach.approach-editorial { padding-block: 4.5rem; }
 }
