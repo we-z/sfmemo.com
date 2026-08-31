@@ -34,7 +34,7 @@
   <meta name="twitter:image:alt" content="SF Memo wordmark.">
   <link rel="canonical" href="https://sfmemo.com/">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/styles.css?v=50">
+  <link rel="stylesheet" href="/styles.css?v=51">
   <title>SF Memo: Memory for AI</title>
   <script type="application/ld+json">
     {
@@ -45,7 +45,7 @@
       "description": "SF Memo is building HBM chips for GPUs, AI Accelerators and SOCs."
     }
   </script>
-  <script type="module" src="/visual.js?v=62"></script>
+  <script type="module" src="/visual.js?v=63"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -205,11 +205,51 @@
         <h2 id="vision-title"><span>Memory made in California.</span></h2>
         <p>Our objective is a domestic path from memory architecture through advanced packaging to HBM manufacturing.</p>
       </div>
-      <ol class="vision-route" aria-label="SF Memo vision from design to manufacturing">
-        <li><span>01</span><strong>Architecture</strong></li>
-        <li><span>02</span><strong>Packaging</strong></li>
-        <li><span>03</span><strong>Manufacturing</strong></li>
-      </ol>
+      <div class="vision-route" role="list" aria-label="SF Memo vision from architecture to manufacturing">
+        <div class="vision-step" role="listitem">
+          <div class="vision-glyph" aria-hidden="true">
+            <svg viewBox="0 0 160 120">
+              <rect class="vision-glyph-surface" x="22" y="20" width="116" height="80" rx="4"></rect>
+              <path class="vision-glyph-line" d="M48 20v80M80 20v80M112 20v80M22 46h116M22 74h116"></path>
+              <path class="vision-glyph-signal" d="M22 74h26V46h32v28h32V46h26"></path>
+              <circle class="vision-glyph-node" cx="48" cy="74" r="4"></circle>
+              <circle class="vision-glyph-node" cx="80" cy="46" r="4"></circle>
+              <circle class="vision-glyph-node" cx="112" cy="74" r="4"></circle>
+            </svg>
+          </div>
+          <div class="vision-step-copy"><span>01</span><strong>Architecture</strong></div>
+        </div>
+        <div class="vision-step" role="listitem">
+          <div class="vision-glyph" aria-hidden="true">
+            <svg viewBox="0 0 160 120">
+              <path class="vision-glyph-surface" d="M25 33 80 15l55 18-55 18z"></path>
+              <path class="vision-glyph-line" d="m25 49 55 18 55-18M25 65l55 18 55-18M25 81l55 18 55-18"></path>
+              <path class="vision-glyph-signal" d="M56 25v62M80 17v80M104 25v62"></path>
+              <circle class="vision-glyph-node" cx="56" cy="87" r="3.5"></circle>
+              <circle class="vision-glyph-node" cx="80" cy="97" r="3.5"></circle>
+              <circle class="vision-glyph-node" cx="104" cy="87" r="3.5"></circle>
+            </svg>
+          </div>
+          <div class="vision-step-copy"><span>02</span><strong>Packaging</strong></div>
+        </div>
+        <div class="vision-step" role="listitem">
+          <div class="vision-glyph" aria-hidden="true">
+            <svg viewBox="0 0 160 120">
+              <defs><clipPath id="vision-wafer-mask"><circle cx="80" cy="59" r="44"></circle></clipPath></defs>
+              <circle class="vision-glyph-surface" cx="80" cy="59" r="44"></circle>
+              <g class="vision-glyph-line" clip-path="url(#vision-wafer-mask)">
+                <path d="M36 37h88M36 59h88M36 81h88M58 15v88M80 15v88M102 15v88"></path>
+              </g>
+              <path class="vision-glyph-signal" d="M58 37h22v22h22v22"></path>
+              <circle class="vision-glyph-node" cx="58" cy="37" r="4"></circle>
+              <circle class="vision-glyph-node" cx="80" cy="59" r="4"></circle>
+              <circle class="vision-glyph-node" cx="102" cy="81" r="4"></circle>
+              <path class="vision-glyph-line" d="M73 103h14"></path>
+            </svg>
+          </div>
+          <div class="vision-step-copy"><span>03</span><strong>Manufacturing</strong></div>
+        </div>
+      </div>
     </section>
 
     <section class="closing">

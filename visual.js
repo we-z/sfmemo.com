@@ -137,7 +137,7 @@ setApproachItem(0);
 updateApproachOrbit(0);
 
 const vision = document.querySelector(".vision-editorial");
-const visionRouteItems = [...document.querySelectorAll(".vision-route li")];
+const visionRouteItems = [...document.querySelectorAll(".vision-step")];
 
 const motionRoot = document.documentElement;
 const motionScenes = {
