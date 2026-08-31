@@ -1,4 +1,4 @@
-import "./hbm-stack.js?v=20";
+import "./hbm-stack.js?v=21";
 
 const hero = document.querySelector(".hero-horizon");
 const heroSurface = hero?.querySelector(".hero-visual") ?? hero;
@@ -325,7 +325,6 @@ function updateScrollMotion() {
     const closingTop = closingMetrics.top - visualScroll;
     const closingReveal = smoothstep(clamp01((viewportHeight * 0.9 - closingTop) / (viewportHeight * 0.72)));
     const labelReveal = smoothstep(clamp01(closingReveal * 1.35));
-    const bottomReveal = smoothstep(clamp01(1 - ((documentHeight - visualScroll) / (viewportHeight * 0.72))));
 
     setMotionVariable("--closing-y", px((1 - closingReveal) * 86 * amplitude), motionScenes.closing);
     setMotionVariable("--closing-scale", unit(0.84 + closingReveal * 0.16), motionScenes.closing);
@@ -334,10 +333,6 @@ function updateScrollMotion() {
     setMotionVariable("--closing-label-opacity", unit(0.15 + labelReveal * 0.85), motionScenes.closing);
     setMotionVariable("--closing-link-x", px((1 - closingReveal) * 64 * amplitude), motionScenes.closing);
     setMotionVariable("--closing-link-opacity", unit(0.1 + closingReveal * 0.9), motionScenes.closing);
-    setMotionVariable("--closing-word-x", px((1 - bottomReveal) * 24 * amplitude), motionScenes.closing);
-    setMotionVariable("--closing-word-y", `${((1 - bottomReveal) * 110).toFixed(2)}%`, motionScenes.closing);
-    setMotionVariable("--closing-word-scale", unit(0.94 + bottomReveal * 0.06), motionScenes.closing);
-    setMotionVariable("--closing-word-opacity", unit(0.02 + bottomReveal * 0.065), motionScenes.closing);
     setMotionVariable("--closing-horizon-scale", unit(closingReveal), motionScenes.closing);
     setMotionVariable("--closing-horizon-opacity", unit(closingReveal * 0.7), motionScenes.closing);
   }

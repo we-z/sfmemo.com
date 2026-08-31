@@ -692,8 +692,8 @@ if (hero && surface && canvas) {
 
       const aspect = bounds.width / bounds.height;
       const viewHeight = mobile
-        ? Math.max(7.05 / 0.94, 7.4 / (aspect * 0.94))
-        : Math.max(3.62 / 0.78, 6.45 / (aspect * 0.9));
+        ? Math.max(7.45 / 0.94, 7.4 / (aspect * 0.94))
+        : Math.max(4.76 / 0.78, 6.85 / (aspect * 0.9));
       camera.left = -viewHeight * aspect / 2;
       camera.right = viewHeight * aspect / 2;
       camera.top = viewHeight / 2;
