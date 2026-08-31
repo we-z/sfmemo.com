@@ -1298,6 +1298,27 @@ html[data-theme="light"] .approach-editorial .approach-item[open] > .approach-tr
   }
 }
 
+/* Large editorial section identifiers. */
+.approach.approach-editorial .section-copy .section-label,
+.vision.vision-editorial.vision-compact .vision-heading .section-label {
+  margin-bottom: clamp(1.75rem, 2.5vw, 2.75rem);
+  font-family: var(--sans);
+  font-size: clamp(2.15rem, 3vw, 3.4rem);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  text-transform: none;
+}
+
+@media (max-width: 780px) {
+  .approach.approach-editorial .section-copy .section-label,
+  .vision.vision-editorial.vision-compact .vision-heading .section-label {
+    margin-bottom: 1.75rem;
+    font-size: clamp(1.9rem, 7.2vw, 2.55rem);
+    line-height: 1;
+  }
+}
+
 @media (max-width: 420px) {
   .vision-compact .vision-step strong { font-size: clamp(0.7rem, 3.15vw, 0.88rem); }
 }
