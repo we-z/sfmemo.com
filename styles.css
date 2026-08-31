@@ -979,8 +979,8 @@ html[data-theme="light"] {
   --panel: #ffffff;
   --white: #0b1628;
   --text: #172337;
-  --muted: #526176;
-  --dim: #68788d;
+  --muted: #43536a;
+  --dim: #586a81;
   --grid: #c8d4e3;
   --blue: #1559c5;
   --blue-2: #1e63d5;
@@ -1002,10 +1002,10 @@ html[data-theme="light"] ::selection {
 }
 
 html[data-theme="light"] .page-grid {
-  opacity: 0.52;
+  opacity: 0.4;
   background-image:
-    linear-gradient(rgba(67, 89, 119, 0.13) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(67, 89, 119, 0.13) 1px, transparent 1px);
+    linear-gradient(rgba(67, 89, 119, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(67, 89, 119, 0.15) 1px, transparent 1px);
 }
 
 html[data-theme="light"] .site-header,
@@ -1052,13 +1052,13 @@ html[data-theme="light"] .approach-editorial .section-intro,
 html[data-theme="light"] .approach-panel p,
 html[data-theme="light"] .vision-heading > p:last-child,
 html[data-theme="light"] .vision-body p {
-  color: #526176;
+  color: #405066;
 }
 
 html[data-theme="light"] .hero-visual-label { color: #52657c; }
 
 html[data-theme="light"] .item-title,
-html[data-theme="light"] .vision-title { color: #26364c; }
+html[data-theme="light"] .vision-title { color: #172337; }
 
 html[data-theme="light"] .approach-trigger:hover .item-title,
 html[data-theme="light"] .approach-item[data-open="true"] .item-title,
@@ -1073,15 +1073,18 @@ html[data-theme="light"] .approach-list,
 html[data-theme="light"] .approach-item,
 html[data-theme="light"] .vision-stages,
 html[data-theme="light"] .vision-stage {
-  border-color: rgba(64, 83, 109, 0.23);
+  border-color: rgba(49, 70, 98, 0.32);
 }
+
+html[data-theme="light"] .item-symbol { background: rgba(21, 89, 197, 0.38); }
+html[data-theme="light"] .item-symbol::before { background: #1559c5; }
 
 html[data-theme="light"] .approach-trigger:focus-visible {
   outline-color: rgba(21, 89, 197, 0.58);
 }
 
 html[data-theme="light"] .approach-progress,
-html[data-theme="light"] .scroll-rail { background: rgba(21, 89, 197, 0.16); }
+html[data-theme="light"] .scroll-rail { background: rgba(21, 89, 197, 0.24); }
 
 html[data-theme="light"] .approach-progress span,
 html[data-theme="light"] .scroll-rail span {
@@ -1090,31 +1093,32 @@ html[data-theme="light"] .scroll-rail span {
 }
 
 html[data-theme="light"] .orbit-guides path,
-html[data-theme="light"] .orbit-guides circle { stroke: rgba(21, 89, 197, 0.12); }
+html[data-theme="light"] .orbit-guides circle { stroke: rgba(21, 89, 197, 0.2); }
 
-html[data-theme="light"] .orbit-path { stroke: rgba(21, 89, 197, 0.4); }
-html[data-theme="light"] .orbit-path-secondary { stroke: rgba(30, 99, 213, 0.32); }
-html[data-theme="light"] .orbit-path-tertiary { stroke: rgba(18, 72, 164, 0.26); }
-html[data-theme="light"] .orbit-path-quaternary { stroke: rgba(18, 72, 164, 0.22); }
-html[data-theme="light"] .orbit-path-quinary { stroke: rgba(18, 72, 164, 0.18); }
-html[data-theme="light"] .orbit-path-senary { stroke: rgba(18, 72, 164, 0.14); }
+html[data-theme="light"] .orbit-path { stroke: rgba(21, 89, 197, 0.68); }
+html[data-theme="light"] .orbit-path-secondary { stroke: rgba(30, 99, 213, 0.58); }
+html[data-theme="light"] .orbit-path-tertiary { stroke: rgba(18, 72, 164, 0.5); }
+html[data-theme="light"] .orbit-path-quaternary { stroke: rgba(18, 72, 164, 0.42); }
+html[data-theme="light"] .orbit-path-quinary { stroke: rgba(18, 72, 164, 0.34); }
+html[data-theme="light"] .orbit-path-senary { stroke: rgba(18, 72, 164, 0.27); }
 
 html[data-theme="light"] .orbit-electron {
-  fill: #eaf4ff;
+  fill: #ffffff;
   stroke: #1559c5;
-  filter: drop-shadow(0 0 0.35rem rgba(21, 89, 197, 0.58));
+  filter: drop-shadow(0 0 0.42rem rgba(21, 89, 197, 0.7));
 }
 
-html[data-theme="light"] .orbit-electron-halo { fill: rgba(21, 89, 197, 0.16); }
-html[data-theme="light"] .orbit-tsv-keepout { stroke: rgba(21, 89, 197, 0.34); }
-html[data-theme="light"] .orbit-tsv-silicon { fill: rgba(224, 234, 247, 0.88); stroke: rgba(21, 89, 197, 0.62); }
-html[data-theme="light"] .orbit-tsv-traces { stroke: rgba(21, 89, 197, 0.66); }
+html[data-theme="light"] .orbit-electron-halo { fill: rgba(21, 89, 197, 0.24); }
+html[data-theme="light"] .orbit-tsv-keepout { fill: rgba(38, 54, 75, 0.4); stroke: rgba(21, 89, 197, 0.74); }
+html[data-theme="light"] .orbit-tsv-silicon { fill: #e3edf8; stroke: #1559c5; }
+html[data-theme="light"] .orbit-tsv-traces { stroke: rgba(21, 89, 197, 0.92); }
+html[data-theme="light"] .orbit-tsv-via { fill: #9a5a12; stroke: #fff3df; }
 
 html[data-theme="light"] .vision-plane {
   background: linear-gradient(180deg, transparent, rgba(199, 214, 234, 0.62));
 }
 
-html[data-theme="light"] .vision-editorial[data-active] .vision-stage:not([data-open="true"]) { opacity: 0.72; }
+html[data-theme="light"] .vision-editorial[data-active] .vision-stage:not([data-open="true"]) { opacity: 0.82; }
 
 html[data-theme="light"] .vision-stages::after {
   background: linear-gradient(90deg, transparent, #6f9ee5 35%, var(--blue) 72%, transparent);
@@ -1520,7 +1524,12 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   font: inherit;
   text-align: left;
   cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
 }
+
+.approach-trigger:active { background: transparent; }
 
 .approach-trigger:focus-visible {
   outline: 1px solid rgba(203, 212, 223, 0.5);
@@ -1800,7 +1809,12 @@ html[data-theme="light"] .closing-link:focus-visible { color: #0b1628; }
   font: inherit;
   text-align: left;
   cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
 }
+
+.vision-trigger:active { background: transparent; }
 
 .vision-trigger:focus-visible {
   outline: 0;
