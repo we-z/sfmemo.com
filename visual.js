@@ -1,5 +1,6 @@
 import "./hbm-stack.js?v=39";
-import "./systolic-array.js?v=2";
+import "./systolic-array.js?v=3";
+import "./vision-map.js?v=1";
 
 const hero = document.querySelector(".hero-horizon");
 const heroSurface = hero?.querySelector(".hero-visual") ?? hero;
@@ -41,7 +42,7 @@ themeToggle?.addEventListener("click", () => {
 const approach = document.querySelector(".approach-editorial");
 
 const vision = document.querySelector(".vision-editorial");
-const visionRouteItems = [...document.querySelectorAll(".vision-step")];
+const visionMap = document.querySelector(".vision-map");
 
 const motionRoot = document.documentElement;
 const motionScenes = {
@@ -49,7 +50,7 @@ const motionScenes = {
   heroSurface,
   approach,
   vision,
-  visionRouteItems,
+  visionMap,
   closing: document.querySelector(".closing"),
 };
 
@@ -93,8 +94,8 @@ function updateScrollMotion() {
     motionScenes.hero,
     motionScenes.approach,
     motionScenes.vision,
+    motionScenes.visionMap,
     motionScenes.closing,
-    ...motionScenes.visionRouteItems,
   ].filter(Boolean);
 
   const measurements = new Map();
@@ -155,13 +156,10 @@ function updateScrollMotion() {
       setMotionVariable(`--vision-line-${index + 1}-skew`, `${((1 - lineReveal) * 2.4 * amplitude).toFixed(3)}deg`, motionScenes.vision);
     });
 
-    motionScenes.visionRouteItems.forEach((item, index) => {
-      const itemReveal = smoothstep(clamp01((visionReveal - 0.28 - index * 0.09) / 0.52));
-      setMotionVariable("--route-y", px((1 - itemReveal) * 28 * amplitude), item);
-      setMotionVariable("--route-opacity", unit(0.12 + itemReveal * 0.88), item);
-    });
-
-    setMotionVariable("--vision-route-progress", unit(smoothstep(visionReveal)), motionScenes.vision);
+    const mapReveal = smoothstep(clamp01((visionReveal - 0.18) / 0.82));
+    setMotionVariable("--vision-map-y", px((1 - mapReveal) * 32 * amplitude), motionScenes.visionMap);
+    setMotionVariable("--vision-map-opacity", unit(0.08 + mapReveal * 0.92), motionScenes.visionMap);
+    setMotionVariable("--vision-map-scale", unit(0.985 + mapReveal * 0.015), motionScenes.visionMap);
   }
 
   if (motionScenes.closing) {

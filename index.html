@@ -34,7 +34,7 @@
   <meta name="twitter:image:alt" content="SF Memo wordmark.">
   <link rel="canonical" href="https://sfmemo.com/">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/styles.css?v=59">
+  <link rel="stylesheet" href="/styles.css?v=60">
   <title>SF Memo: Memory for AI</title>
   <script type="application/ld+json">
     {
@@ -45,7 +45,7 @@
       "description": "SF Memo is building HBM chips for GPUs, AI Accelerators and SOCs."
     }
   </script>
-  <script type="module" src="/visual.js?v=67"></script>
+  <script type="module" src="/visual.js?v=68"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -105,15 +105,11 @@
         <h2 id="vision-title"><span>Memory made in California.</span></h2>
         <p>Our objective is a domestic path from memory architecture through advanced packaging to HBM manufacturing.</p>
       </div>
-      <div class="vision-route-window">
-        <div class="vision-route" role="list" aria-label="SF Memo vision from architecture to manufacturing">
-          <div class="vision-step" role="listitem"><span class="vision-step-index">01</span><strong>Architecture</strong></div>
-          <div class="vision-step" role="listitem"><span class="vision-step-index">02</span><strong>Packaging</strong></div>
-          <div class="vision-step" role="listitem"><span class="vision-step-index">03</span><strong>Manufacturing</strong></div>
-          <span class="vision-chevron vision-chevron-one" aria-hidden="true"></span>
-          <span class="vision-chevron vision-chevron-two" aria-hidden="true"></span>
-        </div>
-      </div>
+      <figure class="vision-map" aria-labelledby="vision-map-title vision-map-note">
+        <canvas id="vision-map-canvas" aria-hidden="true"></canvas>
+        <figcaption id="vision-map-note">Conceptual future reach from the San Francisco Bay Area.</figcaption>
+        <span id="vision-map-title" class="sr-only">Outbound routes originating in the San Francisco Bay Area</span>
+      </figure>
     </section>
 
     <section class="closing">
