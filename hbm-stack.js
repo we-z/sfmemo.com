@@ -121,8 +121,8 @@ if (hero && surface && canvas) {
     const layerCount = 16;
     const layerWidth = 4.94;
     const layerDepth = 2.5;
-    const layerHeight = 0.13;
-    const layerPitch = 0.22;
+    const layerHeight = 0.09;
+    const layerPitch = 0.24;
     const firstLayerY = -0.79;
     const layerGeometry = createSlab(layerWidth, layerDepth, layerHeight, 0.11);
     const layerMaterials = [];
@@ -156,7 +156,7 @@ if (hero && surface && canvas) {
     const edgeMaterial = new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false });
     const frontEdgeSegments = [{ x: 0, width: 4.68 }];
     const edgeStrips = new THREE.InstancedMesh(
-      new THREE.BoxGeometry(1, 0.022, 0.028),
+      new THREE.BoxGeometry(1, 0.014, 0.024),
       edgeMaterial,
       layerCount * frontEdgeSegments.length,
     );
@@ -306,9 +306,9 @@ if (hero && surface && canvas) {
       emissiveIntensity: 0.045,
     });
     const tsvPlugGeometry = new THREE.CylinderGeometry(
-      0.062,
-      0.062,
-      layerHeight + 0.012,
+      0.055,
+      0.055,
+      layerHeight + 0.018,
       18,
     );
     const tsvs = new THREE.InstancedMesh(
@@ -370,9 +370,9 @@ if (hero && surface && canvas) {
     });
     const connectors = new THREE.InstancedMesh(
       new THREE.CylinderGeometry(
-        0.04,
-        0.04,
-        layerPitch - layerHeight - 0.012,
+        0.036,
+        0.036,
+        layerPitch - layerHeight - 0.014,
         16,
       ),
       connectorMaterial,
@@ -384,7 +384,7 @@ if (hero && surface && canvas) {
     tsvColumns.forEach((column) => {
       helper.position.set(column.x, (baseTop + firstLayerBottom) / 2, column.z);
       helper.rotation.set(0, 0, 0);
-      helper.scale.set(1, Math.max(0.2, (firstLayerBottom - baseTop) / (layerPitch - layerHeight - 0.012)), 1);
+      helper.scale.set(1, Math.max(0.2, (firstLayerBottom - baseTop) / (layerPitch - layerHeight - 0.014)), 1);
       helper.updateMatrix();
       connectors.setMatrixAt(connectorIndex, helper.matrix);
       connectorIndex += 1;
@@ -847,7 +847,7 @@ if (hero && surface && canvas) {
       const shortMobile = mobile && window.innerWidth <= 780 && window.innerHeight <= 720;
       touchNavigation = window.innerWidth <= 780 || touchNavigationPreference.matches;
       surface.dataset.touchNavigation = String(touchNavigation);
-      stackRoot.position.y = mobile ? (shortMobile ? 0.48 : 0.95) : 0.04;
+      stackRoot.position.y = mobile ? (shortMobile ? -1 : 0) : 0.04;
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.05 : finePointer ? 1.3 : 1.15));
       renderer.setSize(bounds.width, bounds.height, false);
 
@@ -857,9 +857,9 @@ if (hero && surface && canvas) {
       // and during full desktop drag rotation.
       const viewHeight = mobile
         ? shortMobile
-          ? Math.max(5.4, 7.25 / (aspect * 0.94))
+          ? Math.max(5.9, 7.25 / (aspect * 0.94))
           : Math.max(7.25, 7.5 / (aspect * 0.94))
-        : Math.max(6.35, 7.55 / (aspect * 0.94));
+        : Math.max(8.55, 8.55 / (aspect * 0.94));
       camera.left = -viewHeight * aspect / 2;
       camera.right = viewHeight * aspect / 2;
       camera.top = viewHeight / 2;
