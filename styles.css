@@ -3263,3 +3263,31 @@ html[data-theme="light"] .vision-compact .vision-chevron {
 @media (max-width: 420px) {
   .approach.approach-editorial { padding-block: 4.5rem; }
 }
+
+/* Larger section display titles. */
+.approach.approach-editorial h2 {
+  font-size: clamp(4.8rem, 6.7vw, 7.4rem);
+  line-height: 0.9;
+}
+
+.vision-compact .vision-heading h2 {
+  font-size: clamp(5.6rem, 10vw, 10rem);
+  line-height: 0.88;
+}
+
+@media (max-width: 780px) {
+  .approach.approach-editorial h2 {
+    font-size: clamp(3.8rem, 15vw, 5.4rem);
+    line-height: 0.92;
+  }
+
+  .vision-compact .vision-heading h2 {
+    font-size: clamp(4.35rem, 17vw, 5.8rem);
+    line-height: 0.9;
+  }
+}
+
+@media (max-width: 420px) {
+  .approach.approach-editorial h2 { font-size: clamp(3.55rem, 14.8vw, 4.3rem); }
+  .vision-compact .vision-heading h2 { font-size: clamp(4.15rem, 17vw, 4.8rem); }
+}
