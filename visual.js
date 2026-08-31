@@ -137,63 +137,7 @@ setApproachItem(0);
 updateApproachOrbit(0);
 
 const vision = document.querySelector(".vision-editorial");
-const visionStages = [...document.querySelectorAll(".vision-stage")];
-
-function syncVisionBodyHeight(stage) {
-  const body = stage?.querySelector(".vision-body");
-  const inner = body?.querySelector(".vision-body-inner");
-  if (!body || !inner) return;
-  body.style.setProperty("--vision-body-height", `${inner.scrollHeight}px`);
-}
-
-function setVisionStage(nextStage, open) {
-  if (open) syncVisionBodyHeight(nextStage);
-  visionStages.forEach((stage) => {
-    const isOpen = stage === nextStage && open;
-    const trigger = stage.querySelector(".vision-trigger");
-    const body = stage.querySelector(".vision-body");
-    stage.dataset.open = String(isOpen);
-    trigger?.setAttribute("aria-expanded", String(isOpen));
-    body?.setAttribute("aria-hidden", String(!isOpen));
-  });
-
-  if (!vision) return;
-  if (open) vision.dataset.active = nextStage?.dataset.stage ?? "0";
-  else delete vision.dataset.active;
-}
-
-visionStages.forEach((stage, index) => {
-  const trigger = stage.querySelector(".vision-trigger");
-  stage.dataset.open = "false";
-  syncVisionBodyHeight(stage);
-
-  trigger?.addEventListener("click", () => {
-    const shouldOpen = stage.dataset.open !== "true";
-    setVisionStage(stage, shouldOpen);
-  });
-
-  trigger?.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      setVisionStage(stage, false);
-      return;
-    }
-    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
-    event.preventDefault();
-    const direction = event.key === "ArrowRight" ? 1 : -1;
-    const nextIndex = (index + direction + visionStages.length) % visionStages.length;
-    visionStages[nextIndex].querySelector(".vision-trigger")?.focus();
-  });
-});
-
-const visionBodyResizeObserver = new ResizeObserver((entries) => {
-  entries.forEach((entry) => syncVisionBodyHeight(entry.target.closest(".vision-stage")));
-});
-visionStages.forEach((stage) => {
-  const inner = stage.querySelector(".vision-body-inner");
-  if (inner) visionBodyResizeObserver.observe(inner);
-});
-document.fonts?.ready.then(() => visionStages.forEach(syncVisionBodyHeight));
+const visionRouteItems = [...document.querySelectorAll(".vision-route li")];
 
 const motionRoot = document.documentElement;
 const motionScenes = {
@@ -201,7 +145,7 @@ const motionScenes = {
   heroSurface,
   approach,
   vision,
-  visionStages,
+  visionRouteItems,
   closing: document.querySelector(".closing"),
 };
 
@@ -247,7 +191,7 @@ function updateScrollMotion() {
     motionScenes.approach,
     motionScenes.vision,
     motionScenes.closing,
-    ...motionScenes.visionStages,
+    ...motionScenes.visionRouteItems,
   ].filter(Boolean);
 
   const measurements = new Map();
@@ -301,23 +245,20 @@ function updateScrollMotion() {
     setMotionVariable("--vision-plane-y", px((0.5 - visionTravel) * 54 * amplitude), motionScenes.vision);
     setMotionVariable("--vision-plane-scale", unit(1.02 + visionTravel * 0.035), motionScenes.vision);
 
-    [0, 1, 2].forEach((index) => {
+    [0].forEach((index) => {
       const lineReveal = smoothstep(clamp01((visionReveal - index * 0.11) / (1 - index * 0.11)));
       setMotionVariable(`--vision-line-${index + 1}-y`, px((1 - lineReveal) * (58 + index * 10) * amplitude), motionScenes.vision);
       setMotionVariable(`--vision-line-${index + 1}-opacity`, unit(0.08 + lineReveal * 0.92), motionScenes.vision);
       setMotionVariable(`--vision-line-${index + 1}-skew`, `${((1 - lineReveal) * 2.4 * amplitude).toFixed(3)}deg`, motionScenes.vision);
     });
 
-    motionScenes.visionStages.forEach((stage, index) => {
-      const stageReveal = smoothstep(clamp01((visionReveal - 0.2 - index * 0.1) / (0.7 - index * 0.04)));
-      setMotionVariable("--stage-y", px((1 - stageReveal) * (66 + index * 9) * amplitude), stage);
-      setMotionVariable("--stage-opacity", unit(0.14 + stageReveal * 0.86), stage);
-      setMotionVariable("--stage-rotate", `${((1 - stageReveal) * 6 * amplitude).toFixed(3)}deg`, stage);
+    motionScenes.visionRouteItems.forEach((item, index) => {
+      const itemReveal = smoothstep(clamp01((visionReveal - 0.28 - index * 0.09) / 0.52));
+      setMotionVariable("--route-y", px((1 - itemReveal) * 28 * amplitude), item);
+      setMotionVariable("--route-opacity", unit(0.12 + itemReveal * 0.88), item);
     });
 
-    const stageWidth = motionScenes.vision.querySelector(".vision-stages")?.clientWidth ?? viewportWidth;
-    setMotionVariable("--vision-tracer-x", px(stageWidth * 0.8 * visionTravel), motionScenes.vision);
-    setMotionVariable("--vision-tracer-opacity", unit(Math.min(0.88, visionReveal * 1.25)), motionScenes.vision);
+    setMotionVariable("--vision-route-progress", unit(smoothstep(visionReveal)), motionScenes.vision);
   }
 
   if (motionScenes.closing) {
