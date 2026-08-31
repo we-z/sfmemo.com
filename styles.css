@@ -923,7 +923,7 @@ footer p { margin: 0; }
 
 /* Blue Horizon hero */
 .site-header .wordmark {
-  gap: 0.55rem;
+  gap: 0;
   font-size: clamp(1.05rem, 1.2vw, 1.2rem);
   letter-spacing: 0.055em;
 }
@@ -1688,7 +1688,7 @@ footer p { margin: 0; }
 }
 
 .hero.hero-horizon {
-  min-height: 155svh;
+  min-height: 165svh;
   padding: 0;
   overflow: visible;
   isolation: auto;
@@ -1741,14 +1741,6 @@ footer p { margin: 0; }
   width: min(52vw, 52rem);
   height: 80%;
   overflow: hidden;
-  touch-action: pan-y pinch-zoom;
-}
-
-.hero-gesture-target {
-  position: absolute;
-  z-index: 3;
-  inset: 0;
-  pointer-events: none;
   touch-action: pan-y pinch-zoom;
 }
 
@@ -1960,23 +1952,12 @@ footer p { margin: 0; }
 @media (max-width: 70rem), (max-height: 55.99rem) {
   .scroll-rail { display: none; }
 
-  .hero.hero-horizon {
-    min-height: 100svh;
-    padding: 0;
-  }
-
-  .hero-frame {
-    position: relative;
-    top: auto;
-    min-height: 100svh;
-  }
-
   .approach-editorial .section-copy { position: relative; top: auto; }
 }
 
 @media (max-width: 780px) {
   .hero.hero-horizon {
-    min-height: calc(max(100svh, 54rem) + 40svh);
+    min-height: calc(max(100svh, 54rem) + 50svh);
     padding: 0;
   }
 
@@ -2022,10 +2003,9 @@ footer p { margin: 0; }
     touch-action: pan-y pinch-zoom;
   }
 
-  .hero-visual #hero-canvas { touch-action: pan-y pinch-zoom; }
-  .hero-gesture-target[data-ready="true"] {
-    pointer-events: auto;
-    touch-action: pinch-zoom;
+  .hero-visual #hero-canvas {
+    cursor: default;
+    touch-action: pan-y pinch-zoom;
   }
   .hero-visual-label { display: none; }
   .vision-stages::after { width: 34%; }
@@ -2034,7 +2014,7 @@ footer p { margin: 0; }
 }
 
 @media (min-width: 521px) and (max-width: 780px) and (orientation: portrait) {
-  .hero.hero-horizon { min-height: calc(max(100svh, 60rem) + 40svh); }
+  .hero.hero-horizon { min-height: calc(max(100svh, 60rem) + 50svh); }
   .hero-frame { min-height: max(100svh, 60rem); }
   .hero-frame { grid-template-rows: auto clamp(20rem, 36svh, 24rem); }
   .hero-horizon .eyebrow { margin-bottom: 1.5rem; }
@@ -2044,7 +2024,7 @@ footer p { margin: 0; }
 }
 
 @media (orientation: landscape) and (max-height: 480px) and (max-width: 900px) {
-  .hero.hero-horizon { min-height: calc(max(100svh, 23rem) + 35svh); }
+  .hero.hero-horizon { min-height: calc(max(100svh, 23rem) + 45svh); }
   .hero-frame { min-height: max(100svh, 23rem); }
 
   .hero-frame {
@@ -2108,7 +2088,7 @@ footer p { margin: 0; }
 }
 
 @media (max-width: 360px) {
-  .hero.hero-horizon { min-height: calc(max(100svh, 50rem) + 40svh); }
+  .hero.hero-horizon { min-height: calc(max(100svh, 50rem) + 50svh); }
   .hero-frame { min-height: max(100svh, 50rem); }
   .hero-frame { padding-top: calc(6.4rem + env(safe-area-inset-top, 0px)); }
   .hero-horizon .eyebrow { margin-bottom: 1.2rem; }

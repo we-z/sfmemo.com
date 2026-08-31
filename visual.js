@@ -1,4 +1,4 @@
-import "./hbm-stack.js?v=14";
+import "./hbm-stack.js?v=15";
 
 const hero = document.querySelector(".hero-horizon");
 const heroSurface = hero?.querySelector(".hero-visual") ?? hero;
@@ -189,8 +189,9 @@ function updateScrollMotion() {
     const desktopRange = Math.max(heroMetrics.height - surfaceHeight, 1);
     const mobileRange = Math.max(heroMetrics.height * 0.8, 1);
     const heroProgress = smoothstep(clamp01((visualScroll - heroMetrics.top) / (mobile ? mobileRange : desktopRange)));
-    const departure = smoothstep(clamp01((heroProgress - 0.04) / 0.96));
-    const metaDeparture = smoothstep(clamp01((heroProgress - 0.02) / 0.58));
+    const heroHold = mobile ? 0.26 : 0.22;
+    const departure = smoothstep(clamp01((heroProgress - heroHold) / (1 - heroHold)));
+    const metaDeparture = smoothstep(clamp01((heroProgress - heroHold) / (0.84 - heroHold)));
 
     setMotionVariable("--hero-eyebrow-y", px(-18 * departure * amplitude), motionScenes.hero);
     setMotionVariable("--hero-eyebrow-opacity", unit(1 - metaDeparture * 0.88), motionScenes.hero);

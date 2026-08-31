@@ -1,13 +1,15 @@
 import * as THREE from "./vendor/three.module.js";
 
 const hero = document.querySelector(".hero-horizon");
+const heroFrame = hero?.querySelector(".hero-frame");
 const surface = hero?.querySelector(".hero-visual");
 const canvas = document.querySelector("#hero-canvas");
-const gestureTarget = surface?.querySelector(".hero-gesture-target");
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 const finePointer = window.matchMedia("(pointer: fine)").matches;
 const INITIAL_ROTATION_X = 0.18;
 const INITIAL_ROTATION_Y = 0.46;
+const SCROLL_REVEAL_ROTATION_X = 0.1;
+const SCROLL_REVEAL_ROTATION_Y = -0.82;
 
 if (hero && surface && canvas) {
   try {
@@ -289,17 +291,18 @@ if (hero && surface && canvas) {
     particles.frustumCulled = false;
     stackRoot.add(particles);
 
+    const particleHaloMaterial = new THREE.MeshBasicMaterial({
+      color: 0x5fa3ff,
+      transparent: true,
+      opacity: 0.2,
+      blending: THREE.AdditiveBlending,
+      depthTest: false,
+      depthWrite: false,
+      toneMapped: false,
+    });
     const particleHalos = new THREE.InstancedMesh(
       new THREE.SphereGeometry(0.095, 10, 7),
-      new THREE.MeshBasicMaterial({
-        color: 0x5fa3ff,
-        transparent: true,
-        opacity: 0.2,
-        blending: THREE.AdditiveBlending,
-        depthTest: false,
-        depthWrite: false,
-        toneMapped: false,
-      }),
+      particleHaloMaterial,
       particleCount,
     );
     particleHalos.frustumCulled = false;
@@ -349,25 +352,15 @@ if (hero && surface && canvas) {
       bumps,
     ];
 
-    const gestureBounds = {
-      min: new THREE.Vector3(-3.14, -1.57, -1.57),
-      max: new THREE.Vector3(3.14, 1.72, 1.57),
-    };
-    const gestureCorners = [];
-    for (const x of [gestureBounds.min.x, gestureBounds.max.x]) {
-      for (const y of [gestureBounds.min.y, gestureBounds.max.y]) {
-        for (const z of [gestureBounds.min.z, gestureBounds.max.z]) {
-          gestureCorners.push(new THREE.Vector3(x, y, z));
-        }
-      }
-    }
-
     const raycaster = new THREE.Raycaster();
     const pointerNdc = new THREE.Vector2();
     const activePointers = new Map();
+    const mobileTapPointers = new Map();
     const rotationCurrent = new THREE.Vector2(INITIAL_ROTATION_X, INITIAL_ROTATION_Y);
     const rotationTarget = new THREE.Vector2(INITIAL_ROTATION_X, INITIAL_ROTATION_Y);
     const baseRotation = new THREE.Vector2(INITIAL_ROTATION_X, INITIAL_ROTATION_Y);
+    const scrollRotation = new THREE.Vector2(INITIAL_ROTATION_X, INITIAL_ROTATION_Y);
+    const desktopRotationOffset = new THREE.Vector2();
     const layerActivity = new Float32Array(layerCount);
     const tempColor = new THREE.Color();
     const tempPoint = new THREE.Vector3();
@@ -382,10 +375,14 @@ if (hero && surface && canvas) {
     let lastTouchTapAt = 0;
     let lastTouchTapX = 0;
     let lastTouchTapY = 0;
-    let lastGestureClipPath = "";
+    let scrollRotationFrame = 0;
+    let lastScrollAt = 0;
+    let particleBoost = 0;
+    let particleBoostResetTimer = 0;
 
     surface.dataset.inspecting = "false";
     surface.dataset.dragging = "false";
+    surface.dataset.particleBoost = "false";
 
     function pointFromClient(clientX, clientY) {
       const bounds = surface.getBoundingClientRect();
@@ -402,53 +399,6 @@ if (hero && surface && canvas) {
       return raycaster.intersectObjects(interactionMeshes, false).length > 0;
     }
 
-    function startsOnGestureTarget(event) {
-      return mobile && gestureTarget?.dataset.ready === "true" && event.target === gestureTarget;
-    }
-
-    function convexHull(points) {
-      const sorted = [...points].sort((a, b) => a.x - b.x || a.y - b.y);
-      if (sorted.length <= 2) return sorted;
-      const cross = (origin, a, b) =>
-        (a.x - origin.x) * (b.y - origin.y) - (a.y - origin.y) * (b.x - origin.x);
-      const lower = [];
-      sorted.forEach((point) => {
-        while (lower.length >= 2 && cross(lower.at(-2), lower.at(-1), point) <= 0) lower.pop();
-        lower.push(point);
-      });
-      const upper = [];
-      for (let index = sorted.length - 1; index >= 0; index -= 1) {
-        const point = sorted[index];
-        while (upper.length >= 2 && cross(upper.at(-2), upper.at(-1), point) <= 0) upper.pop();
-        upper.push(point);
-      }
-      lower.pop();
-      upper.pop();
-      return lower.concat(upper);
-    }
-
-    function updateGestureTarget() {
-      if (!gestureTarget || !mobile) return;
-      camera.updateMatrixWorld(true);
-      stackRoot.updateWorldMatrix(true, true);
-      const projected = gestureCorners.map((corner) => {
-        const point = corner.clone().applyMatrix4(stackRoot.matrixWorld).project(camera);
-        return {
-          x: clamp((point.x * 0.5 + 0.5) * 100, 0, 100),
-          y: clamp((-point.y * 0.5 + 0.5) * 100, 0, 100),
-        };
-      });
-      const polygon = convexHull(projected)
-        .map((point) => `${point.x.toFixed(3)}% ${point.y.toFixed(3)}%`)
-        .join(", ");
-      const clipPath = `polygon(${polygon})`;
-      if (clipPath === lastGestureClipPath) return;
-      lastGestureClipPath = clipPath;
-      gestureTarget.style.clipPath = clipPath;
-      gestureTarget.style.webkitClipPath = clipPath;
-      gestureTarget.dataset.ready = "true";
-    }
-
     function updateInteractionState() {
       surface.dataset.inspecting = String(dragging);
       surface.dataset.dragging = String(dragging);
@@ -457,6 +407,23 @@ if (hero && surface && canvas) {
     function updateLights(point) {
       rimLight.position.x = 4.4 + point.x * 2.2;
       keyLight.position.x = -4.5 + point.x * 1.2;
+    }
+
+    function triggerParticleBoost() {
+      particleBoost = 1;
+      surface.dataset.particleBoost = "true";
+      if (particleBoostResetTimer) window.clearTimeout(particleBoostResetTimer);
+      if (reduceMotion) {
+        render(performance.now(), true);
+        particleBoostResetTimer = window.setTimeout(() => {
+          particleBoost = 0;
+          particleBoostResetTimer = 0;
+          surface.dataset.particleBoost = "false";
+          render(performance.now(), true);
+        }, 850);
+      } else {
+        start();
+      }
     }
 
     function renderDirectlyWhenReduced() {
@@ -470,9 +437,9 @@ if (hero && surface && canvas) {
     }
 
     function resetRotation() {
-      baseRotation.set(INITIAL_ROTATION_X, INITIAL_ROTATION_Y);
-      rotationTarget.copy(baseRotation);
       dragging = false;
+      desktopRotationOffset.set(0, 0);
+      updateScrollRotation();
       updateLights({ x: 0, y: 0 });
       updateInteractionState();
       renderDirectlyWhenReduced();
@@ -488,6 +455,7 @@ if (hero && surface && canvas) {
     }
 
     function registerTouchTap(event) {
+      triggerParticleBoost();
       const now = performance.now();
       const closeToPrevious = Math.hypot(
         event.clientX - lastTouchTapX,
@@ -509,6 +477,12 @@ if (hero && surface && canvas) {
       const wrappedYaw = wrapAngle(rotationTarget.y);
       rotationCurrent.y += wrappedYaw - rotationTarget.y;
       rotationTarget.y = wrappedYaw;
+      if (!mobile) {
+        desktopRotationOffset.set(
+          rotationTarget.x - scrollRotation.x,
+          rotationTarget.y - scrollRotation.y,
+        );
+      }
       baseRotation.copy(rotationTarget);
     }
 
@@ -526,9 +500,7 @@ if (hero && surface && canvas) {
         : (dx / bounds.width) * Math.PI * 2;
 
       dragging = true;
-      const pitch = touchInput
-        ? tracked.startRotation.x + pitchDelta
-        : tracked.startRotation.x - pitchDelta;
+      const pitch = tracked.startRotation.x + pitchDelta;
       rotationTarget.set(
         clamp(pitch, touchInput ? -0.7 : -0.3, touchInput ? 0.8 : 0.42),
         tracked.startRotation.y + yawDelta,
@@ -557,9 +529,26 @@ if (hero && surface && canvas) {
       });
     }
 
+    function updateScrollRotation() {
+      const travel = Math.max(1, hero.offsetHeight - (heroFrame?.offsetHeight ?? window.innerHeight));
+      const rawProgress = clamp(-hero.getBoundingClientRect().top / travel, 0, 1);
+      const reveal = reduceMotion ? 0 : smoothstep(clamp(rawProgress / 0.82, 0, 1));
+      scrollRotation.set(
+        INITIAL_ROTATION_X + (SCROLL_REVEAL_ROTATION_X - INITIAL_ROTATION_X) * reveal,
+        INITIAL_ROTATION_Y + (SCROLL_REVEAL_ROTATION_Y - INITIAL_ROTATION_Y) * reveal,
+      );
+      if (dragging) return;
+      rotationTarget.set(
+        scrollRotation.x + (mobile ? 0 : desktopRotationOffset.x),
+        scrollRotation.y + (mobile ? 0 : desktopRotationOffset.y),
+      );
+      baseRotation.copy(rotationTarget);
+    }
+
     function render(now = performance.now(), force = false) {
       frameId = 0;
-      const mobileFrameInterval = dragging ? 0 : 31;
+      const scrollingModel = now - lastScrollAt < 140;
+      const mobileFrameInterval = dragging || scrollingModel ? 0 : 31;
       if (!force && mobile && now - lastFrameAt < mobileFrameInterval) {
         frameId = requestAnimationFrame(render);
         return;
@@ -567,8 +556,14 @@ if (hero && surface && canvas) {
 
       const delta = clamp((now - lastFrameAt) / 1000, 0, 0.05);
       lastFrameAt = now;
+      if (!reduceMotion) particleBoost = Math.max(0, particleBoost - delta * 0.72);
+      if (particleBoost <= 0.001 && surface.dataset.particleBoost !== "false") {
+        particleBoost = 0;
+        surface.dataset.particleBoost = "false";
+      }
+      const boostAmount = smoothstep(particleBoost);
       const inspectAmount = dragging ? 1 : 0;
-      const speed = 0.085 + inspectAmount * 0.022;
+      const speed = 0.085 + inspectAmount * 0.022 + boostAmount * 0.31;
 
       if (!reduceMotion) {
         flowTime = (flowTime + delta * speed) % 1;
@@ -580,7 +575,6 @@ if (hero && surface && canvas) {
 
       stackRoot.rotation.x = rotationCurrent.x;
       stackRoot.rotation.y = rotationCurrent.y;
-      updateGestureTarget();
       layerActivity.fill(0);
 
       particleMeta.forEach((meta, index) => {
@@ -595,11 +589,11 @@ if (hero && surface && canvas) {
 
         helper.position.copy(tempPoint);
         helper.rotation.set(0, 0, 0);
-        helper.scale.setScalar(scale);
+        helper.scale.setScalar(scale * (1 + boostAmount * 0.48));
         helper.updateMatrix();
         particles.setMatrixAt(index, helper.matrix);
 
-        helper.scale.setScalar(scale * 1.18);
+        helper.scale.setScalar(scale * (1.18 + boostAmount * 1.15));
         helper.updateMatrix();
         particleHalos.setMatrixAt(index, helper.matrix);
 
@@ -623,10 +617,11 @@ if (hero && surface && canvas) {
       }
       edgeStrips.instanceColor.needsUpdate = true;
 
-      tsvMaterial.emissiveIntensity = 0.2 + inspectAmount * 0.18;
-      routeMaterial.opacity = 0.27 + inspectAmount * 0.1;
-      particleMaterial.opacity = 0.9;
-      rimLight.intensity = 31 + inspectAmount * 6;
+      tsvMaterial.emissiveIntensity = 0.2 + inspectAmount * 0.18 + boostAmount * 0.32;
+      routeMaterial.opacity = 0.27 + inspectAmount * 0.1 + boostAmount * 0.18;
+      particleMaterial.opacity = 0.9 + boostAmount * 0.1;
+      particleHaloMaterial.opacity = 0.2 + boostAmount * 0.5;
+      rimLight.intensity = 31 + inspectAmount * 6 + boostAmount * 7;
 
       renderer.render(scene, camera);
       if (!force && !reduceMotion && visible && !document.hidden) frameId = requestAnimationFrame(render);
@@ -635,7 +630,9 @@ if (hero && surface && canvas) {
     function resize() {
       const bounds = surface.getBoundingClientRect();
       if (!bounds.width || !bounds.height) return;
-      mobile = window.innerWidth <= 780;
+      const wasMobile = mobile;
+      mobile = window.innerWidth <= 780
+        || (!finePointer && window.innerWidth <= 900 && window.innerHeight <= 480);
       stackRoot.position.y = mobile ? 1.05 : 0;
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.05 : finePointer ? 1.3 : 1.15));
       renderer.setSize(bounds.width, bounds.height, false);
@@ -651,10 +648,19 @@ if (hero && surface && canvas) {
       camera.position.set(0, 1.6, 12);
       camera.lookAt(0, -0.08, 0);
       camera.updateProjectionMatrix();
+      if (wasMobile !== mobile) desktopRotationOffset.set(0, 0);
+      updateScrollRotation();
       render(performance.now(), true);
     }
 
     surface.addEventListener("pointermove", (event) => {
+      if (mobile) {
+        const tap = mobileTapPointers.get(event.pointerId);
+        if (tap && Math.hypot(event.clientX - tap.startX, event.clientY - tap.startY) > 10) {
+          mobileTapPointers.delete(event.pointerId);
+        }
+        return;
+      }
       const tracked = activePointers.get(event.pointerId);
 
       if (tracked) {
@@ -695,9 +701,21 @@ if (hero && surface && canvas) {
     }, { passive: false });
 
     surface.addEventListener("pointerdown", (event) => {
+      if (mobile) {
+        if (event.pointerType === "touch") {
+          const point = pointFromClient(event.clientX, event.clientY);
+          if (hitsStack(point)) {
+            mobileTapPointers.set(event.pointerId, {
+              startX: event.clientX,
+              startY: event.clientY,
+            });
+          }
+        }
+        return;
+      }
       if (event.button !== undefined && event.button !== 0) return;
       const point = pointFromClient(event.clientX, event.clientY);
-      const hit = startsOnGestureTarget(event) || hitsStack(point);
+      const hit = hitsStack(point);
       if (!hit) return;
 
       activePointers.set(event.pointerId, {
@@ -724,10 +742,19 @@ if (hero && surface && canvas) {
     });
 
     function releasePointer(event) {
+      const mobileTap = mobileTapPointers.get(event.pointerId);
+      if (mobileTap) {
+        mobileTapPointers.delete(event.pointerId);
+        if (event.type === "pointerup") registerTouchTap(event);
+        return;
+      }
       const tracked = activePointers.get(event.pointerId);
       if (!tracked) return;
 
       if (tracked.mode === "rotate") commitRotation();
+      if (event.type === "pointerup" && tracked.mode === "pressed") {
+        triggerParticleBoost();
+      }
       if (event.type === "pointerup" && tracked.type === "touch" && tracked.mode === "pending") {
         registerTouchTap(event);
       }
@@ -768,12 +795,26 @@ if (hero && surface && canvas) {
       if (tracked && tracked.mode !== "multi") releasePointer(event);
     });
     surface.addEventListener("dblclick", (event) => {
+      if (mobile) return;
       const point = pointFromClient(event.clientX, event.clientY);
-      if (!startsOnGestureTarget(event) && !hitsStack(point)) return;
+      if (!hitsStack(point)) return;
       event.preventDefault();
-      if (mobile) resetHeroFromTouch();
-      else resetRotation();
+      resetRotation();
     });
+
+    function scheduleScrollRotation() {
+      if (scrollRotationFrame) return;
+      scrollRotationFrame = requestAnimationFrame(() => {
+        scrollRotationFrame = 0;
+        lastScrollAt = performance.now();
+        updateScrollRotation();
+        if (reduceMotion) render(performance.now(), true);
+        else start();
+      });
+    }
+
+    window.addEventListener("scroll", scheduleScrollRotation, { passive: true });
+    window.addEventListener("pageshow", scheduleScrollRotation);
 
     function start() {
       if (frameId || reduceMotion || !visible || document.hidden) return;
@@ -797,6 +838,7 @@ if (hero && surface && canvas) {
     document.addEventListener("visibilitychange", () => {
       if ([...activePointers.values()].some((pointer) => pointer.mode === "rotate")) commitRotation();
       activePointers.clear();
+      mobileTapPointers.clear();
       dragging = false;
       rotationTarget.copy(baseRotation);
       updateLights({ x: 0, y: 0 });
@@ -807,6 +849,7 @@ if (hero && surface && canvas) {
     window.addEventListener("blur", () => {
       if ([...activePointers.values()].some((pointer) => pointer.mode === "rotate")) commitRotation();
       activePointers.clear();
+      mobileTapPointers.clear();
       dragging = false;
       rotationTarget.copy(baseRotation);
       updateLights({ x: 0, y: 0 });
@@ -816,6 +859,7 @@ if (hero && surface && canvas) {
     window.addEventListener("orientationchange", () => {
       if ([...activePointers.values()].some((pointer) => pointer.mode === "rotate")) commitRotation();
       activePointers.clear();
+      mobileTapPointers.clear();
       dragging = false;
       rotationTarget.copy(baseRotation);
       updateLights({ x: 0, y: 0 });
@@ -827,12 +871,20 @@ if (hero && surface && canvas) {
     canvas.addEventListener("webglcontextlost", (event) => {
       event.preventDefault();
       stop();
-      if (gestureTarget) gestureTarget.dataset.ready = "false";
       hero.classList.remove("webgl-ready");
     });
 
     motionPreference.addEventListener("change", (event) => {
       reduceMotion = event.matches;
+      if (reduceMotion && particleBoostResetTimer) {
+        window.clearTimeout(particleBoostResetTimer);
+        particleBoostResetTimer = 0;
+      }
+      if (reduceMotion) {
+        particleBoost = 0;
+        surface.dataset.particleBoost = "false";
+      }
+      updateScrollRotation();
       if (reduceMotion) {
         render(performance.now(), true);
         stop();
