@@ -19,11 +19,12 @@ if (surface && canvas) {
 
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-4, 4, 4, -4, 0.1, 40);
-    camera.position.set(0, 7.25, 8.8);
+    camera.position.set(0, 10.8, 2.05);
+    camera.up.set(0, 0, -1);
     camera.lookAt(0, 0, 0);
 
     const arrayRoot = new THREE.Group();
-    const defaultRotation = { x: 0.02, y: -0.38 };
+    const defaultRotation = { x: 0, y: 0 };
     const targetRotation = { ...defaultRotation };
     arrayRoot.rotation.set(defaultRotation.x, defaultRotation.y, 0);
     scene.add(arrayRoot);
@@ -70,38 +71,11 @@ if (surface && canvas) {
       vertexColors: true,
       toneMapped: false,
     });
-    const signalMaterialA = new THREE.MeshBasicMaterial({
-      color: 0xbfe7ff,
-      toneMapped: false,
-    });
-    const signalMaterialB = new THREE.MeshBasicMaterial({
-      color: 0x8db8ff,
-      toneMapped: false,
-    });
-    const resultMaterial = new THREE.MeshBasicMaterial({
-      color: 0xe8f6ff,
-      toneMapped: false,
-    });
-    const glowMaterialA = new THREE.MeshBasicMaterial({
-      color: 0x4ba8ff,
-      transparent: true,
-      opacity: 0.18,
-      depthWrite: false,
-      toneMapped: false,
-    });
-    const glowMaterialB = new THREE.MeshBasicMaterial({
-      color: 0x6b7dff,
-      transparent: true,
-      opacity: 0.15,
-      depthWrite: false,
-      toneMapped: false,
-    });
-
-    const substrate = new THREE.Mesh(new THREE.BoxGeometry(7.15, 0.2, 7.15), substrateMaterial);
+    const substrate = new THREE.Mesh(new THREE.BoxGeometry(8.2, 0.2, 8.2), substrateMaterial);
     substrate.position.y = -0.28;
     arrayRoot.add(substrate);
 
-    const interposer = new THREE.Mesh(new THREE.BoxGeometry(6.75, 0.12, 6.75), interposerMaterial);
+    const interposer = new THREE.Mesh(new THREE.BoxGeometry(8, 0.12, 8), interposerMaterial);
     interposer.position.y = -0.12;
     arrayRoot.add(interposer);
 
@@ -111,7 +85,7 @@ if (surface && canvas) {
       opacity: 0.54,
     });
     const substrateEdges = new THREE.LineSegments(
-      new THREE.EdgesGeometry(new THREE.BoxGeometry(6.76, 0.125, 6.76)),
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(8.01, 0.125, 8.01)),
       substrateEdgeMaterial,
     );
     substrateEdges.position.y = -0.115;
@@ -195,26 +169,108 @@ if (surface && canvas) {
     columnPads.instanceMatrix.needsUpdate = true;
     arrayRoot.add(rowPads, columnPads);
 
-    const pulseGeometry = new THREE.SphereGeometry(0.065, 12, 8);
-    const glowGeometry = new THREE.SphereGeometry(0.13, 12, 8);
-    const rowPulses = [];
-    const columnPulses = [];
-    const resultPulses = [];
+    const hbmBaseMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x0a294a,
+      metalness: 0.56,
+      roughness: 0.34,
+      clearcoat: 0.42,
+      clearcoatRoughness: 0.25,
+      emissive: 0x031326,
+      emissiveIntensity: 0.14,
+    });
+    const hbmLayerMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x164d80,
+      metalness: 0.24,
+      roughness: 0.3,
+      clearcoat: 0.52,
+      clearcoatRoughness: 0.22,
+      emissive: 0x061e38,
+      emissiveIntensity: 0.16,
+    });
+    const hbmTopMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x276aa3,
+      metalness: 0.18,
+      roughness: 0.27,
+      clearcoat: 0.6,
+      clearcoatRoughness: 0.18,
+      iridescence: 0.18,
+      iridescenceIOR: 1.32,
+      iridescenceThicknessRange: [150, 250],
+      emissive: 0x092a4a,
+      emissiveIntensity: 0.18,
+    });
+    const hbmViaMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xc39252,
+      metalness: 0.82,
+      roughness: 0.22,
+      emissive: 0x3d210a,
+      emissiveIntensity: 0.12,
+    });
 
-    const createPulse = (material, glowMaterial) => {
-      const group = new THREE.Group();
-      const core = new THREE.Mesh(pulseGeometry, material);
-      const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-      group.add(core, glow);
-      arrayRoot.add(group);
-      return group;
-    };
+    const hbmPositions = [];
+    const hbmOffsets = [...lanePositions];
+    hbmOffsets.forEach((offset) => {
+      hbmPositions.push({ x: offset, z: -3.7, rotation: 0 });
+      hbmPositions.push({ x: offset, z: 3.7, rotation: 0 });
+      hbmPositions.push({ x: -3.7, z: offset, rotation: Math.PI / 2 });
+      hbmPositions.push({ x: 3.7, z: offset, rotation: Math.PI / 2 });
+    });
 
-    for (let index = 0; index < gridSize; index += 1) {
-      rowPulses.push(createPulse(signalMaterialA, glowMaterialA));
-      columnPulses.push(createPulse(signalMaterialB, glowMaterialB));
-      resultPulses.push(createPulse(resultMaterial, glowMaterialA));
-    }
+    const hbmBaseMesh = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(0.64, 0.08, 0.5),
+      hbmBaseMaterial,
+      hbmPositions.length,
+    );
+    const hbmLayerCount = 4;
+    const hbmLayerMesh = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(0.58, 0.052, 0.44),
+      hbmLayerMaterial,
+      hbmPositions.length * hbmLayerCount,
+    );
+    const hbmTopMesh = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(0.5, 0.022, 0.35),
+      hbmTopMaterial,
+      hbmPositions.length,
+    );
+    const hbmViaMesh = new THREE.InstancedMesh(
+      new THREE.CylinderGeometry(0.026, 0.026, 0.035, 10),
+      hbmViaMaterial,
+      hbmPositions.length * 4,
+    );
+
+    hbmPositions.forEach(({ x, z, rotation }, stackIndex) => {
+      helper.position.set(x, 0.01, z);
+      helper.rotation.set(0, rotation, 0);
+      helper.scale.set(1, 1, 1);
+      helper.updateMatrix();
+      hbmBaseMesh.setMatrixAt(stackIndex, helper.matrix);
+
+      for (let layer = 0; layer < hbmLayerCount; layer += 1) {
+        helper.position.set(x, 0.075 + layer * 0.066, z);
+        helper.rotation.set(0, rotation, 0);
+        helper.updateMatrix();
+        hbmLayerMesh.setMatrixAt(stackIndex * hbmLayerCount + layer, helper.matrix);
+      }
+
+      helper.position.set(x, 0.3, z);
+      helper.rotation.set(0, rotation, 0);
+      helper.updateMatrix();
+      hbmTopMesh.setMatrixAt(stackIndex, helper.matrix);
+
+      [-0.18, -0.06, 0.06, 0.18].forEach((localX, viaIndex) => {
+        const cos = Math.cos(rotation);
+        const sin = Math.sin(rotation);
+        helper.position.set(x + localX * cos, 0.33, z - localX * sin);
+        helper.rotation.set(0, rotation, 0);
+        helper.updateMatrix();
+        hbmViaMesh.setMatrixAt(stackIndex * 4 + viaIndex, helper.matrix);
+      });
+    });
+    hbmBaseMesh.instanceMatrix.needsUpdate = true;
+    hbmLayerMesh.instanceMatrix.needsUpdate = true;
+    hbmTopMesh.instanceMatrix.needsUpdate = true;
+    hbmViaMesh.instanceMatrix.needsUpdate = true;
+    arrayRoot.add(hbmBaseMesh, hbmLayerMesh, hbmTopMesh, hbmViaMesh);
 
     const darkCellPalette = [0x123d69, 0x154875, 0x173f70, 0x1b4c7d];
     const lightCellPalette = [0x21699e, 0x2675aa, 0x2a669f, 0x2f79b1];
@@ -226,6 +282,15 @@ if (surface && canvas) {
     const activeCellLight = new THREE.Color(0x176bc4);
     const activeCoreDark = new THREE.Color(0xe0f4ff);
     const activeCoreLight = new THREE.Color(0x8bc8ff);
+    const boostBlueDark = new THREE.Color(0x4c9ff0);
+    const boostBlueLight = new THREE.Color(0x2b78c6);
+    const boostTopDark = new THREE.Color(0x77c6ff);
+    const boostTopLight = new THREE.Color(0x3d8fd0);
+    const boostSubstrateDark = new THREE.Color(0x123b69);
+    const boostSubstrateLight = new THREE.Color(0x397db3);
+    const boostInterposerDark = new THREE.Color(0x246ea9);
+    const boostInterposerLight = new THREE.Color(0x4a92c9);
+    const boostGold = new THREE.Color(0xf1c777);
 
     let lightTheme = document.documentElement.dataset.theme === "light";
     let visible = true;
@@ -238,11 +303,6 @@ if (surface && canvas) {
 
     const fract = (value) => value - Math.floor(value);
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-    const wrappedDistance = (a, b) => {
-      const distance = Math.abs(a - b);
-      return Math.min(distance, 1 - distance);
-    };
-
     function applyTheme() {
       lightTheme = document.documentElement.dataset.theme === "light";
       renderer.toneMappingExposure = lightTheme ? 1.0 : 1.18;
@@ -256,6 +316,14 @@ if (surface && canvas) {
       traceMaterial.opacity = lightTheme ? 0.42 : 0.3;
       padMaterial.color.setHex(lightTheme ? 0x2b74a8 : 0x6da9d7);
       padMaterial.emissive.setHex(lightTheme ? 0x0e3f70 : 0x0d3154);
+      hbmBaseMaterial.color.setHex(lightTheme ? 0x1c527f : 0x0a294a);
+      hbmBaseMaterial.emissive.setHex(lightTheme ? 0x0a3158 : 0x031326);
+      hbmLayerMaterial.color.setHex(lightTheme ? 0x2b75aa : 0x164d80);
+      hbmLayerMaterial.emissive.setHex(lightTheme ? 0x10426f : 0x061e38);
+      hbmTopMaterial.color.setHex(lightTheme ? 0x3c87b9 : 0x276aa3);
+      hbmTopMaterial.emissive.setHex(lightTheme ? 0x15517e : 0x092a4a);
+      hbmViaMaterial.color.setHex(lightTheme ? 0x9c6f37 : 0xc39252);
+      hbmViaMaterial.emissive.setHex(lightTheme ? 0x3b220b : 0x3d210a);
       if (reducedMotion) renderFrame(performance.now());
     }
 
@@ -265,46 +333,64 @@ if (surface && canvas) {
       const activeBody = lightTheme ? activeCellLight : activeCellDark;
       const activeTop = lightTheme ? activeCoreLight : activeCoreDark;
       const waveTime = reducedMotion ? 7.3 : simulationTime;
+      const cycleLength = gridSize * 2 + 4;
+      const wavePosition = fract(waveTime * 0.095) * cycleLength - 2;
 
       cellPositions.forEach(({ row, column }, index) => {
-        const diagonalPhase = fract(waveTime * 0.34 - (row + column) * 0.057);
-        const wave = Math.exp(-Math.pow(wrappedDistance(diagonalPhase, 0.04), 2) * 270);
+        const diagonal = row + column;
+        const leadingWave = Math.exp(-Math.pow(diagonal - wavePosition, 2) * 1.4);
+        const trailingWave = Math.exp(-Math.pow(diagonal - (wavePosition - 3), 2) * 2.2) * 0.28;
+        const wave = Math.min(1, leadingWave + trailingWave);
         const hovered = index === hoveredCell ? 0.78 : 0;
         const hoverLane = hoveredCell >= 0 && (
           row === Math.floor(hoveredCell / gridSize) || column === hoveredCell % gridSize
         ) ? 0.16 : 0;
         const activation = clamp(wave * (0.74 + boost * 0.34) + hovered + hoverLane, 0, 1);
 
-        cellColor.setHex(bodyPalette[(row + column * 3) % bodyPalette.length]).lerp(activeBody, activation * 0.76);
-        coreColor.setHex(topPalette[(row * 2 + column) % topPalette.length]).lerp(activeTop, activation);
+        cellColor
+          .setHex(bodyPalette[(row + column * 3) % bodyPalette.length])
+          .lerp(activeBody, clamp(activation * 0.76 + boost * 0.28, 0, 1));
+        coreColor
+          .setHex(topPalette[(row * 2 + column) % topPalette.length])
+          .lerp(activeTop, clamp(activation + boost * 0.34, 0, 1));
         cellMesh.setColorAt(index, cellColor);
         coreMesh.setColorAt(index, coreColor);
       });
       cellMesh.instanceColor.needsUpdate = true;
       coreMesh.instanceColor.needsUpdate = true;
 
-      const glowScale = 1 + boost * 0.55;
-      rowPulses.forEach((pulse, row) => {
-        const progress = fract(waveTime * 0.19 - row * 0.045);
-        pulse.position.set(-3.42 + progress * 6.84, 0.2, lanePositions[row]);
-        pulse.scale.setScalar(glowScale);
-      });
-      columnPulses.forEach((pulse, column) => {
-        const progress = fract(waveTime * 0.19 - column * 0.045);
-        pulse.position.set(lanePositions[column], 0.21, -3.42 + progress * 6.84);
-        pulse.scale.setScalar(glowScale);
-      });
-      resultPulses.forEach((pulse, row) => {
-        const progress = fract(waveTime * 0.16 - row * 0.075 - 0.34);
-        pulse.position.set(2.72 + progress * 0.82, 0.22, lanePositions[row]);
-        pulse.scale.setScalar(0.78 + boost * 0.45);
-      });
+      renderer.toneMappingExposure = (lightTheme ? 1 : 1.18) + boost * 0.18;
 
-      coreMaterial.opacity = 0.86 + boost * 0.14;
-      glowMaterialA.opacity = 0.16 + boost * 0.2;
-      glowMaterialB.opacity = 0.14 + boost * 0.18;
-      interposerMaterial.emissiveIntensity = (lightTheme ? 0.12 : 0.15) + boost * 0.18;
-      rimLight.intensity = 24 + boost * 14;
+      substrateMaterial.color
+        .setHex(lightTheme ? 0x15304d : 0x07111f)
+        .lerp(lightTheme ? boostSubstrateLight : boostSubstrateDark, boost * 0.5);
+      interposerMaterial.color
+        .setHex(lightTheme ? 0x225f91 : 0x0a2a4c)
+        .lerp(lightTheme ? boostInterposerLight : boostInterposerDark, boost * 0.62);
+      padMaterial.color
+        .setHex(lightTheme ? 0x2b74a8 : 0x6da9d7)
+        .lerp(lightTheme ? boostTopLight : activeCoreDark, boost * 0.52);
+      hbmBaseMaterial.color
+        .setHex(lightTheme ? 0x1c527f : 0x0a294a)
+        .lerp(lightTheme ? boostBlueLight : boostBlueDark, boost * 0.56);
+      hbmLayerMaterial.color
+        .setHex(lightTheme ? 0x2b75aa : 0x164d80)
+        .lerp(lightTheme ? boostBlueLight : boostBlueDark, boost * 0.72);
+      hbmTopMaterial.color
+        .setHex(lightTheme ? 0x3c87b9 : 0x276aa3)
+        .lerp(lightTheme ? boostTopLight : boostTopDark, boost * 0.76);
+      hbmViaMaterial.color
+        .setHex(lightTheme ? 0x9c6f37 : 0xc39252)
+        .lerp(boostGold, boost * 0.7);
+
+      substrateEdgeMaterial.opacity = (lightTheme ? 0.68 : 0.54) + boost * 0.22;
+      traceMaterial.opacity = (lightTheme ? 0.42 : 0.3) + boost * 0.36;
+      hbmBaseMaterial.emissiveIntensity = (lightTheme ? 0.12 : 0.14) + boost * 0.3;
+      hbmLayerMaterial.emissiveIntensity = (lightTheme ? 0.14 : 0.16) + boost * 0.42;
+      hbmTopMaterial.emissiveIntensity = (lightTheme ? 0.16 : 0.18) + boost * 0.48;
+      hbmViaMaterial.emissiveIntensity = 0.12 + boost * 0.3;
+      interposerMaterial.emissiveIntensity = (lightTheme ? 0.12 : 0.15) + boost * 0.34;
+      rimLight.intensity = 24 + boost * 22;
     }
 
     function renderFrame(time) {
@@ -312,7 +398,7 @@ if (surface && canvas) {
       const elapsed = Math.min(0.05, Math.max(0, (time - previousTime) / 1000));
       previousTime = time;
       const boost = reducedMotion ? 0 : clamp((boostUntil - time) / 900, 0, 1);
-      if (!reducedMotion) simulationTime += elapsed * (1 + boost * 2.5);
+      if (!reducedMotion) simulationTime += elapsed * (1 + boost * 4.2);
 
       arrayRoot.rotation.x += (targetRotation.x - arrayRoot.rotation.x) * 0.09;
       arrayRoot.rotation.y += (targetRotation.y - arrayRoot.rotation.y) * 0.09;
@@ -334,7 +420,7 @@ if (surface && canvas) {
       const width = Math.max(1, Math.round(bounds.width));
       const height = Math.max(1, Math.round(bounds.height));
       const aspect = width / height;
-      const viewHeight = Math.max(8.4, 10.1 / Math.max(aspect, 0.4));
+      const viewHeight = Math.max(10.4, 11.4 / Math.max(aspect, 0.4));
       const halfHeight = viewHeight / 2;
       const halfWidth = halfHeight * aspect;
       camera.left = -halfWidth;
@@ -388,8 +474,8 @@ if (surface && canvas) {
       event.preventDefault();
       const dx = event.clientX - drag.lastX;
       const dy = event.clientY - drag.lastY;
-      targetRotation.y += dx * 0.011;
-      targetRotation.x = clamp(targetRotation.x + dy * 0.007, -0.32, 0.34);
+      targetRotation.y = clamp(targetRotation.y + dx * 0.008, -0.28, 0.28);
+      targetRotation.x = 0;
       drag.lastX = event.clientX;
       drag.lastY = event.clientY;
       requestRender();
@@ -397,7 +483,7 @@ if (surface && canvas) {
 
     const finishPointer = (event) => {
       if (drag.id !== event.pointerId) return;
-      if (!drag.moved) boostUntil = performance.now() + 1050;
+      if (!drag.moved) boostUntil = performance.now() + 1350;
       drag.id = null;
       drag.moved = false;
       requestRender();
