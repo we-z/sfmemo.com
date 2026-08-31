@@ -122,6 +122,7 @@ if (hero && surface && canvas) {
     const layerPitch = 0.15;
     const firstLayerY = -0.8;
     const layerGeometry = createSlab(layerWidth, layerDepth, layerHeight, 0.11, 0.68);
+    const topLayerGeometry = createSlab(layerWidth, layerDepth, layerHeight, 0.11);
     const layerMaterials = [];
     const layerMeshes = [];
     const darkLayerPalette = [0x0e3154, 0x10365b, 0x123a62, 0x143e68];
@@ -141,7 +142,10 @@ if (hero && surface && canvas) {
         emissive: darkLayerEmissivePalette[index % darkLayerEmissivePalette.length],
         emissiveIntensity: 0.035,
       });
-      const layer = new THREE.Mesh(layerGeometry, material);
+      const layer = new THREE.Mesh(
+        index === layerCount - 1 ? topLayerGeometry : layerGeometry,
+        material,
+      );
       layer.position.y = firstLayerY + index * layerPitch;
       layerMaterials.push(material);
       layerMeshes.push(layer);
@@ -264,10 +268,10 @@ if (hero && surface && canvas) {
       addTopTrace(left, back, left, front);
     };
 
-    addTopTrace(-2.18, -1.02, 1.74, -1.02);
-    addTopTrace(1.74, -1.02, 1.74, -0.58);
-    addTopTrace(1.74, -0.58, 2.18, -0.58);
-    addTopTrace(2.18, -0.58, 2.18, 1.02);
+    // The etched top die is a continuous cap over the exposed lower cutaway,
+    // so every seal-ring segment is supported by silicon at every rotation.
+    addTopTrace(-2.18, -1.02, 2.18, -1.02);
+    addTopTrace(2.18, -1.02, 2.18, 1.02);
     addTopTrace(2.18, 1.02, -2.18, 1.02);
     addTopTrace(-2.18, 1.02, -2.18, -1.02);
     memoryBanks.forEach(addTopTraceRectangle);
@@ -280,8 +284,8 @@ if (hero && surface && canvas) {
       addTopTrace(controller.x - controller.width / 6, controller.z - controller.depth / 2, controller.x - controller.width / 6, controller.z + controller.depth / 2);
       addTopTrace(controller.x + controller.width / 6, controller.z - controller.depth / 2, controller.x + controller.width / 6, controller.z + controller.depth / 2);
     });
-    addTopTrace(0.6, -0.91, 0.6, 0.91);
-    addTopTrace(0.6, -0.04, 1.68, -0.04);
+    addTopTrace(0.54, -0.91, 0.54, 0.91);
+    addTopTrace(0.54, -0.04, 1.68, -0.04);
     addTopTrace(0.82, -0.91, 1.68, -0.91);
     addTopTrace(1.68, -0.91, 1.68, -0.04);
 
@@ -296,24 +300,30 @@ if (hero && surface && canvas) {
     });
     stackRoot.add(new THREE.LineSegments(topTraceGeometry, topTraceMaterial));
 
+    // Four through-silicon vias occupy the exposed front-right cutaway. Their
+    // placement is outside the opaque die polygon, so the columns remain
+    // visible from the default and cutaway-facing views while remaining
+    // correctly occluded by silicon in the far-side view.
     const tsvColumns = [
-      { x: 1.4, z: 0.78 },
-      { x: 1.68, z: 0.78 },
-      { x: 1.4, z: 1.02 },
-      { x: 1.68, z: 1.02 },
+      { x: 2.02, z: 0.79 },
+      { x: 2.29, z: 0.79 },
+      { x: 2.02, z: 1.06 },
+      { x: 2.29, z: 1.06 },
     ];
     const towerBottom = -1.115;
-    const towerTop = topDieY - 0.018;
+    // Terminate inside the continuous top die, which visibly bonds the vias to
+    // the cap and prevents detached antenna-like tips in the far-side view.
+    const towerTop = topDieY - layerHeight + 0.012;
     const towerHeight = towerTop - towerBottom;
     const tsvMaterial = new THREE.MeshStandardMaterial({
-      color: 0x7895b0,
-      metalness: 0.6,
-      roughness: 0.34,
-      emissive: 0x102b40,
-      emissiveIntensity: 0.06,
+      color: 0x6f99bb,
+      metalness: 0.68,
+      roughness: 0.3,
+      emissive: 0x0f2f49,
+      emissiveIntensity: 0.07,
     });
     const tsvs = new THREE.InstancedMesh(
-      new THREE.CylinderGeometry(0.035, 0.035, towerHeight, 10),
+      new THREE.CylinderGeometry(0.048, 0.048, towerHeight, 14),
       tsvMaterial,
       tsvColumns.length,
     );
@@ -328,14 +338,14 @@ if (hero && surface && canvas) {
 
     const bumpCount = tsvColumns.length * (layerCount - 1);
     const bumpMaterial = new THREE.MeshStandardMaterial({
-      color: 0x8299ae,
-      metalness: 0.58,
-      roughness: 0.36,
-      emissive: 0x0e1f2e,
-      emissiveIntensity: 0.05,
+      color: 0x87abc8,
+      metalness: 0.64,
+      roughness: 0.32,
+      emissive: 0x102d43,
+      emissiveIntensity: 0.06,
     });
     const bumps = new THREE.InstancedMesh(
-      new THREE.CylinderGeometry(0.043, 0.043, 0.024, 10),
+      new THREE.CylinderGeometry(0.065, 0.065, 0.026, 14),
       bumpMaterial,
       bumpCount,
     );
@@ -369,7 +379,7 @@ if (hero && surface && canvas) {
       const start = new THREE.Vector3(-2.42, -0.9, entryZ[index]);
       const elbow = new THREE.Vector3(column.x, -0.9, entryZ[index]);
       const base = new THREE.Vector3(column.x, -0.9, column.z);
-      const top = new THREE.Vector3(column.x, towerTop + 0.04, column.z);
+      const top = new THREE.Vector3(column.x, towerTop, column.z);
       const route = new THREE.CurvePath();
       route.add(new THREE.LineCurve3(start, elbow));
       route.add(new THREE.LineCurve3(elbow, base));
@@ -396,7 +406,7 @@ if (hero && surface && canvas) {
       transparent: true,
       opacity: 0.94,
       blending: THREE.AdditiveBlending,
-      depthTest: false,
+      depthTest: true,
       depthWrite: false,
       toneMapped: false,
     });
@@ -413,7 +423,7 @@ if (hero && surface && canvas) {
       transparent: true,
       opacity: 0.2,
       blending: THREE.AdditiveBlending,
-      depthTest: false,
+      depthTest: true,
       depthWrite: false,
       toneMapped: false,
     });
@@ -521,8 +531,8 @@ if (hero && surface && canvas) {
       topTraceMaterial.color.set(light ? 0x245f98 : 0x70afe8);
       edgeIdle.set(light ? 0x356ca6 : 0x6a93bd);
       edgeActive.set(light ? 0x8abcf2 : 0xc7e2ff);
-      tsvMaterial.color.set(light ? 0x566f88 : 0x7895b0);
-      bumpMaterial.color.set(light ? 0x4d667f : 0x8299ae);
+      tsvMaterial.color.set(light ? 0x395e7e : 0x6f99bb);
+      bumpMaterial.color.set(light ? 0x416986 : 0x87abc8);
       routeMaterial.color.set(light ? 0x0e55b7 : 0x6b9dde);
       routeMaterial.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
       routeMaterial.needsUpdate = true;
