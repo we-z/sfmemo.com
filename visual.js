@@ -1,4 +1,4 @@
-import "./hbm-stack.js?v=16";
+import "./hbm-stack.js?v=17";
 
 const hero = document.querySelector(".hero-horizon");
 const heroSurface = hero?.querySelector(".hero-visual") ?? hero;
@@ -9,7 +9,7 @@ const approach = document.querySelector(".approach-editorial");
 const approachTrack = approach?.querySelector(".approach-track");
 const approachList = approach?.querySelector(".approach-list");
 const approachItems = [...document.querySelectorAll(".approach-item")];
-const approachWord = approach?.querySelector(".approach-watermark span");
+const approachStageThresholds = [0, 0.16, 0.42, 0.68];
 let activeApproachIndex = -1;
 
 function setApproachItem(nextIndex) {
@@ -25,17 +25,16 @@ function setApproachItem(nextIndex) {
     panel?.setAttribute("aria-hidden", String(!isOpen));
   });
 
-  approach?.classList.add("has-selection");
   if (approach) approach.dataset.active = String(nextIndex);
-  if (approachWord) approachWord.textContent = approachItems[nextIndex]?.dataset.word ?? "BOUNDARY";
 }
 
 function getApproachScrollRange() {
   if (!approachTrack || !approachList) return { start: 0, end: 1 };
   const trackTop = approachTrack.getBoundingClientRect().top + window.scrollY;
   const stickyTop = Number.parseFloat(getComputedStyle(approachList).top) || 0;
-  const start = trackTop - stickyTop;
-  const end = Math.max(start + 1, trackTop + approachTrack.offsetHeight - window.innerHeight);
+  const activationLead = Math.max(stickyTop, window.innerHeight * 0.72);
+  const start = trackTop - activationLead;
+  const end = Math.max(start + 1, trackTop + approachTrack.offsetHeight - window.innerHeight * 1.08);
   return { start, end };
 }
 
@@ -43,14 +42,19 @@ function updateApproachFromScroll(scrollPosition = window.scrollY) {
   if (!approachItems.length) return;
   const { start, end } = getApproachScrollRange();
   const progress = Math.min(1, Math.max(0, (scrollPosition - start) / (end - start)));
-  const stage = Math.min(approachItems.length - 1, Math.floor(progress * approachItems.length));
+  const stage = approachStageThresholds.reduce(
+    (current, threshold, index) => progress >= threshold ? index : current,
+    0,
+  );
   approach?.style.setProperty("--approach-stage-progress", progress.toFixed(4));
   setApproachItem(stage);
 }
 
 function scrollToApproachItem(index) {
   const { start, end } = getApproachScrollRange();
-  const stagePosition = (index + 0.5) / approachItems.length;
+  const stageStart = approachStageThresholds[index] ?? 0;
+  const stageEnd = approachStageThresholds[index + 1] ?? 1;
+  const stagePosition = stageStart + (stageEnd - stageStart) * 0.5;
   window.scrollTo({
     top: start + (end - start) * stagePosition,
     behavior: reduceMotion ? "auto" : "smooth",
@@ -223,12 +227,9 @@ function updateScrollMotion() {
     const approachMetrics = measurements.get(motionScenes.approach);
     const approachTop = approachMetrics.top - visualScroll;
     const approachReveal = smoothstep(clamp01((viewportHeight * 0.88 - approachTop) / (viewportHeight * 0.66)));
-    const approachTravel = clamp01((viewportHeight - approachTop) / (viewportHeight + approachMetrics.height));
 
     setMotionVariable("--approach-heading-y", px((1 - approachReveal) * 42 * amplitude), motionScenes.approach);
     setMotionVariable("--approach-heading-opacity", unit(0.2 + approachReveal * 0.8), motionScenes.approach);
-    setMotionVariable("--approach-watermark-x", px((0.5 - approachTravel) * 110 * amplitude), motionScenes.approach);
-
   }
 
   if (motionScenes.vision) {

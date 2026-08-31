@@ -613,9 +613,10 @@ if (hero && surface && canvas) {
 
       for (let index = 0; index < layerCount; index += 1) {
         const activity = clamp(layerActivity[index], 0, 1);
-        tempColor.copy(edgeIdle).lerp(edgeActive, activity);
+        const layerGlow = clamp(activity + boostAmount * 0.22, 0, 1);
+        tempColor.copy(edgeIdle).lerp(edgeActive, layerGlow);
         edgeStrips.setColorAt(index, tempColor);
-        layerMaterials[index].emissiveIntensity = 0.14 + activity * 0.48;
+        layerMaterials[index].emissiveIntensity = 0.14 + activity * 0.48 + boostAmount * 0.22;
       }
       edgeStrips.instanceColor.needsUpdate = true;
 
