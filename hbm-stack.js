@@ -198,20 +198,20 @@ if (hero && surface && canvas) {
     });
     const topPassivationHeight = 0.01;
     const topPassivation = new THREE.Mesh(
-      createSlab(4.7, 2.26, topPassivationHeight, 0.09),
+      createSlab(4.76, 2.32, topPassivationHeight, 0.09),
       topPassivationMaterial,
     );
     topPassivation.position.y = topDieY + topPassivationHeight / 2 + 0.001;
     stackRoot.add(topPassivation);
 
-    const bankX = [-1.62, -0.93, -0.24, 0.45];
-    const bankZ = [-0.46, 0.46];
+    const bankX = [-1.03, 1.03];
+    const bankZ = [-0.48, 0.3];
     bankZ.forEach((z, row) => {
       bankX.forEach((x, column) => {
         memoryBanks.push({
           x,
           z,
-          width: 0.54,
+          width: 1.92,
           depth: 0.7,
           tone: (row + column) % 2,
         });
@@ -222,9 +222,9 @@ if (hero && surface && canvas) {
     const tsvLaneZ = 1.14;
     const peripheralBlocks = tsvLaneX.map((x, index) => ({
       x,
-      z: 0.56,
-      width: 0.2,
-      depth: 0.3,
+      z: 0.82,
+      width: 0.18,
+      depth: 0.16,
       tone: index % 2,
     }));
     const surfaceFeatures = [

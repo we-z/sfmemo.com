@@ -200,10 +200,11 @@ if (surface && canvas) {
     arrayRoot.add(cellMesh, coreMesh, activationMesh);
 
     const lanePositions = Array.from({ length: gridSize }, (_, index) => first + index * pitch);
+    const clockPositions = [-2.82, ...lanePositions, 2.82];
     const traceVertices = [];
     lanePositions.forEach((lane) => {
-      traceVertices.push(-2.72, -0.015, lane, 2.72, -0.015, lane);
-      traceVertices.push(lane, -0.005, -2.72, lane, -0.005, 2.72);
+      traceVertices.push(-2.42, -0.015, lane, 2.42, -0.015, lane);
+      traceVertices.push(lane, -0.005, -2.42, lane, -0.005, 2.42);
     });
     const traceGeometry = new THREE.BufferGeometry();
     traceGeometry.setAttribute("position", new THREE.Float32BufferAttribute(traceVertices, 3));
@@ -321,18 +322,18 @@ if (surface && canvas) {
 
     function createHbmPackage() {
       const packageGroup = new THREE.Group();
-      const base = new THREE.Mesh(createSlab(6.78, 1.36, 0.1, 0.07), hbmBaseMaterial);
+      const base = new THREE.Mesh(createSlab(4.76, 1.66, 0.1, 0.07), hbmBaseMaterial);
       base.position.y = -0.015;
       packageGroup.add(base);
-      const packageInterposer = new THREE.Mesh(createSlab(6.64, 1.27, 0.045, 0.065), hbmInterposerMaterial);
+      const packageInterposer = new THREE.Mesh(createSlab(4.62, 1.52, 0.045, 0.065), hbmInterposerMaterial);
       packageInterposer.position.y = 0.05;
       packageGroup.add(packageInterposer);
 
       const layerCount = 8;
       const firstLayerY = 0.1;
-      const layerPitch = 0.072;
-      const layerHeight = 0.034;
-      const layerGeometry = createSlab(6.54, 1.18, layerHeight, 0.055);
+      const layerPitch = 0.09;
+      const layerHeight = 0.045;
+      const layerGeometry = createSlab(4.52, 1.42, layerHeight, 0.055);
       for (let layer = 0; layer < layerCount; layer += 1) {
         const die = new THREE.Mesh(layerGeometry, hbmLayerMaterials[layer % 2]);
         die.position.y = firstLayerY + layer * layerPitch;
@@ -340,65 +341,65 @@ if (surface && canvas) {
       }
 
       const topY = firstLayerY + (layerCount - 1) * layerPitch + layerHeight / 2;
-      const passivation = new THREE.Mesh(createSlab(6.5, 1.13, 0.018, 0.052), hbmTopMaterial);
+      const passivation = new THREE.Mesh(createSlab(4.48, 1.38, 0.018, 0.052), hbmTopMaterial);
       passivation.position.y = topY + 0.014;
       packageGroup.add(passivation);
       const featureY = topY + 0.03;
 
-      const bankXs = [-2.72, -2.16, -1.6, -1.04, -0.48, 0.08, 0.64, 1.2, 1.76];
-      const bankZs = [-0.27, 0.08];
+      const bankXs = [-1.45, -0.76, -0.07, 0.62];
+      const bankZs = [-0.34, 0.34];
       bankZs.forEach((z, row) => {
         bankXs.forEach((x, column) => {
           const bank = new THREE.Mesh(
-            new THREE.BoxGeometry(0.49, 0.008, 0.27),
+            new THREE.BoxGeometry(0.56, 0.008, 0.5),
             hbmBankMaterials[(row + column) % 2],
           );
           bank.position.set(x, featureY, z);
           packageGroup.add(bank);
-          [-0.12, 0, 0.12].forEach((offset) => {
-            addTopStrip(packageGroup, x + offset, z, 0.011, 0.235, featureY + 0.007, hbmGridMaterial);
+          [-0.14, 0, 0.14].forEach((offset) => {
+            addTopStrip(packageGroup, x + offset, z, 0.011, 0.44, featureY + 0.007, hbmGridMaterial);
           });
-          [-0.04, 0.04].forEach((offset) => {
-            addTopStrip(packageGroup, x, z + offset * 1.75, 0.45, 0.01, featureY + 0.007, hbmGridMaterial);
+          [-0.07, 0.07].forEach((offset) => {
+            addTopStrip(packageGroup, x, z + offset * 1.75, 0.5, 0.01, featureY + 0.007, hbmGridMaterial);
           });
         });
       });
 
-      const viaXs = [2.14, 2.38, 2.62, 2.86];
+      const viaXs = [1.16, 1.4, 1.64, 1.88];
       viaXs.forEach((x) => {
         const phy = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.008, 0.09), hbmPhyMaterial);
-        phy.position.set(x, featureY, 0.41);
+        phy.position.set(x, featureY, 0.34);
         packageGroup.add(phy);
-        addTopStrip(packageGroup, x, 0.49, 0.022, 0.16, featureY + 0.008, hbmRdlMaterial);
+        addTopStrip(packageGroup, x, 0.48, 0.022, 0.28, featureY + 0.008, hbmRdlMaterial);
 
         const viaHeight = topY - 0.055;
         const via = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, viaHeight, 14), hbmViaMaterial);
-        via.position.set(x, 0.055 + viaHeight / 2, 0.52);
+        via.position.set(x, 0.055 + viaHeight / 2, 0.62);
         packageGroup.add(via);
 
         [firstLayerY, topY].forEach((ringY) => {
           const ringGeometry = new THREE.TorusGeometry(0.05, 0.01, 7, 18);
           ringGeometry.rotateX(Math.PI / 2);
           const ring = new THREE.Mesh(ringGeometry, hbmViaRingMaterial);
-          ring.position.set(x, ringY + 0.02, 0.52);
+          ring.position.set(x, ringY + 0.02, 0.62);
           packageGroup.add(ring);
         });
       });
 
-      addTopStrip(packageGroup, -0.34, 0.315, 5.45, 0.018, featureY + 0.008, hbmRdlMaterial);
+      addTopStrip(packageGroup, 0.22, 0.54, 3.4, 0.018, featureY + 0.008, hbmRdlMaterial);
       bankXs.forEach((x) => {
-        addTopStrip(packageGroup, x, 0.2, 0.014, 0.22, featureY + 0.008, hbmRdlMaterial);
+        addTopStrip(packageGroup, x, 0.475, 0.014, 0.13, featureY + 0.008, hbmRdlMaterial);
       });
-      addSealRing(packageGroup, 6.26, 1.02, featureY + 0.009);
-      addSealRing(packageGroup, 6.1, 0.9, featureY + 0.0095);
+      addSealRing(packageGroup, 4.24, 1.18, featureY + 0.009);
+      addSealRing(packageGroup, 4.08, 1.04, featureY + 0.0095);
       return packageGroup;
     }
 
     const hbmPositions = [
-      { x: 0, z: -3.42, rotation: 0 },
-      { x: 0, z: 3.42, rotation: Math.PI },
-      { x: -3.42, z: 0, rotation: Math.PI / 2 },
-      { x: 3.42, z: 0, rotation: -Math.PI / 2 },
+      { x: 0, z: -3.25, rotation: 0 },
+      { x: 0, z: 3.25, rotation: Math.PI },
+      { x: -3.25, z: 0, rotation: Math.PI / 2 },
+      { x: 3.25, z: 0, rotation: -Math.PI / 2 },
     ];
     const packagePrototype = createHbmPackage();
     hbmPositions.forEach(({ x, z, rotation }, index) => {
@@ -474,12 +475,13 @@ if (surface && canvas) {
 
     function updateSystolicState(boost) {
       const progress = reducedMotion ? 0.52 : fract(simulationTime);
-      const easedProgress = smoothstep(0, 1, progress);
-      const travelStart = -2.82;
-      const travelEnd = 2.82;
-      const horizontalPosition = travelStart + (travelEnd - travelStart) * easedProgress;
-      const verticalPosition = travelStart + (travelEnd - travelStart) * easedProgress;
-      const edgeFade = smoothstep(0, 0.12, progress) * (1 - smoothstep(0.88, 1, progress));
+      const cycleIndex = Math.min(
+        clockPositions.length - 1,
+        Math.floor(progress * clockPositions.length),
+      );
+      const horizontalPosition = clockPositions[cycleIndex];
+      const verticalPosition = clockPositions[cycleIndex];
+      const edgeFade = cycleIndex === 0 || cycleIndex === clockPositions.length - 1 ? 0.001 : 1;
 
       cellPositions.forEach(({ row, column, x, z }, index) => {
         const horizontalWave = clamp(1 - Math.abs(x - horizontalPosition) / (pitch * 0.82));
