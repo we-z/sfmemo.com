@@ -415,6 +415,7 @@ if (surface && canvas) {
     const peRowLight = new THREE.Color(0x8de5ff);
     const peColumnLight = new THREE.Color(0xb1a7ff);
     const peActiveLight = new THREE.Color(0xeaf8ff);
+    const peBlackout = new THREE.Color(0x000000);
     const colorScratch = new THREE.Color();
     const brightCore = new THREE.Color(0xbfe8ff);
 
@@ -547,8 +548,11 @@ if (surface && canvas) {
     function updateClockState(step, boostAmount) {
       const fillSteps = gridSize;
       const drainSteps = gridSize - 1;
-      const cycleStep = step % (fillSteps + drainSteps);
+      const blackoutStep = fillSteps + drainSteps;
+      const cycleStep = step % (blackoutStep + 1);
       const filling = cycleStep < fillSteps;
+      const draining = cycleStep >= fillSteps && cycleStep < blackoutStep;
+      const blackout = cycleStep === blackoutStep;
       const waveStep = filling ? cycleStep : cycleStep - fillSteps;
       const offColor = lightTheme ? peOffLight : peOffDark;
       const filledColor = lightTheme ? peFilledLight : peFilledDark;
@@ -560,14 +564,14 @@ if (surface && canvas) {
       pePositions.forEach(({ row, column, x, z }, index) => {
         const filled = filling
           ? row <= waveStep || column <= waveStep
-          : row > waveStep || column > waveStep;
+          : draining && (row > waveStep || column > waveStep);
         const rowPath = filling && row === waveStep;
         const columnPath = filling && column === waveStep;
         const intersection = rowPath && columnPath;
-        const drainBoundary = !filling
+        const drainBoundary = draining
           && ((row === waveStep && column <= waveStep)
             || (column === waveStep && row <= waveStep));
-        colorScratch.copy(filled ? filledColor : offColor);
+        colorScratch.copy(blackout ? peBlackout : filled ? filledColor : offColor);
         if (drainBoundary) colorScratch.copy(afterglowColor);
         if (rowPath) colorScratch.copy(rowColor);
         if (columnPath) colorScratch.copy(columnColor);
@@ -764,7 +768,7 @@ if (surface && canvas) {
       const sectionProgress = clamp((viewportTrigger - bounds.top) / travel);
       const tiltProgress = reducedMotion
         ? 0
-        : smoothstep(clamp((sectionProgress - 0.5) / 0.34));
+        : smoothstep(clamp((sectionProgress - 0.3) / 0.54));
       scrollRotation.set(
         INITIAL_PITCH + (SCROLL_END_PITCH - INITIAL_PITCH) * tiltProgress,
         INITIAL_YAW + (SCROLL_END_YAW - INITIAL_YAW) * tiltProgress,
