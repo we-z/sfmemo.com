@@ -3322,9 +3322,13 @@ html[data-theme="light"] .vision-compact .vision-chevron {
 
 .approach-systolic {
   position: relative;
+  width: 100%;
+  max-width: 48rem;
   min-width: 0;
-  height: clamp(33rem, 43vw, 43rem);
+  height: auto;
+  aspect-ratio: 1.22 / 1;
   align-self: center;
+  justify-self: center;
   overflow: visible;
   isolation: isolate;
 }
@@ -3344,12 +3348,24 @@ html[data-theme="light"] .vision-compact .vision-chevron {
   display: block;
   width: 100%;
   height: 100%;
-  cursor: pointer;
+  cursor: grab;
   outline: 0;
-  touch-action: pan-y pinch-zoom;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-#systolic-canvas:active { cursor: pointer; }
+#systolic-canvas:active,
+.approach-systolic[data-dragging="true"] #systolic-canvas { cursor: grabbing; }
+
+#systolic-canvas:focus-visible {
+  outline: 0;
+  filter: drop-shadow(0 0 0.45rem rgba(96, 165, 250, 0.72));
+}
+
+html[data-theme="light"] #systolic-canvas:focus-visible {
+  filter: drop-shadow(0 0 0.45rem rgba(21, 89, 197, 0.58));
+}
 .approach-systolic.is-unavailable { min-height: 18rem; }
 
 html[data-theme="light"] .approach-systolic::before {
@@ -3504,16 +3520,19 @@ html[data-theme="light"] .vision-compact .vision-chevron {
   }
 
   .approach-editorial .section-copy { max-width: 46rem; }
-  .approach-systolic { width: 100%; height: clamp(28rem, 66vw, 38rem); }
+  .approach-systolic { width: 100%; max-width: 52rem; height: auto; }
 }
 
 @media (max-width: 780px) {
   .approach-systolic {
-    height: clamp(23rem, 94vw, 30rem);
+    width: 100%;
+    max-width: 34rem;
+    height: auto;
+    aspect-ratio: 1.15 / 1;
     margin-top: -0.5rem;
   }
 
-  #systolic-canvas { cursor: default; }
+  #systolic-canvas { cursor: grab; }
 
   .vision-compact .vision-route {
     --rail-y: 4.5rem;

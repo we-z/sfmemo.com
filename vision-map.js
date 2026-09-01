@@ -30,15 +30,37 @@ if (mapFigure && mapCanvas && mapContext) {
   let width = 1;
   let height = 1;
   let pixelRatio = 1;
-  let visible = true;
+  let visible = false;
   let reducedMotion = mapMotionPreference.matches;
   let frame = 0;
   let lastDraw = 0;
   let trunkGeometry = null;
   let branchGeometries = [];
+  const flowTiming = { inbound: 1050, handoff: 90, outbound: 1550 };
+  const flowOrder = ["inbound", "handoff", "outbound"];
+  let flowPhase = "inbound";
+  let flowPhaseStartedAt = 0;
 
   const clamp = (value, minimum = 0, maximum = 1) => Math.min(maximum, Math.max(minimum, value));
   const projectionScale = () => Math.min(width / 1.22, height / 1.05);
+
+  function resetFlow(timestamp = performance.now()) {
+    flowPhase = "inbound";
+    flowPhaseStartedAt = timestamp;
+  }
+
+  function flowState(timestamp) {
+    if (!flowPhaseStartedAt) flowPhaseStartedAt = timestamp;
+    let duration = flowTiming[flowPhase];
+    let elapsed = timestamp - flowPhaseStartedAt;
+    while (elapsed >= duration) {
+      flowPhaseStartedAt += duration;
+      flowPhase = flowOrder[(flowOrder.indexOf(flowPhase) + 1) % flowOrder.length];
+      duration = flowTiming[flowPhase];
+      elapsed = timestamp - flowPhaseStartedAt;
+    }
+    return { phase: flowPhase, progress: clamp(elapsed / duration) };
+  }
 
   const project = ([longitude, latitude]) => {
     const scale = projectionScale();
@@ -214,16 +236,11 @@ if (mapFigure && mapCanvas && mapContext) {
     mapContext.fill();
   }
 
-  function drawLoopingRouteSegment(geometry, progress, lightTheme, emphasis = false) {
-    const endAmount = ((progress % 1) + 1) % 1;
+  function drawTravelingRouteSegment(geometry, progress, lightTheme, emphasis = false, clearFrame = false) {
     const tailLength = emphasis ? 0.22 : 0.16;
-    const startAmount = endAmount - tailLength;
-    if (startAmount < 0) {
-      drawRouteWindow(geometry, 1 + startAmount, 1, lightTheme, emphasis);
-      drawRouteWindow(geometry, 0, endAmount, lightTheme, emphasis, true);
-      return;
-    }
-    drawRouteWindow(geometry, startAmount, endAmount, lightTheme, emphasis, true);
+    const endAmount = clamp(progress) * (clearFrame ? 1 + tailLength : 1);
+    const startAmount = Math.max(0, endAmount - tailLength);
+    drawRouteWindow(geometry, startAmount, endAmount, lightTheme, emphasis, endAmount <= 1);
   }
 
   function drawNode(point, lightTheme, emphasized = false) {
@@ -243,9 +260,17 @@ if (mapFigure && mapCanvas && mapContext) {
     mapContext.shadowBlur = 0;
   }
 
+  function requestMapFrame() {
+    if (!frame) frame = requestAnimationFrame(draw);
+  }
+
   function draw(timestamp = 0) {
-    frame = requestAnimationFrame(draw);
-    if (!visible || (!reducedMotion && timestamp - lastDraw < 24)) return;
+    frame = 0;
+    if (!visible) return;
+    if (!reducedMotion && timestamp - lastDraw < 24) {
+      frame = requestAnimationFrame(draw);
+      return;
+    }
     lastDraw = timestamp;
 
     const lightTheme = document.documentElement.dataset.theme === "light";
@@ -264,18 +289,26 @@ if (mapFigure && mapCanvas && mapContext) {
     drawRouteBase(trunkGeometry, lightTheme, true);
     branchGeometries.forEach((geometry) => drawRouteBase(geometry, lightTheme));
 
-    const flowProgress = reducedMotion ? 0.72 : (timestamp / 1900) % 1;
-    const branchProgress = reducedMotion ? 0.62 : (flowProgress + 0.28) % 1;
-    [flowProgress, (flowProgress + 0.5) % 1].forEach((progress) => {
-      drawLoopingRouteSegment(trunkGeometry, progress, lightTheme, true);
-    });
-    [branchProgress, (branchProgress + 0.5) % 1].forEach((progress) => {
-      branchGeometries.forEach((geometry) => drawLoopingRouteSegment(geometry, progress, lightTheme));
-    });
+    if (!reducedMotion) {
+      const flow = flowState(timestamp);
+      if (flow.phase === "inbound" || flow.phase === "handoff") {
+        drawTravelingRouteSegment(
+          trunkGeometry,
+          flow.phase === "handoff" ? 1 : flow.progress,
+          lightTheme,
+          true,
+        );
+      } else {
+        branchGeometries.forEach((geometry) => {
+          drawTravelingRouteSegment(geometry, flow.progress, lightTheme, false, true);
+        });
+      }
+    }
 
     drawRegionOutlines(lightTheme);
     drawNode(project(sanFrancisco), lightTheme);
     drawNode(project(southBay), lightTheme, true);
+    if (!reducedMotion) frame = requestAnimationFrame(draw);
   }
 
   function resizeMap() {
@@ -289,18 +322,34 @@ if (mapFigure && mapCanvas && mapContext) {
     mapCanvas.style.height = `${height}px`;
     rebuildRoutes();
     lastDraw = 0;
+    requestMapFrame();
   }
 
   new ResizeObserver(resizeMap).observe(mapFigure);
   new IntersectionObserver((entries) => {
-    visible = entries.some((entry) => entry.isIntersecting);
-  }, { rootMargin: "180px" }).observe(mapFigure);
+    const nextVisible = entries.some((entry) => entry.isIntersecting);
+    if (nextVisible && !visible) resetFlow(performance.now());
+    visible = nextVisible;
+    if (visible) requestMapFrame();
+  }, { rootMargin: "0px" }).observe(mapFigure);
 
   mapMotionPreference.addEventListener("change", (event) => {
     reducedMotion = event.matches;
+    if (!reducedMotion) resetFlow(performance.now());
     lastDraw = 0;
+    requestMapFrame();
   });
-  window.addEventListener("sfmemo:themechange", () => { lastDraw = 0; });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && visible) {
+      resetFlow(performance.now());
+      lastDraw = 0;
+      requestMapFrame();
+    }
+  });
+  window.addEventListener("sfmemo:themechange", () => {
+    lastDraw = 0;
+    requestMapFrame();
+  });
 
   fetch("/world-land.json")
     .then((response) => {
@@ -317,5 +366,5 @@ if (mapFigure && mapCanvas && mapContext) {
     .catch(() => mapFigure.classList.add("is-unavailable"));
 
   resizeMap();
-  frame = requestAnimationFrame(draw);
+  requestMapFrame();
 }
