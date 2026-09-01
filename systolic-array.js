@@ -65,6 +65,31 @@ if (surface && canvas) {
       return geometry;
     }
 
+    function createWedgeSlab(outerWidth, innerWidth, depth, height, chamfer) {
+      const outerHalf = outerWidth / 2;
+      const innerHalf = innerWidth / 2;
+      const halfDepth = depth / 2;
+      const shape = new THREE.Shape();
+      shape.moveTo(-outerHalf + chamfer, -halfDepth);
+      shape.lineTo(outerHalf - chamfer, -halfDepth);
+      shape.lineTo(outerHalf, -halfDepth + chamfer);
+      shape.lineTo(innerHalf, halfDepth - chamfer);
+      shape.lineTo(innerHalf - chamfer, halfDepth);
+      shape.lineTo(-innerHalf + chamfer, halfDepth);
+      shape.lineTo(-innerHalf, halfDepth - chamfer);
+      shape.lineTo(-outerHalf, -halfDepth + chamfer);
+      shape.closePath();
+      const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth: height,
+        bevelEnabled: false,
+        curveSegments: 1,
+      });
+      geometry.rotateX(-Math.PI / 2);
+      geometry.translate(0, -height / 2, 0);
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
     const substrateMaterial = new THREE.MeshPhysicalMaterial({
       color: 0x07111f,
       metalness: 0.58,
@@ -200,7 +225,7 @@ if (surface && canvas) {
     arrayRoot.add(cellMesh, coreMesh, activationMesh);
 
     const lanePositions = Array.from({ length: gridSize }, (_, index) => first + index * pitch);
-    const clockPositions = [-2.82, ...lanePositions, 2.82];
+    const clockPositions = lanePositions;
     const traceVertices = [];
     lanePositions.forEach((lane) => {
       traceVertices.push(-2.42, -0.015, lane, 2.42, -0.015, lane);
@@ -312,20 +337,21 @@ if (surface && canvas) {
       group.add(strip);
     }
 
-    function addSealRing(group, ringWidth, ringDepth, y) {
-      const stroke = 0.016;
-      addTopStrip(group, 0, -ringDepth / 2, ringWidth, stroke, y, hbmSealMaterial);
-      addTopStrip(group, 0, ringDepth / 2, ringWidth, stroke, y, hbmSealMaterial);
-      addTopStrip(group, -ringWidth / 2, 0, stroke, ringDepth, y, hbmSealMaterial);
-      addTopStrip(group, ringWidth / 2, 0, stroke, ringDepth, y, hbmSealMaterial);
+    function addWedgeRing(group, outerWidth, innerWidth, depth, y) {
+      const halfDepth = depth / 2;
+      addTopStrip(group, 0, -halfDepth, outerWidth, 0.016, y, hbmSealMaterial);
+      addTopStrip(group, 0, halfDepth, innerWidth, 0.016, y, hbmSealMaterial);
     }
 
     function createHbmPackage() {
       const packageGroup = new THREE.Group();
-      const base = new THREE.Mesh(createSlab(4.76, 1.66, 0.1, 0.07), hbmBaseMaterial);
+      const base = new THREE.Mesh(createWedgeSlab(7.9, 4.64, 1.62, 0.1, 0.07), hbmBaseMaterial);
       base.position.y = -0.015;
       packageGroup.add(base);
-      const packageInterposer = new THREE.Mesh(createSlab(4.62, 1.52, 0.045, 0.065), hbmInterposerMaterial);
+      const packageInterposer = new THREE.Mesh(
+        createWedgeSlab(7.68, 4.7, 1.48, 0.045, 0.065),
+        hbmInterposerMaterial,
+      );
       packageInterposer.position.y = 0.05;
       packageGroup.add(packageInterposer);
 
@@ -333,7 +359,7 @@ if (surface && canvas) {
       const firstLayerY = 0.1;
       const layerPitch = 0.09;
       const layerHeight = 0.045;
-      const layerGeometry = createSlab(4.52, 1.42, layerHeight, 0.055);
+      const layerGeometry = createWedgeSlab(7.46, 4.76, 1.36, layerHeight, 0.055);
       for (let layer = 0; layer < layerCount; layer += 1) {
         const die = new THREE.Mesh(layerGeometry, hbmLayerMaterials[layer % 2]);
         die.position.y = firstLayerY + layer * layerPitch;
@@ -341,57 +367,60 @@ if (surface && canvas) {
       }
 
       const topY = firstLayerY + (layerCount - 1) * layerPitch + layerHeight / 2;
-      const passivation = new THREE.Mesh(createSlab(4.48, 1.38, 0.018, 0.052), hbmTopMaterial);
+      const passivation = new THREE.Mesh(
+        createWedgeSlab(7.3, 4.8, 1.28, 0.018, 0.052),
+        hbmTopMaterial,
+      );
       passivation.position.y = topY + 0.014;
       packageGroup.add(passivation);
       const featureY = topY + 0.03;
 
-      const bankXs = [-1.45, -0.76, -0.07, 0.62];
-      const bankZs = [-0.34, 0.34];
+      const bankXs = [-2.48, -1.92, -1.36, -0.8, -0.24, 0.32, 0.88, 1.44];
+      const bankZs = [-0.34, 0.3];
       bankZs.forEach((z, row) => {
         bankXs.forEach((x, column) => {
           const bank = new THREE.Mesh(
-            new THREE.BoxGeometry(0.56, 0.008, 0.5),
+            new THREE.BoxGeometry(0.48, 0.008, 0.46),
             hbmBankMaterials[(row + column) % 2],
           );
           bank.position.set(x, featureY, z);
           packageGroup.add(bank);
-          [-0.14, 0, 0.14].forEach((offset) => {
-            addTopStrip(packageGroup, x + offset, z, 0.011, 0.44, featureY + 0.007, hbmGridMaterial);
+          [-0.12, 0, 0.12].forEach((offset) => {
+            addTopStrip(packageGroup, x + offset, z, 0.011, 0.4, featureY + 0.007, hbmGridMaterial);
           });
-          [-0.07, 0.07].forEach((offset) => {
-            addTopStrip(packageGroup, x, z + offset * 1.75, 0.5, 0.01, featureY + 0.007, hbmGridMaterial);
+          [-0.06, 0.06].forEach((offset) => {
+            addTopStrip(packageGroup, x, z + offset * 1.75, 0.43, 0.01, featureY + 0.007, hbmGridMaterial);
           });
         });
       });
 
-      const viaXs = [1.16, 1.4, 1.64, 1.88];
+      const viaXs = [1.82, 2, 2.18, 2.36];
       viaXs.forEach((x) => {
         const phy = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.008, 0.09), hbmPhyMaterial);
-        phy.position.set(x, featureY, 0.34);
+        phy.position.set(x, featureY, 0.32);
         packageGroup.add(phy);
-        addTopStrip(packageGroup, x, 0.48, 0.022, 0.28, featureY + 0.008, hbmRdlMaterial);
+        addTopStrip(packageGroup, x, 0.43, 0.022, 0.22, featureY + 0.008, hbmRdlMaterial);
 
         const viaHeight = topY - 0.055;
         const via = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, viaHeight, 14), hbmViaMaterial);
-        via.position.set(x, 0.055 + viaHeight / 2, 0.62);
+        via.position.set(x, 0.055 + viaHeight / 2, 0.54);
         packageGroup.add(via);
 
         [firstLayerY, topY].forEach((ringY) => {
           const ringGeometry = new THREE.TorusGeometry(0.05, 0.01, 7, 18);
           ringGeometry.rotateX(Math.PI / 2);
           const ring = new THREE.Mesh(ringGeometry, hbmViaRingMaterial);
-          ring.position.set(x, ringY + 0.02, 0.62);
+          ring.position.set(x, ringY + 0.02, 0.54);
           packageGroup.add(ring);
         });
       });
 
-      addTopStrip(packageGroup, 0.22, 0.54, 3.4, 0.018, featureY + 0.008, hbmRdlMaterial);
+      addTopStrip(packageGroup, 0, 0.51, 4.82, 0.018, featureY + 0.008, hbmRdlMaterial);
       bankXs.forEach((x) => {
-        addTopStrip(packageGroup, x, 0.475, 0.014, 0.13, featureY + 0.008, hbmRdlMaterial);
+        addTopStrip(packageGroup, x, 0.1, 0.014, 0.78, featureY + 0.008, hbmRdlMaterial);
       });
-      addSealRing(packageGroup, 4.24, 1.18, featureY + 0.009);
-      addSealRing(packageGroup, 4.08, 1.04, featureY + 0.0095);
+      addWedgeRing(packageGroup, 7.04, 4.56, 1.1, featureY + 0.009);
+      addWedgeRing(packageGroup, 6.9, 4.42, 0.96, featureY + 0.0095);
       return packageGroup;
     }
 
@@ -481,7 +510,7 @@ if (surface && canvas) {
       );
       const horizontalPosition = clockPositions[cycleIndex];
       const verticalPosition = clockPositions[cycleIndex];
-      const edgeFade = cycleIndex === 0 || cycleIndex === clockPositions.length - 1 ? 0.001 : 1;
+      const edgeFade = 1;
 
       cellPositions.forEach(({ row, column, x, z }, index) => {
         const horizontalWave = clamp(1 - Math.abs(x - horizontalPosition) / (pitch * 0.82));

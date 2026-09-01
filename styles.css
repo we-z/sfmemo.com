@@ -3038,7 +3038,7 @@ footer .wordmark {
     left: auto;
     grid-row: 2;
     width: calc(100% + (var(--gutter) * 2));
-    height: clamp(24.5rem, 46svh, 27.5rem);
+    height: clamp(21rem, 40svh, 24rem);
     margin: 0 calc(var(--gutter) * -1);
     overflow: visible;
     touch-action: pan-y pinch-zoom;
