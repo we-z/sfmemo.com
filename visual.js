@@ -1,6 +1,6 @@
 import "./hbm-stack.js?v=41";
-import "./systolic-array.js?v=5";
-import "./vision-map.js?v=3";
+import "./systolic-array.js?v=6";
+import "./vision-map.js?v=4";
 
 const hero = document.querySelector(".hero-horizon");
 const heroSurface = hero?.querySelector(".hero-visual") ?? hero;

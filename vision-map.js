@@ -6,8 +6,44 @@ const mapMotionPreference = window.matchMedia("(prefers-reduced-motion: reduce)"
 if (mapFigure && mapCanvas && mapContext) {
   const sanFrancisco = [-122.4194, 37.7749];
   const southBay = [-121.8863, 37.3382];
-  const mapCenter = [-122.1, 37.55];
-  const mapAngle = -6 * Math.PI / 180;
+  const mapCenter = [-121.95, 37.4];
+  const mapAngle = -7 * Math.PI / 180;
+  const countyOutlines = [
+    {
+      name: "San Francisco County",
+      role: "source",
+      coordinates: [
+        [-122.40537, 37.70829], [-122.28178, 37.70823], [-122.37378, 37.88373],
+        [-122.43228, 37.92982], [-122.41867, 37.8525], [-122.4991, 37.81988],
+        [-122.61229, 37.81522], [-122.58817, 37.78936], [-122.57519, 37.70672],
+        [-122.40537, 37.70829],
+      ],
+    },
+    {
+      name: "Santa Clara County",
+      role: "destination",
+      coordinates: [
+        [-122.2026, 37.36322], [-122.17507, 37.32574], [-122.19306, 37.31828],
+        [-122.16207, 37.30423], [-122.10423, 37.23427], [-122.05509, 37.2125],
+        [-122.02617, 37.16685], [-121.75548, 37.04903], [-121.71876, 37.00756],
+        [-121.7387, 36.98999], [-121.69536, 36.98515], [-121.69783, 36.9721],
+        [-121.66479, 36.96371], [-121.64579, 36.93233], [-121.62476, 36.94045],
+        [-121.59035, 36.92615], [-121.57572, 36.893], [-121.48895, 36.98315],
+        [-121.45061, 36.98894], [-121.41825, 36.96055], [-121.21541, 36.96125],
+        [-121.24657, 36.98523], [-121.23334, 37.01175], [-121.24865, 37.03368],
+        [-121.2082, 37.06129], [-121.24548, 37.08915], [-121.21734, 37.12304],
+        [-121.23663, 37.15668], [-121.26209, 37.15932], [-121.28111, 37.1836],
+        [-121.29855, 37.16596], [-121.32841, 37.16595], [-121.35956, 37.18445],
+        [-121.39902, 37.15014], [-121.42182, 37.22131], [-121.45575, 37.24944],
+        [-121.45805, 37.28414], [-121.40575, 37.31099], [-121.42365, 37.35884],
+        [-121.40908, 37.38067], [-121.45665, 37.39554], [-121.47261, 37.42334],
+        [-121.46292, 37.45149], [-121.48677, 37.47565], [-121.47295, 37.48233],
+        [-121.86527, 37.48464], [-121.92504, 37.45419], [-121.94491, 37.46916],
+        [-122.05124, 37.45901], [-122.08147, 37.47784], [-122.1823, 37.43936],
+        [-122.2026, 37.36322],
+      ],
+    },
+  ];
   const outboundRoutes = [
     { destination: [-123.55, 38.42], bend: -0.2 },
     { destination: [-123.72, 37.56], bend: -0.08 },
@@ -27,10 +63,12 @@ if (mapFigure && mapCanvas && mapContext) {
   let reducedMotion = mapMotionPreference.matches;
   let frame = 0;
   let lastDraw = 0;
+  let trunkGeometry = null;
+  let branchGeometries = [];
 
   const clamp = (value, minimum = 0, maximum = 1) => Math.min(maximum, Math.max(minimum, value));
 
-  const projectionScale = () => Math.min(width / 2.6, height / 2.4);
+  const projectionScale = () => Math.min(width / 1.85, height / 1.55);
 
   const project = ([longitude, latitude]) => {
     const scale = projectionScale();
@@ -64,6 +102,33 @@ if (mapFigure && mapCanvas && mapContext) {
     return { start, control, end };
   };
 
+  const extendRouteBeyondFrame = (geometry, overscan = 38) => {
+    const isOutside = ([x, y]) => (
+      x < -overscan || x > width + overscan || y < -overscan || y > height + overscan
+    );
+    let amount = 1;
+    let end = geometry.end;
+    while (amount < 12 && !isOutside(end)) {
+      amount += 0.08;
+      end = quadraticPoint(geometry.start, geometry.control, geometry.end, amount);
+    }
+    return {
+      start: geometry.start,
+      control: [
+        geometry.start[0] + (geometry.control[0] - geometry.start[0]) * amount,
+        geometry.start[1] + (geometry.control[1] - geometry.start[1]) * amount,
+      ],
+      end,
+    };
+  };
+
+  function rebuildRoutes() {
+    trunkGeometry = routeGeometry(sanFrancisco, southBay, -0.11);
+    branchGeometries = outboundRoutes.map((route) => extendRouteBeyondFrame(
+      routeGeometry(southBay, route.destination, route.bend),
+    ));
+  }
+
   function traceRing(ring) {
     ring.forEach((coordinate, index) => {
       const [x, y] = project(coordinate);
@@ -79,6 +144,31 @@ if (mapFigure && mapCanvas && mapContext) {
     landGeometries.forEach((geometry) => {
       const polygons = geometry.type === "MultiPolygon" ? geometry.coordinates : [geometry.coordinates];
       polygons.forEach((polygon) => polygon.forEach(traceRing));
+    });
+  }
+
+  function drawCountyOutlines(lightTheme) {
+    countyOutlines.forEach((county) => {
+      mapContext.beginPath();
+      county.coordinates.forEach((coordinate, index) => {
+        const [x, y] = project(coordinate);
+        if (index === 0) mapContext.moveTo(x, y);
+        else mapContext.lineTo(x, y);
+      });
+      mapContext.closePath();
+      const destination = county.role === "destination";
+      mapContext.fillStyle = lightTheme
+        ? `rgba(21, 89, 197, ${destination ? 0.13 : 0.08})`
+        : `rgba(55, 128, 225, ${destination ? 0.16 : 0.1})`;
+      mapContext.strokeStyle = lightTheme
+        ? `rgba(21, 89, 197, ${destination ? 0.9 : 0.72})`
+        : `rgba(126, 194, 255, ${destination ? 0.9 : 0.7})`;
+      mapContext.lineWidth = destination ? 2.3 : 1.8;
+      mapContext.shadowColor = lightTheme ? "rgba(21, 89, 197, 0.2)" : "rgba(75, 156, 255, 0.42)";
+      mapContext.shadowBlur = destination ? 14 : 9;
+      mapContext.fill();
+      mapContext.stroke();
+      mapContext.shadowBlur = 0;
     });
   }
 
@@ -123,10 +213,8 @@ if (mapFigure && mapCanvas && mapContext) {
     mapContext.stroke();
   }
 
-  function drawRouteSegment(geometry, progress, lightTheme, emphasis = false) {
-    if (progress <= 0) return;
-    const endAmount = clamp(progress);
-    const startAmount = Math.max(0, endAmount - (emphasis ? 0.22 : 0.14));
+  function drawRouteWindow(geometry, startAmount, endAmount, lightTheme, emphasis = false, drawHead = false) {
+    if (endAmount <= startAmount) return;
     const steps = 24;
     mapContext.beginPath();
     for (let step = 0; step <= steps; step += 1) {
@@ -142,11 +230,24 @@ if (mapFigure && mapCanvas && mapContext) {
     mapContext.stroke();
     mapContext.shadowBlur = 0;
 
-    const head = quadraticPoint(geometry.start, geometry.control, geometry.end, endAmount);
+    if (!drawHead) return;
+    const head = quadraticPoint(geometry.start, geometry.control, geometry.end, clamp(endAmount));
     mapContext.beginPath();
     mapContext.arc(head[0], head[1], emphasis ? 3.4 : 2.5, 0, Math.PI * 2);
     mapContext.fillStyle = lightTheme ? "#1559c5" : "#d7f1ff";
     mapContext.fill();
+  }
+
+  function drawLoopingRouteSegment(geometry, progress, lightTheme, emphasis = false) {
+    const endAmount = ((progress % 1) + 1) % 1;
+    const tailLength = emphasis ? 0.22 : 0.16;
+    const startAmount = endAmount - tailLength;
+    if (startAmount < 0) {
+      drawRouteWindow(geometry, 1 + startAmount, 1, lightTheme, emphasis);
+      drawRouteWindow(geometry, 0, endAmount, lightTheme, emphasis, true);
+      return;
+    }
+    drawRouteWindow(geometry, startAmount, endAmount, lightTheme, emphasis, true);
   }
 
   function drawNode(point, label, sublabel, lightTheme, align = "left") {
@@ -197,20 +298,27 @@ if (mapFigure && mapCanvas && mapContext) {
     mapContext.lineWidth = lightTheme ? 1.2 : 1;
     mapContext.fill("evenodd");
     mapContext.stroke();
+    drawCountyOutlines(lightTheme);
 
-    const trunk = routeGeometry(sanFrancisco, southBay, -0.11);
-    const branches = outboundRoutes.map((route) => routeGeometry(southBay, route.destination, route.bend));
-    drawRouteBase(trunk, lightTheme, true);
-    branches.forEach((geometry) => drawRouteBase(geometry, lightTheme));
+    if (!trunkGeometry || !branchGeometries.length) rebuildRoutes();
+    drawRouteBase(trunkGeometry, lightTheme, true);
+    branchGeometries.forEach((geometry) => drawRouteBase(geometry, lightTheme));
 
-    const cycle = reducedMotion ? 1 : (timestamp / 5200) % 1;
-    const trunkProgress = reducedMotion ? 1 : clamp(cycle / 0.24);
-    const branchProgress = reducedMotion ? 1 : clamp((cycle - 0.26) / 0.62);
-    drawRouteSegment(trunk, trunkProgress, lightTheme, true);
-    branches.forEach((geometry) => drawRouteSegment(geometry, branchProgress, lightTheme));
+    const flowProgress = reducedMotion ? 0.72 : (timestamp / 2300) % 1;
+    const pulsePhases = reducedMotion ? [flowProgress] : [flowProgress, (flowProgress + 0.5) % 1];
+    pulsePhases.forEach((progress) => {
+      drawLoopingRouteSegment(trunkGeometry, progress, lightTheme, true);
+      branchGeometries.forEach((geometry) => drawLoopingRouteSegment(geometry, progress, lightTheme));
+    });
 
-    drawNode(project(sanFrancisco), "SAN FRANCISCO", "OPERATIONS", lightTheme, "right");
-    drawNode(project(southBay), "SOUTH BAY", "OUTBOUND NETWORK", lightTheme, "left");
+    drawNode(
+      project(sanFrancisco),
+      "SAN FRANCISCO COUNTY",
+      "SOURCE",
+      lightTheme,
+      width < 520 ? "left" : "right",
+    );
+    drawNode(project(southBay), "SANTA CLARA COUNTY", "OUTBOUND NETWORK", lightTheme, "left");
   }
 
   function resizeMap() {
@@ -222,6 +330,7 @@ if (mapFigure && mapCanvas && mapContext) {
     mapCanvas.height = Math.round(height * pixelRatio);
     mapCanvas.style.width = `${width}px`;
     mapCanvas.style.height = `${height}px`;
+    rebuildRoutes();
     lastDraw = 0;
   }
 

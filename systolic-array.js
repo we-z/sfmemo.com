@@ -130,7 +130,7 @@ if (surface && canvas) {
     const helper = new THREE.Object3D();
     const cellGeometry = new THREE.BoxGeometry(0.52, 0.13, 0.52);
     const coreGeometry = new THREE.BoxGeometry(0.3, 0.055, 0.3);
-    const waveGeometry = new THREE.BoxGeometry(0.4, 0.04, 0.4);
+    const waveGeometry = new THREE.BoxGeometry(0.46, 0.055, 0.46);
     const cellMesh = new THREE.InstancedMesh(cellGeometry, cellMaterial, gridSize * gridSize);
     const coreMesh = new THREE.InstancedMesh(coreGeometry, coreMaterial, gridSize * gridSize);
     const waveMesh = new THREE.InstancedMesh(waveGeometry, waveMaterial, gridSize * gridSize);
@@ -374,16 +374,17 @@ if (surface && canvas) {
     }
 
     const hbmPositions = [
-      { x: 0, z: -3.53, rotation: 0 },
-      { x: 0, z: 3.53, rotation: Math.PI },
-      { x: -3.53, z: 0, rotation: Math.PI / 2 },
-      { x: 3.53, z: 0, rotation: -Math.PI / 2 },
+      { x: 0, z: -3.5, rotation: 0 },
+      { x: 0, z: 3.5, rotation: Math.PI },
+      { x: -3.5, z: 0, rotation: Math.PI / 2 },
+      { x: 3.5, z: 0, rotation: -Math.PI / 2 },
     ];
     const packagePrototype = createCompactHbmPackage();
     hbmPositions.forEach(({ x, z, rotation }, index) => {
       const packageGroup = index === 0 ? packagePrototype : packagePrototype.clone(true);
       packageGroup.position.set(x, 0, z);
       packageGroup.rotation.y = rotation;
+      packageGroup.scale.set(1.34, 1.24, 1.34);
       arrayRoot.add(packageGroup);
     });
 
@@ -456,29 +457,29 @@ if (surface && canvas) {
 
     function updateColors(boost) {
       const waveTime = reducedMotion ? 7.3 : simulationTime;
-      const cycleLength = gridSize * 2 + 4;
-      const wavePosition = fract(waveTime * 0.095) * cycleLength - 2;
+      const cycleLength = gridSize * 2 - 1;
+      const wavePosition = fract(waveTime * 0.34) * cycleLength - 0.5;
 
       cellPositions.forEach(({ row, column, x, z }, index) => {
         const diagonal = row + column;
-        const leadingWave = Math.exp(-Math.pow(diagonal - wavePosition, 2) * 1.4);
-        const trailingWave = Math.exp(-Math.pow(diagonal - (wavePosition - 3), 2) * 2.2) * 0.28;
+        const leadingWave = Math.exp(-Math.pow(diagonal - wavePosition, 2) * 0.5);
+        const trailingWave = Math.exp(-Math.pow(diagonal - (wavePosition - 2.35), 2) * 0.72) * 0.48;
         const wave = Math.min(1, leadingWave + trailingWave);
         const hovered = index === hoveredCell ? 0.78 : 0;
         const hoverLane = hoveredCell >= 0 && (
           row === Math.floor(hoveredCell / gridSize) || column === hoveredCell % gridSize
         ) ? 0.16 : 0;
-        const activation = clamp(wave * (0.74 + boost * 0.34) + hovered + hoverLane, 0, 1);
+        const activation = clamp(wave * (1.02 + boost * 0.42) + hovered + hoverLane, 0, 1);
 
-        helper.position.set(x, 0.13 + activation * 0.018, z);
+        helper.position.set(x, 0.13 + activation * 0.03, z);
         helper.rotation.set(0, 0, 0);
-        helper.scale.set(1 + activation * 0.08, 1 + activation * 0.4, 1 + activation * 0.08);
+        helper.scale.set(1 + activation * 0.13, 1 + activation * 0.72, 1 + activation * 0.13);
         helper.updateMatrix();
         coreMesh.setMatrixAt(index, helper.matrix);
 
-        const lightScale = Math.max(0.001, Math.pow(activation, 0.72));
-        helper.position.set(x, 0.178 + activation * 0.03, z);
-        helper.scale.set(lightScale, 0.65 + activation * 1.25, lightScale);
+        const lightScale = Math.max(0.001, Math.pow(activation, 0.58));
+        helper.position.set(x, 0.188 + activation * 0.045, z);
+        helper.scale.set(lightScale, 0.9 + activation * 1.7, lightScale);
         helper.updateMatrix();
         waveMesh.setMatrixAt(index, helper.matrix);
       });
@@ -490,7 +491,7 @@ if (surface && canvas) {
       coreMaterial.color
         .setHex(lightTheme ? 0x266fa5 : 0x246b9d)
         .lerp(lightTheme ? boostTopLight : boostTopDark, boost * 0.46);
-      waveMaterial.opacity = 0.78 + boost * 0.18;
+      waveMaterial.opacity = 0.92 + boost * 0.08;
 
       substrateMaterial.color
         .setHex(lightTheme ? 0x15304d : 0x07111f)
@@ -554,7 +555,7 @@ if (surface && canvas) {
       previousTime = time;
       if (!visible && !reducedMotion) return;
       const boost = reducedMotion ? 0 : clamp((boostUntil - time) / 900, 0, 1);
-      if (!reducedMotion) simulationTime += elapsed * (1 + boost * 4.2);
+      if (!reducedMotion) simulationTime += elapsed * (1 + boost * 1.9);
 
       arrayRoot.rotation.x += (targetRotation.x - arrayRoot.rotation.x) * 0.09;
       arrayRoot.rotation.y += (targetRotation.y - arrayRoot.rotation.y) * 0.09;

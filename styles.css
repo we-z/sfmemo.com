@@ -3799,3 +3799,7 @@ html[data-theme="light"] .vision-map figcaption { color: rgba(31, 66, 108, 0.72)
   .vision-compact .vision-heading h2 { font-size: clamp(4rem, 17vw, 5.2rem); }
   .vision-map { height: clamp(23rem, 105vw, 29rem); }
 }
+
+@media (max-width: 360px) {
+  .vision-compact .vision-heading h2 { font-size: clamp(3.4rem, 15vw, 4rem); }
+}
