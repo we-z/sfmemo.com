@@ -321,10 +321,10 @@ if (surface && canvas) {
 
     function createHbmPackage() {
       const packageGroup = new THREE.Group();
-      const base = new THREE.Mesh(createSlab(5.86, 1.36, 0.1, 0.07), hbmBaseMaterial);
+      const base = new THREE.Mesh(createSlab(6.78, 1.36, 0.1, 0.07), hbmBaseMaterial);
       base.position.y = -0.015;
       packageGroup.add(base);
-      const packageInterposer = new THREE.Mesh(createSlab(5.72, 1.27, 0.045, 0.065), hbmInterposerMaterial);
+      const packageInterposer = new THREE.Mesh(createSlab(6.64, 1.27, 0.045, 0.065), hbmInterposerMaterial);
       packageInterposer.position.y = 0.05;
       packageGroup.add(packageInterposer);
 
@@ -332,7 +332,7 @@ if (surface && canvas) {
       const firstLayerY = 0.1;
       const layerPitch = 0.072;
       const layerHeight = 0.034;
-      const layerGeometry = createSlab(5.62, 1.18, layerHeight, 0.055);
+      const layerGeometry = createSlab(6.54, 1.18, layerHeight, 0.055);
       for (let layer = 0; layer < layerCount; layer += 1) {
         const die = new THREE.Mesh(layerGeometry, hbmLayerMaterials[layer % 2]);
         die.position.y = firstLayerY + layer * layerPitch;
@@ -340,12 +340,12 @@ if (surface && canvas) {
       }
 
       const topY = firstLayerY + (layerCount - 1) * layerPitch + layerHeight / 2;
-      const passivation = new THREE.Mesh(createSlab(5.58, 1.13, 0.018, 0.052), hbmTopMaterial);
+      const passivation = new THREE.Mesh(createSlab(6.5, 1.13, 0.018, 0.052), hbmTopMaterial);
       passivation.position.y = topY + 0.014;
       packageGroup.add(passivation);
       const featureY = topY + 0.03;
 
-      const bankXs = [-2.3, -1.72, -1.14, -0.56, 0.02, 0.6, 1.18, 1.76];
+      const bankXs = [-2.72, -2.16, -1.6, -1.04, -0.48, 0.08, 0.64, 1.2, 1.76];
       const bankZs = [-0.27, 0.08];
       bankZs.forEach((z, row) => {
         bankXs.forEach((x, column) => {
@@ -364,7 +364,7 @@ if (surface && canvas) {
         });
       });
 
-      const viaXs = [2.08, 2.28, 2.48, 2.68];
+      const viaXs = [2.14, 2.38, 2.62, 2.86];
       viaXs.forEach((x) => {
         const phy = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.008, 0.09), hbmPhyMaterial);
         phy.position.set(x, featureY, 0.41);
@@ -385,12 +385,12 @@ if (surface && canvas) {
         });
       });
 
-      addTopStrip(packageGroup, -0.26, 0.315, 4.55, 0.018, featureY + 0.008, hbmRdlMaterial);
+      addTopStrip(packageGroup, -0.34, 0.315, 5.45, 0.018, featureY + 0.008, hbmRdlMaterial);
       bankXs.forEach((x) => {
         addTopStrip(packageGroup, x, 0.2, 0.014, 0.22, featureY + 0.008, hbmRdlMaterial);
       });
-      addSealRing(packageGroup, 5.34, 1.02, featureY + 0.009);
-      addSealRing(packageGroup, 5.18, 0.9, featureY + 0.0095);
+      addSealRing(packageGroup, 6.26, 1.02, featureY + 0.009);
+      addSealRing(packageGroup, 6.1, 0.9, featureY + 0.0095);
       return packageGroup;
     }
 
@@ -462,8 +462,8 @@ if (surface && canvas) {
       cellMaterial.color.setHex(lightTheme ? 0x1c4d72 : 0x0d2b49);
       cellMaterial.emissive.setHex(lightTheme ? 0x061d31 : 0x020d18);
       hbmInterposerMaterial.color.setHex(lightTheme ? 0x24658e : 0x0b3155);
-      hbmBankMaterials[0].color.setHex(lightTheme ? 0x217986 : 0x1b7087);
-      hbmBankMaterials[1].color.setHex(lightTheme ? 0x465b94 : 0x4b5fa8);
+      hbmBankMaterials[0].color.setHex(lightTheme ? 0x167f8b : 0x2a95a0);
+      hbmBankMaterials[1].color.setHex(lightTheme ? 0x514aa0 : 0x5368b4);
       hbmPhyMaterial.color.setHex(lightTheme ? 0x5d4d86 : 0x66539c);
       hbmGridMaterial.color.setHex(lightTheme ? 0x315f75 : 0x8bc2d2);
       hbmSealMaterial.color.setHex(lightTheme ? 0x4f7591 : 0x668daa);
