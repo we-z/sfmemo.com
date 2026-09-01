@@ -10,7 +10,7 @@ const INITIAL_PITCH = -0.08;
 const INITIAL_YAW = -0.52;
 const SCROLL_END_PITCH = 0.04;
 const SCROLL_END_YAW = 0.88;
-const CAMERA_DIRECTION = new THREE.Vector3(0, 1.45, 0.9).normalize();
+const CAMERA_DIRECTION = new THREE.Vector3(0, 4, 1).normalize();
 
 if (surface && canvas) {
   try {
