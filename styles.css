@@ -2045,6 +2045,7 @@ html[data-theme="light"] .vision-map::after {
   max-width: 8.5ch;
   margin: 0;
   font-size: clamp(4.8rem, 6.4vw, 7.4rem);
+  line-height: 1.02;
 }
 
 .vision-compact .vision-heading > p:last-child {
@@ -2082,7 +2083,10 @@ html[data-theme="light"] .vision-map::after {
 
 @media (max-width: 780px) {
   .vision.vision-editorial.vision-compact { gap: 2.5rem; }
-  .vision-compact .vision-heading h2 { font-size: clamp(4rem, 17vw, 5.2rem); }
+  .vision-compact .vision-heading h2 {
+    font-size: clamp(4rem, 17vw, 5.2rem);
+    line-height: 1.08;
+  }
   .vision-map { height: clamp(23rem, 105vw, 29rem); }
 }
 
