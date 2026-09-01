@@ -8,8 +8,10 @@ const mobileViewport = window.matchMedia("(max-width: 780px)");
 
 const INITIAL_PITCH = 0;
 const INITIAL_YAW = 0;
-const SCROLL_END_PITCH = -0.18;
+const SCROLL_END_PITCH = -Math.PI / 4;
 const SCROLL_END_YAW = 0;
+const MIN_PITCH = -Math.PI / 2 + 0.08;
+const MAX_PITCH = Math.PI / 2 - 0.08;
 const CAMERA_DIRECTION = new THREE.Vector3(0, 1, 0);
 
 if (surface && canvas) {
@@ -376,6 +378,10 @@ if (surface && canvas) {
       toneMapped: false,
       vertexColors: true,
     });
+    const peLitMaterial = new THREE.MeshBasicMaterial({
+      color: 0x72d4ff,
+      toneMapped: false,
+    });
     const peBases = new THREE.InstancedMesh(
       new THREE.BoxGeometry(0.43, 0.16, 0.43),
       peBaseMaterial,
@@ -386,22 +392,29 @@ if (surface && canvas) {
       peCoreMaterial,
       peCount,
     );
+    const peLitCores = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(0.23, 0.026, 0.23),
+      peLitMaterial,
+      peCount,
+    );
     peCores.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    peLitCores.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     peBases.frustumCulled = false;
     peCores.frustumCulled = false;
+    peLitCores.frustumCulled = false;
     const pePositions = [];
     const peOffDark = new THREE.Color(0x1c405c);
-    const peFilledDark = new THREE.Color(0x2d6f91);
+    const peFilledDark = new THREE.Color(0x72d4ff);
     const peAfterglowDark = new THREE.Color(0x4d7f9d);
-    const peRowDark = new THREE.Color(0x45b9d5);
-    const peColumnDark = new THREE.Color(0x8479dc);
+    const peRowDark = new THREE.Color(0x8de8ff);
+    const peColumnDark = new THREE.Color(0xb5a9ff);
     const peActiveDark = new THREE.Color(0xc8edff);
     const peOffLight = new THREE.Color(0x356b86);
-    const peFilledLight = new THREE.Color(0x2f6c89);
+    const peFilledLight = new THREE.Color(0x69c8ef);
     const peAfterglowLight = new THREE.Color(0x3f7895);
-    const peRowLight = new THREE.Color(0x1387aa);
-    const peColumnLight = new THREE.Color(0x5d55b5);
-    const peActiveLight = new THREE.Color(0x136f9e);
+    const peRowLight = new THREE.Color(0x8de5ff);
+    const peColumnLight = new THREE.Color(0xb1a7ff);
+    const peActiveLight = new THREE.Color(0xeaf8ff);
     const colorScratch = new THREE.Color();
     const brightCore = new THREE.Color(0xbfe8ff);
 
@@ -420,12 +433,17 @@ if (surface && canvas) {
         helper.updateMatrix();
         peCores.setMatrixAt(index, helper.matrix);
         peCores.setColorAt(index, peOffDark);
+        helper.position.y = -3;
+        helper.scale.setScalar(0.001);
+        helper.updateMatrix();
+        peLitCores.setMatrixAt(index, helper.matrix);
       }
     }
     peBases.instanceMatrix.needsUpdate = true;
     peCores.instanceMatrix.needsUpdate = true;
     peCores.instanceColor.needsUpdate = true;
-    model.add(peBases, peCores);
+    peLitCores.instanceMatrix.needsUpdate = true;
+    model.add(peBases, peCores, peLitCores);
 
     const rowTokenMaterial = new THREE.MeshBasicMaterial({
       color: 0x48bce2,
@@ -518,6 +536,7 @@ if (surface && canvas) {
       peBaseMaterial.color.setHex(lightTheme ? 0x437b9b : 0x17496d);
       peBaseMaterial.emissive.setHex(lightTheme ? 0x0c3148 : 0x08253b);
       peBaseMaterial.emissiveIntensity = lightTheme ? 0.2 : 0.24;
+      peLitMaterial.color.setHex(lightTheme ? 0x69c8ef : 0x72d4ff);
       rowTokenMaterial.color.setHex(lightTheme ? 0x147bae : 0x48bce2);
       columnTokenMaterial.color.setHex(lightTheme ? 0x624db1 : 0x8876d9);
       lastClockStep = -1;
@@ -567,16 +586,27 @@ if (surface && canvas) {
             : drainBoundary
               ? 1.03
               : filled
-                ? 1.03
+                ? 1.08
                 : 1;
         helper.position.set(x, 0.415 + (coreScale - 1) * 0.025, z);
         helper.rotation.set(0, 0, 0);
         helper.scale.set(coreScale, 1, coreScale);
         helper.updateMatrix();
         peCores.setMatrixAt(index, helper.matrix);
+
+        if (filled) {
+          helper.position.set(x, 0.477, z);
+          helper.scale.setScalar(intersection ? 1.1 : 1);
+        } else {
+          helper.position.set(0, -3, 0);
+          helper.scale.setScalar(0.001);
+        }
+        helper.updateMatrix();
+        peLitCores.setMatrixAt(index, helper.matrix);
       });
       peCores.instanceMatrix.needsUpdate = true;
       peCores.instanceColor.needsUpdate = true;
+      peLitCores.instanceMatrix.needsUpdate = true;
 
       for (let lane = 0; lane < gridSize; lane += 1) {
         for (let tail = 0; tail < tokenTailLength; tail += 1) {
@@ -624,6 +654,9 @@ if (surface && canvas) {
       hbmTopMaterial.emissiveIntensity = 0.06 + boostAmount * 0.16;
       hbmViaMaterial.emissiveIntensity = 0.11 + boostAmount * 0.22;
       hbmViaRingMaterial.emissiveIntensity = 0.06 + boostAmount * 0.16;
+      peLitMaterial.color
+        .setHex(lightTheme ? 0x69c8ef : 0x72d4ff)
+        .lerp(brightCore, boostAmount * 0.14);
       rowTokenMaterial.opacity = 0.78 + boostAmount * 0.2;
       columnTokenMaterial.opacity = 0.74 + boostAmount * 0.22;
       rimLight.intensity = 30 + boostAmount * 10;
@@ -638,6 +671,9 @@ if (surface && canvas) {
         boost = Math.max(0, boost - elapsed * 0.66);
         simulationTime += elapsed * (1 + smoothstep(boost) * 2.8);
         rotationCurrent.lerp(rotationTarget, dragging ? 0.34 : 0.16);
+        if (rotationCurrent.distanceToSquared(rotationTarget) < 0.000001) {
+          rotationCurrent.copy(rotationTarget);
+        }
       } else {
         rotationCurrent.copy(rotationTarget);
       }
@@ -690,7 +726,7 @@ if (surface && canvas) {
 
     function syncRotationTarget() {
       rotationTarget.set(
-        clamp(scrollRotation.x + manualRotation.x, -0.72, 0.68),
+        clamp(scrollRotation.x + manualRotation.x, MIN_PITCH, MAX_PITCH),
         scrollRotation.y + manualRotation.y,
       );
     }
@@ -703,6 +739,7 @@ if (surface && canvas) {
       dragging = false;
       surface.dataset.dragging = "false";
       syncRotationTarget();
+      rotationCurrent.copy(rotationTarget);
       requestRender();
     }
 
@@ -791,7 +828,7 @@ if (surface && canvas) {
       surface.dataset.dragging = "true";
       const sensitivity = 0.007;
       manualRotation.set(
-        clamp(pointer.startPitch + dy * sensitivity, -0.72 - scrollRotation.x, 0.68 - scrollRotation.x),
+        clamp(pointer.startPitch + dy * sensitivity, MIN_PITCH - scrollRotation.x, MAX_PITCH - scrollRotation.x),
         pointer.startYaw + dx * sensitivity,
       );
       syncRotationTarget();
@@ -840,8 +877,8 @@ if (surface && canvas) {
         event.preventDefault();
         if (event.key === "ArrowLeft") manualRotation.y -= 0.16;
         if (event.key === "ArrowRight") manualRotation.y += 0.16;
-        if (event.key === "ArrowUp") manualRotation.x = clamp(manualRotation.x - 0.12, -0.72 - scrollRotation.x, 0.68 - scrollRotation.x);
-        if (event.key === "ArrowDown") manualRotation.x = clamp(manualRotation.x + 0.12, -0.72 - scrollRotation.x, 0.68 - scrollRotation.x);
+        if (event.key === "ArrowUp") manualRotation.x = clamp(manualRotation.x - 0.12, MIN_PITCH - scrollRotation.x, MAX_PITCH - scrollRotation.x);
+        if (event.key === "ArrowDown") manualRotation.x = clamp(manualRotation.x + 0.12, MIN_PITCH - scrollRotation.x, MAX_PITCH - scrollRotation.x);
         syncRotationTarget();
         requestRender();
       }
