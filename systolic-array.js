@@ -70,14 +70,14 @@ if (surface && canvas) {
       const innerHalf = innerWidth / 2;
       const halfDepth = depth / 2;
       const shape = new THREE.Shape();
-      shape.moveTo(-outerHalf + chamfer, -halfDepth);
-      shape.lineTo(outerHalf - chamfer, -halfDepth);
-      shape.lineTo(outerHalf, -halfDepth + chamfer);
-      shape.lineTo(innerHalf, halfDepth - chamfer);
-      shape.lineTo(innerHalf - chamfer, halfDepth);
-      shape.lineTo(-innerHalf + chamfer, halfDepth);
-      shape.lineTo(-innerHalf, halfDepth - chamfer);
-      shape.lineTo(-outerHalf, -halfDepth + chamfer);
+      shape.moveTo(-innerHalf + chamfer, -halfDepth);
+      shape.lineTo(innerHalf - chamfer, -halfDepth);
+      shape.lineTo(innerHalf, -halfDepth + chamfer);
+      shape.lineTo(outerHalf, halfDepth - chamfer);
+      shape.lineTo(outerHalf - chamfer, halfDepth);
+      shape.lineTo(-outerHalf + chamfer, halfDepth);
+      shape.lineTo(-outerHalf, halfDepth - chamfer);
+      shape.lineTo(-innerHalf, -halfDepth + chamfer);
       shape.closePath();
       const geometry = new THREE.ExtrudeGeometry(shape, {
         depth: height,
