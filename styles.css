@@ -1361,54 +1361,28 @@ footer .wordmark {
   line-height: 1.62;
 }
 
-.approach-path {
-  max-width: 40rem;
-  padding: 0;
+.approach-research {
+  max-width: 39rem;
   margin: clamp(2.5rem, 4vw, 3.75rem) 0 0;
+  padding-top: clamp(1.5rem, 2.4vw, 2rem);
   border-top: 1px solid rgba(116, 131, 151, 0.32);
-  list-style: none;
 }
 
-.approach-path li {
-  display: grid;
-  grid-template-columns: minmax(8.75rem, 0.68fr) minmax(0, 1.32fr);
-  gap: clamp(1rem, 2vw, 1.75rem);
-  padding: 1.25rem 0 1.35rem;
-  align-items: start;
-  border-bottom: 1px solid rgba(116, 131, 151, 0.32);
-}
-
-.approach-path-heading span {
-  display: block;
-  margin-bottom: 0.45rem;
-  color: var(--blue-2);
-  font-family: var(--mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.12em;
-  line-height: 1.4;
-  text-transform: uppercase;
-}
-
-.approach-path h3 {
-  margin: 0;
-  color: var(--text);
-  font-size: clamp(0.94rem, 1.05vw, 1.06rem);
-  font-weight: 500;
-  letter-spacing: -0.015em;
-  line-height: 1.28;
-}
-
-.approach-path p {
-  margin: 0;
+.approach-research p {
+  margin: 0 0 1.15rem;
   color: var(--muted);
-  font-size: clamp(0.92rem, 1vw, 1.02rem);
-  line-height: 1.55;
+  font-size: clamp(0.98rem, 1.08vw, 1.08rem);
+  line-height: 1.62;
 }
 
-html[data-theme="light"] .approach-path,
-html[data-theme="light"] .approach-path li {
-  border-color: rgba(64, 83, 109, 0.24);
+.approach-research p:last-child { margin-bottom: 0; }
+
+.approach-research strong {
+  color: var(--text);
+  font-weight: 500;
 }
+
+html[data-theme="light"] .approach-research { border-color: rgba(64, 83, 109, 0.24); }
 
 /* Three Horizons vision */
 .vision.vision-editorial {
@@ -1488,14 +1462,8 @@ html[data-theme="light"] .approach-path li {
     font-size: clamp(3.25rem, 14vw, 3.75rem);
     line-height: 1;
   }
-  .approach-path li {
-    grid-template-columns: minmax(5.8rem, 0.62fr) minmax(0, 1.38fr);
-    gap: 0.9rem;
-    padding-block: 1.1rem 1.2rem;
-  }
-  .approach-path-heading span { font-size: 0.61rem; }
-  .approach-path h3 { font-size: 0.9rem; }
-  .approach-path p { font-size: 0.9rem; }
+  .approach-research { margin-top: 2.25rem; padding-top: 1.35rem; }
+  .approach-research p { font-size: 0.94rem; line-height: 1.58; }
 }
 
 /* Scroll-directed motion system: native scroll, no input hijacking */
