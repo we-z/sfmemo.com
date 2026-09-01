@@ -545,10 +545,11 @@ if (surface && canvas) {
     }
 
     function updateClockState(step, boostAmount) {
-      const phaseLength = gridSize;
-      const cycleStep = step % (phaseLength * 2);
-      const filling = cycleStep < phaseLength;
-      const waveStep = filling ? cycleStep : cycleStep - phaseLength;
+      const fillSteps = gridSize;
+      const drainSteps = gridSize - 1;
+      const cycleStep = step % (fillSteps + drainSteps);
+      const filling = cycleStep < fillSteps;
+      const waveStep = filling ? cycleStep : cycleStep - fillSteps;
       const offColor = lightTheme ? peOffLight : peOffDark;
       const filledColor = lightTheme ? peFilledLight : peFilledDark;
       const afterglowColor = lightTheme ? peAfterglowLight : peAfterglowDark;
@@ -559,13 +560,13 @@ if (surface && canvas) {
       pePositions.forEach(({ row, column, x, z }, index) => {
         const filled = filling
           ? row <= waveStep || column <= waveStep
-          : row > waveStep && column > waveStep;
+          : row > waveStep || column > waveStep;
         const rowPath = filling && row === waveStep;
         const columnPath = filling && column === waveStep;
         const intersection = rowPath && columnPath;
         const drainBoundary = !filling
-          && ((row === waveStep && column >= waveStep)
-            || (column === waveStep && row >= waveStep));
+          && ((row === waveStep && column <= waveStep)
+            || (column === waveStep && row <= waveStep));
         colorScratch.copy(filled ? filledColor : offColor);
         if (drainBoundary) colorScratch.copy(afterglowColor);
         if (rowPath) colorScratch.copy(rowColor);
@@ -760,12 +761,13 @@ if (surface && canvas) {
       const bounds = surface.getBoundingClientRect();
       const viewportTrigger = window.innerHeight * 0.88;
       const travel = Math.max(1, viewportTrigger + bounds.height);
-      const progress = reducedMotion
+      const sectionProgress = clamp((viewportTrigger - bounds.top) / travel);
+      const tiltProgress = reducedMotion
         ? 0
-        : smoothstep(clamp((viewportTrigger - bounds.top) / travel));
+        : smoothstep(clamp((sectionProgress - 0.5) / 0.34));
       scrollRotation.set(
-        INITIAL_PITCH + (SCROLL_END_PITCH - INITIAL_PITCH) * progress,
-        INITIAL_YAW + (SCROLL_END_YAW - INITIAL_YAW) * progress,
+        INITIAL_PITCH + (SCROLL_END_PITCH - INITIAL_PITCH) * tiltProgress,
+        INITIAL_YAW + (SCROLL_END_YAW - INITIAL_YAW) * tiltProgress,
       );
       syncRotationTarget();
       requestRender();

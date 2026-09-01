@@ -2081,6 +2081,15 @@ html[data-theme="light"] .vision-map::after {
   }
 }
 
+@media (min-width: 70.001rem) {
+  .vision.vision-editorial.vision-compact { padding-block: 0; }
+  .vision-compact .vision-heading { padding-block: clamp(6rem, 10vw, 9rem); }
+  .vision-map {
+    height: auto;
+    align-self: stretch;
+  }
+}
+
 @media (max-width: 780px) {
   .vision.vision-editorial.vision-compact { gap: 2.5rem; }
   .vision-compact .vision-heading h2 {
