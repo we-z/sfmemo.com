@@ -457,7 +457,7 @@ if (surface && canvas) {
       opacity: 0.74,
       toneMapped: false,
     });
-    const tokenTailLength = 3;
+    const tokenTailLength = 1;
     const rowTokens = new THREE.InstancedMesh(
       new THREE.BoxGeometry(0.36, 0.04, 0.1),
       rowTokenMaterial,
@@ -496,7 +496,7 @@ if (surface && canvas) {
     let lastBoostBucket = -1;
     let scrollRotationFrame = 0;
     let lastTap = null;
-    const stepDuration = 0.29;
+    const stepDuration = 0.46;
     surface.dataset.dragging = "false";
 
     function applyTheme() {
@@ -545,11 +545,10 @@ if (surface && canvas) {
     }
 
     function updateClockState(step, boostAmount) {
-      const diagonalCount = gridSize * 2 - 1;
-      const cycleStep = step % (diagonalCount * 2);
-      const filling = cycleStep < diagonalCount;
-      const waveStep = filling ? cycleStep : cycleStep - diagonalCount;
-      const tokenWaveStep = filling ? waveStep : -1;
+      const phaseLength = gridSize;
+      const cycleStep = step % (phaseLength * 2);
+      const filling = cycleStep < phaseLength;
+      const waveStep = filling ? cycleStep : cycleStep - phaseLength;
       const offColor = lightTheme ? peOffLight : peOffDark;
       const filledColor = lightTheme ? peFilledLight : peFilledDark;
       const afterglowColor = lightTheme ? peAfterglowLight : peAfterglowDark;
@@ -558,20 +557,15 @@ if (surface && canvas) {
       const activeColor = lightTheme ? peActiveLight : peActiveDark;
 
       pePositions.forEach(({ row, column, x, z }, index) => {
-        const cellStep = row + column;
-        const filled = filling ? cellStep <= waveStep : cellStep > waveStep;
-        const intersection = filling && cellStep === waveStep;
-        const drainBoundary = !filling && cellStep === waveStep + 1;
-        const rowHead = tokenWaveStep - row;
-        const columnHead = tokenWaveStep - column;
-        const rowPath = rowHead >= 0
-          && rowHead < gridSize
-          && column < rowHead
-          && column >= Math.max(0, rowHead - 3);
-        const columnPath = columnHead >= 0
-          && columnHead < gridSize
-          && row < columnHead
-          && row >= Math.max(0, columnHead - 3);
+        const filled = filling
+          ? row <= waveStep || column <= waveStep
+          : row > waveStep && column > waveStep;
+        const rowPath = filling && row === waveStep;
+        const columnPath = filling && column === waveStep;
+        const intersection = rowPath && columnPath;
+        const drainBoundary = !filling
+          && ((row === waveStep && column >= waveStep)
+            || (column === waveStep && row >= waveStep));
         colorScratch.copy(filled ? filledColor : offColor);
         if (drainBoundary) colorScratch.copy(afterglowColor);
         if (rowPath) colorScratch.copy(rowColor);
@@ -611,12 +605,10 @@ if (surface && canvas) {
       for (let lane = 0; lane < gridSize; lane += 1) {
         for (let tail = 0; tail < tokenTailLength; tail += 1) {
           const tokenIndex = lane * tokenTailLength + tail;
-          const tailScale = 1 - tail * 0.22;
-          const rowColumn = tokenWaveStep - lane - tail;
           helper.rotation.set(0, 0, 0);
-          if (rowColumn >= 0 && rowColumn < gridSize) {
-            helper.position.set(gridFirst + rowColumn * gridPitch, 0.56, gridFirst + lane * gridPitch - 0.1);
-            helper.scale.set(tailScale, 1, 1);
+          if (filling) {
+            helper.position.set(gridFirst + lane * gridPitch, 0.56, gridFirst + waveStep * gridPitch - 0.1);
+            helper.scale.set(1, 1, 1);
           } else {
             helper.position.set(0, -3, 0);
             helper.scale.setScalar(0.001);
@@ -624,10 +616,9 @@ if (surface && canvas) {
           helper.updateMatrix();
           rowTokens.setMatrixAt(tokenIndex, helper.matrix);
 
-          const columnRow = tokenWaveStep - lane - tail;
-          if (columnRow >= 0 && columnRow < gridSize) {
-            helper.position.set(gridFirst + lane * gridPitch + 0.1, 0.57, gridFirst + columnRow * gridPitch);
-            helper.scale.set(1, 1, tailScale);
+          if (filling) {
+            helper.position.set(gridFirst + waveStep * gridPitch + 0.1, 0.57, gridFirst + lane * gridPitch);
+            helper.scale.set(1, 1, 1);
           } else {
             helper.position.set(0, -3, 0);
             helper.scale.setScalar(0.001);
