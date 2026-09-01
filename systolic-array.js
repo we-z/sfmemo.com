@@ -4,9 +4,12 @@ const surface = document.querySelector(".approach-systolic");
 const canvas = document.querySelector("#systolic-canvas");
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 const coarsePointer = window.matchMedia("(hover: none) and (pointer: coarse)");
+const mobileViewport = window.matchMedia("(max-width: 780px)");
 
 const INITIAL_PITCH = -0.08;
 const INITIAL_YAW = -0.52;
+const MOBILE_SCROLL_PITCH = 0.14;
+const MOBILE_SCROLL_YAW = 0.88;
 
 if (surface && canvas) {
   try {
@@ -481,6 +484,7 @@ if (surface && canvas) {
     const rotationCurrent = new THREE.Vector2(INITIAL_PITCH, INITIAL_YAW);
     const rotationTarget = new THREE.Vector2(INITIAL_PITCH, INITIAL_YAW);
     const activePointers = new Map();
+    const mobileTapPointers = new Map();
     let dragging = false;
     let visible = true;
     let reducedMotion = motionPreference.matches;
@@ -491,6 +495,7 @@ if (surface && canvas) {
     let boost = 0;
     let lastClockStep = -1;
     let lastBoostBucket = -1;
+    let scrollRotationFrame = 0;
     const stepDuration = 0.29;
     surface.dataset.dragging = "false";
 
@@ -658,12 +663,13 @@ if (surface && canvas) {
       const height = Math.max(1, Math.round(bounds.height));
       const aspect = width / height;
       camera.aspect = aspect;
-      camera.fov = coarsePointer.matches ? 41 : 39;
+      const touchNavigation = coarsePointer.matches || mobileViewport.matches;
+      camera.fov = touchNavigation ? 41 : 39;
       camera.updateProjectionMatrix();
       const verticalFov = THREE.MathUtils.degToRad(camera.fov);
       const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * aspect);
       const limitingFov = Math.min(verticalFov, horizontalFov);
-      const margin = coarsePointer.matches ? 1.06 : 1.03;
+      const margin = touchNavigation ? 1.06 : 1.03;
       const distance = modelSphere.radius / Math.sin(limitingFov / 2) * margin;
       const cameraDirection = new THREE.Vector3(0, 0.68, 1).normalize();
       camera.position.copy(cameraDirection.multiplyScalar(distance));
@@ -671,12 +677,44 @@ if (surface && canvas) {
       camera.far = distance + modelSphere.radius * 2.4;
       camera.lookAt(0, 0, 0);
       camera.updateProjectionMatrix();
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarsePointer.matches ? 1.15 : 1.5));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, touchNavigation ? 1.15 : 1.5));
       renderer.setSize(width, height, false);
+      if (touchNavigation) updateScrollRotation();
       requestRender();
     }
 
+    function updateScrollRotation() {
+      if (!coarsePointer.matches && !mobileViewport.matches) return;
+      const bounds = surface.getBoundingClientRect();
+      const viewportTrigger = window.innerHeight * 0.88;
+      const travel = Math.max(1, viewportTrigger + bounds.height);
+      const progress = reducedMotion
+        ? 0
+        : smoothstep(clamp((viewportTrigger - bounds.top) / travel));
+      rotationTarget.set(
+        INITIAL_PITCH + (MOBILE_SCROLL_PITCH - INITIAL_PITCH) * progress,
+        INITIAL_YAW + (MOBILE_SCROLL_YAW - INITIAL_YAW) * progress,
+      );
+      requestRender();
+    }
+
+    function scheduleScrollRotation() {
+      if ((!coarsePointer.matches && !mobileViewport.matches) || scrollRotationFrame) return;
+      scrollRotationFrame = requestAnimationFrame(() => {
+        scrollRotationFrame = 0;
+        updateScrollRotation();
+      });
+    }
+
     function beginPointer(event) {
+      if (coarsePointer.matches || mobileViewport.matches || event.pointerType === "touch") {
+        mobileTapPointers.set(event.pointerId, {
+          startX: event.clientX,
+          startY: event.clientY,
+          moved: false,
+        });
+        return;
+      }
       if (event.pointerType === "mouse" && event.button !== 0) return;
       if (activePointers.size) return;
       activePointers.set(event.pointerId, {
@@ -691,6 +729,13 @@ if (surface && canvas) {
     }
 
     function movePointer(event) {
+      const mobileTap = mobileTapPointers.get(event.pointerId);
+      if (mobileTap) {
+        if (Math.hypot(event.clientX - mobileTap.startX, event.clientY - mobileTap.startY) > 8) {
+          mobileTap.moved = true;
+        }
+        return;
+      }
       const pointer = activePointers.get(event.pointerId);
       if (!pointer) return;
       const dx = event.clientX - pointer.startX;
@@ -709,6 +754,15 @@ if (surface && canvas) {
     }
 
     function endPointer(event) {
+      const mobileTap = mobileTapPointers.get(event.pointerId);
+      if (mobileTap) {
+        mobileTapPointers.delete(event.pointerId);
+        if (!mobileTap.moved && event.type === "pointerup") {
+          boost = 1;
+          requestRender();
+        }
+        return;
+      }
       const pointer = activePointers.get(event.pointerId);
       if (!pointer) return;
       activePointers.delete(event.pointerId);
@@ -757,13 +811,26 @@ if (surface && canvas) {
     window.addEventListener("sfmemo:themechange", applyTheme);
     motionPreference.addEventListener("change", (event) => {
       reducedMotion = event.matches;
+      updateScrollRotation();
       requestRender();
     });
-    coarsePointer.addEventListener("change", fitCamera);
+    function updateNavigationMode() {
+      activePointers.clear();
+      mobileTapPointers.clear();
+      dragging = false;
+      surface.dataset.dragging = "false";
+      updateScrollRotation();
+      fitCamera();
+    }
+    coarsePointer.addEventListener("change", updateNavigationMode);
+    mobileViewport.addEventListener("change", updateNavigationMode);
+    window.addEventListener("scroll", scheduleScrollRotation, { passive: true });
+    window.addEventListener("pageshow", scheduleScrollRotation);
 
     canvas.tabIndex = 0;
     applyTheme();
     fitCamera();
+    updateScrollRotation();
     requestRender();
   } catch (error) {
     console.error("Systolic visualization unavailable", error);

@@ -3366,6 +3366,13 @@ html[data-theme="light"] .vision-compact .vision-chevron {
 html[data-theme="light"] #systolic-canvas:focus-visible {
   filter: drop-shadow(0 0 0.45rem rgba(21, 89, 197, 0.58));
 }
+
+@media (hover: none) and (pointer: coarse) {
+  #systolic-canvas {
+    cursor: default;
+    touch-action: pan-y pinch-zoom;
+  }
+}
 .approach-systolic.is-unavailable { min-height: 18rem; }
 
 html[data-theme="light"] .approach-systolic::before {
@@ -3532,7 +3539,10 @@ html[data-theme="light"] .vision-compact .vision-chevron {
     margin-top: -0.5rem;
   }
 
-  #systolic-canvas { cursor: grab; }
+  #systolic-canvas {
+    cursor: default;
+    touch-action: pan-y pinch-zoom;
+  }
 
   .vision-compact .vision-route {
     --rail-y: 4.5rem;
