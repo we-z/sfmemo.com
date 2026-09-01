@@ -1221,7 +1221,7 @@ footer .wordmark {
   max-width: 36rem;
   margin: 0;
   color: #a7b1bf;
-  font-size: clamp(1.08rem, 1.4vw, 1.34rem);
+  font-size: clamp(1.14rem, 1.5vw, 1.42rem);
   line-height: 1.56;
 }
 
@@ -1287,7 +1287,7 @@ footer .wordmark {
 
   .hero-horizon .hero-intro {
     max-width: 31rem;
-    font-size: 1rem;
+    font-size: 1.06rem;
   }
 
   .hero-link { max-width: 22rem; }
@@ -1357,7 +1357,7 @@ footer .wordmark {
   max-width: 34rem;
   margin-bottom: 0;
   color: #9ba7b7;
-  font-size: clamp(1.05rem, 1.2vw, 1.2rem);
+  font-size: clamp(1.1rem, 1.3vw, 1.28rem);
   line-height: 1.62;
 }
 
@@ -1396,7 +1396,7 @@ footer .wordmark {
   max-width: 29rem;
   margin: 0 0 0.6rem;
   color: #9ba7b7;
-  font-size: clamp(1.05rem, 1.2vw, 1.2rem);
+  font-size: clamp(1.1rem, 1.3vw, 1.28rem);
   line-height: 1.62;
 }
 
@@ -1591,6 +1591,7 @@ footer .wordmark {
   display: block;
   width: max-content;
   max-width: 100%;
+  white-space: nowrap;
 }
 
 .scroll-motion .vision-heading .section-label,
@@ -1746,7 +1747,7 @@ footer .wordmark {
   }
 
   .hero-horizon .hero-intro {
-    font-size: 0.76rem;
+    font-size: 0.8rem;
     line-height: 1.42;
   }
 
@@ -1785,7 +1786,7 @@ footer .wordmark {
   .hero-horizon .eyebrow { margin-bottom: 1.2rem; }
   .hero-horizon h1 { font-size: clamp(4.25rem, 20vw, 4.6rem); }
   .hero-meta { gap: 0.9rem; margin-top: 1.45rem; }
-  .hero-horizon .hero-intro { font-size: 0.9rem; line-height: 1.48; }
+  .hero-horizon .hero-intro { font-size: 0.96rem; line-height: 1.48; }
   .hero-link { min-height: 2.75rem; }
 }
 

@@ -376,13 +376,6 @@ if (surface && canvas) {
       toneMapped: false,
       vertexColors: true,
     });
-    const peDotMaterial = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0.9,
-      toneMapped: false,
-      vertexColors: true,
-    });
     const peBases = new THREE.InstancedMesh(
       new THREE.BoxGeometry(0.43, 0.16, 0.43),
       peBaseMaterial,
@@ -393,28 +386,20 @@ if (surface && canvas) {
       peCoreMaterial,
       peCount,
     );
-    const dotsPerPe = 3;
-    const peDots = new THREE.InstancedMesh(
-      new THREE.SphereGeometry(0.078, 12, 9),
-      peDotMaterial,
-      peCount * dotsPerPe,
-    );
     peCores.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    peDots.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     peBases.frustumCulled = false;
     peCores.frustumCulled = false;
-    peDots.frustumCulled = false;
     const pePositions = [];
-    const peOffDark = new THREE.Color(0x3a7899);
-    const peWaveDark = new THREE.Color(0x4c88a9);
-    const peActiveDark = new THREE.Color(0x8fcef0);
-    const peOffLight = new THREE.Color(0x3f83a6);
-    const peWaveLight = new THREE.Color(0x31779e);
-    const peActiveLight = new THREE.Color(0x155f8d);
-    const dotOffDark = new THREE.Color(0x75b0cc);
-    const dotActiveDark = new THREE.Color(0xd6f0ff);
-    const dotOffLight = new THREE.Color(0x23678c);
-    const dotActiveLight = new THREE.Color(0x1559c5);
+    const peOffDark = new THREE.Color(0x1c405c);
+    const peAfterglowDark = new THREE.Color(0x4d7f9d);
+    const peRowDark = new THREE.Color(0x45b9d5);
+    const peColumnDark = new THREE.Color(0x8479dc);
+    const peActiveDark = new THREE.Color(0xc8edff);
+    const peOffLight = new THREE.Color(0x356b86);
+    const peAfterglowLight = new THREE.Color(0x3f7895);
+    const peRowLight = new THREE.Color(0x1387aa);
+    const peColumnLight = new THREE.Color(0x5d55b5);
+    const peActiveLight = new THREE.Color(0x136f9e);
     const colorScratch = new THREE.Color();
     const brightCore = new THREE.Color(0xbfe8ff);
 
@@ -433,44 +418,35 @@ if (surface && canvas) {
         helper.updateMatrix();
         peCores.setMatrixAt(index, helper.matrix);
         peCores.setColorAt(index, peOffDark);
-        for (let dot = 0; dot < dotsPerPe; dot += 1) {
-          const dotIndex = index * dotsPerPe + dot;
-          helper.position.set(x, 0.54 + dot * 0.18, z);
-          helper.scale.setScalar(0.76);
-          helper.updateMatrix();
-          peDots.setMatrixAt(dotIndex, helper.matrix);
-          peDots.setColorAt(dotIndex, dotOffDark);
-        }
       }
     }
     peBases.instanceMatrix.needsUpdate = true;
     peCores.instanceMatrix.needsUpdate = true;
     peCores.instanceColor.needsUpdate = true;
-    peDots.instanceMatrix.needsUpdate = true;
-    peDots.instanceColor.needsUpdate = true;
-    model.add(peBases, peCores, peDots);
+    model.add(peBases, peCores);
 
     const rowTokenMaterial = new THREE.MeshBasicMaterial({
       color: 0x48bce2,
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.78,
       toneMapped: false,
     });
     const columnTokenMaterial = new THREE.MeshBasicMaterial({
       color: 0x8876d9,
       transparent: true,
-      opacity: 0.66,
+      opacity: 0.74,
       toneMapped: false,
     });
+    const tokenTailLength = 3;
     const rowTokens = new THREE.InstancedMesh(
       new THREE.BoxGeometry(0.36, 0.04, 0.1),
       rowTokenMaterial,
-      gridSize,
+      gridSize * tokenTailLength,
     );
     const columnTokens = new THREE.InstancedMesh(
       new THREE.BoxGeometry(0.1, 0.045, 0.36),
       columnTokenMaterial,
-      gridSize,
+      gridSize * tokenTailLength,
     );
     rowTokens.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     columnTokens.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -499,6 +475,7 @@ if (surface && canvas) {
     let lastClockStep = -1;
     let lastBoostBucket = -1;
     let scrollRotationFrame = 0;
+    let lastTap = null;
     const stepDuration = 0.29;
     surface.dataset.dragging = "false";
 
@@ -549,58 +526,74 @@ if (surface && canvas) {
     function updateClockState(step, boostAmount) {
       const waveStep = step % 15;
       const offColor = lightTheme ? peOffLight : peOffDark;
-      const waveColor = lightTheme ? peWaveLight : peWaveDark;
+      const afterglowColor = lightTheme ? peAfterglowLight : peAfterglowDark;
+      const rowColor = lightTheme ? peRowLight : peRowDark;
+      const columnColor = lightTheme ? peColumnLight : peColumnDark;
       const activeColor = lightTheme ? peActiveLight : peActiveDark;
-      const dotOff = lightTheme ? dotOffLight : dotOffDark;
-      const dotActive = lightTheme ? dotActiveLight : dotActiveDark;
 
       pePositions.forEach(({ row, column, x, z }, index) => {
-        const wavefront = row + column === waveStep;
-        const previousWave = row + column === waveStep - 1;
+        const intersection = row + column === waveStep;
+        const previousIntersection = row + column === waveStep - 1;
+        const rowHead = waveStep - row;
+        const columnHead = waveStep - column;
+        const rowPath = rowHead >= 0
+          && rowHead < gridSize
+          && column < rowHead
+          && column >= Math.max(0, rowHead - 3);
+        const columnPath = columnHead >= 0
+          && columnHead < gridSize
+          && row < columnHead
+          && row >= Math.max(0, columnHead - 3);
         colorScratch.copy(offColor);
-        if (previousWave) colorScratch.lerp(waveColor, 0.24);
-        if (wavefront) colorScratch.copy(activeColor).lerp(brightCore, boostAmount * 0.18);
+        if (previousIntersection) colorScratch.copy(afterglowColor);
+        if (rowPath) colorScratch.copy(rowColor);
+        if (columnPath) colorScratch.copy(columnColor);
+        if (rowPath && columnPath) colorScratch.copy(rowColor).lerp(columnColor, 0.5);
+        if (intersection) colorScratch.copy(activeColor).lerp(brightCore, 0.2 + boostAmount * 0.22);
         peCores.setColorAt(index, colorScratch);
-
-        for (let dot = 0; dot < dotsPerPe; dot += 1) {
-          const dotIndex = index * dotsPerPe + dot;
-          const active = wavefront && dot <= (waveStep % dotsPerPe);
-          const scale = active ? 1.08 + boostAmount * 0.18 : previousWave ? 0.86 : 0.72;
-          helper.position.set(x, 0.54 + dot * 0.18, z);
-          helper.rotation.set(0, 0, 0);
-          helper.scale.setScalar(scale);
-          helper.updateMatrix();
-          peDots.setMatrixAt(dotIndex, helper.matrix);
-          peDots.setColorAt(dotIndex, active ? dotActive : dotOff);
-        }
+        const coreScale = intersection
+          ? 1.16 + boostAmount * 0.08
+          : rowPath || columnPath
+            ? 1.07
+            : previousIntersection
+              ? 1.03
+              : 1;
+        helper.position.set(x, 0.415 + (coreScale - 1) * 0.025, z);
+        helper.rotation.set(0, 0, 0);
+        helper.scale.set(coreScale, 1, coreScale);
+        helper.updateMatrix();
+        peCores.setMatrixAt(index, helper.matrix);
       });
+      peCores.instanceMatrix.needsUpdate = true;
       peCores.instanceColor.needsUpdate = true;
-      peDots.instanceMatrix.needsUpdate = true;
-      peDots.instanceColor.needsUpdate = true;
 
       for (let lane = 0; lane < gridSize; lane += 1) {
-        const rowColumn = waveStep - lane;
-        helper.rotation.set(0, 0, 0);
-        if (rowColumn >= 0 && rowColumn < gridSize) {
-          helper.position.set(gridFirst + rowColumn * gridPitch, 0.56, gridFirst + lane * gridPitch - 0.1);
-          helper.scale.set(1, 1, 1);
-        } else {
-          helper.position.set(0, -3, 0);
-          helper.scale.setScalar(0.001);
-        }
-        helper.updateMatrix();
-        rowTokens.setMatrixAt(lane, helper.matrix);
+        for (let tail = 0; tail < tokenTailLength; tail += 1) {
+          const tokenIndex = lane * tokenTailLength + tail;
+          const tailScale = 1 - tail * 0.22;
+          const rowColumn = waveStep - lane - tail;
+          helper.rotation.set(0, 0, 0);
+          if (rowColumn >= 0 && rowColumn < gridSize) {
+            helper.position.set(gridFirst + rowColumn * gridPitch, 0.56, gridFirst + lane * gridPitch - 0.1);
+            helper.scale.set(tailScale, 1, 1);
+          } else {
+            helper.position.set(0, -3, 0);
+            helper.scale.setScalar(0.001);
+          }
+          helper.updateMatrix();
+          rowTokens.setMatrixAt(tokenIndex, helper.matrix);
 
-        const columnRow = waveStep - lane;
-        if (columnRow >= 0 && columnRow < gridSize) {
-          helper.position.set(gridFirst + lane * gridPitch + 0.1, 0.57, gridFirst + columnRow * gridPitch);
-          helper.scale.set(1, 1, 1);
-        } else {
-          helper.position.set(0, -3, 0);
-          helper.scale.setScalar(0.001);
+          const columnRow = waveStep - lane - tail;
+          if (columnRow >= 0 && columnRow < gridSize) {
+            helper.position.set(gridFirst + lane * gridPitch + 0.1, 0.57, gridFirst + columnRow * gridPitch);
+            helper.scale.set(1, 1, tailScale);
+          } else {
+            helper.position.set(0, -3, 0);
+            helper.scale.setScalar(0.001);
+          }
+          helper.updateMatrix();
+          columnTokens.setMatrixAt(tokenIndex, helper.matrix);
         }
-        helper.updateMatrix();
-        columnTokens.setMatrixAt(lane, helper.matrix);
       }
       rowTokens.instanceMatrix.needsUpdate = true;
       columnTokens.instanceMatrix.needsUpdate = true;
@@ -620,9 +613,8 @@ if (surface && canvas) {
       hbmTopMaterial.emissiveIntensity = 0.06 + boostAmount * 0.16;
       hbmViaMaterial.emissiveIntensity = 0.11 + boostAmount * 0.22;
       hbmViaRingMaterial.emissiveIntensity = 0.06 + boostAmount * 0.16;
-      rowTokenMaterial.opacity = 0.7 + boostAmount * 0.24;
-      columnTokenMaterial.opacity = 0.66 + boostAmount * 0.26;
-      peDotMaterial.opacity = 0.86 + boostAmount * 0.14;
+      rowTokenMaterial.opacity = 0.78 + boostAmount * 0.2;
+      columnTokenMaterial.opacity = 0.74 + boostAmount * 0.22;
       rimLight.intensity = 30 + boostAmount * 10;
     }
 
@@ -690,6 +682,39 @@ if (surface && canvas) {
         clamp(scrollRotation.x + manualRotation.x, -0.72, 0.68),
         scrollRotation.y + manualRotation.y,
       );
+    }
+
+    function recenterRotation() {
+      manualRotation.set(
+        INITIAL_PITCH - scrollRotation.x,
+        INITIAL_YAW - scrollRotation.y,
+      );
+      dragging = false;
+      surface.dataset.dragging = "false";
+      syncRotationTarget();
+      requestRender();
+    }
+
+    function handleTap(event) {
+      const now = performance.now();
+      const doubleTap = lastTap
+        && lastTap.pointerType === event.pointerType
+        && now - lastTap.time <= 320
+        && Math.hypot(event.clientX - lastTap.x, event.clientY - lastTap.y) <= 30;
+      boost = 1;
+      if (doubleTap) {
+        lastTap = null;
+        if (event.cancelable) event.preventDefault();
+        recenterRotation();
+        return;
+      }
+      lastTap = {
+        time: now,
+        x: event.clientX,
+        y: event.clientY,
+        pointerType: event.pointerType,
+      };
+      requestRender();
     }
 
     function updateScrollRotation() {
@@ -768,8 +793,9 @@ if (surface && canvas) {
       if (passiveTap) {
         passiveTapPointers.delete(event.pointerId);
         if (!passiveTap.moved && event.type === "pointerup") {
-          boost = 1;
-          requestRender();
+          handleTap(event);
+        } else {
+          lastTap = null;
         }
         return;
       }
@@ -777,8 +803,9 @@ if (surface && canvas) {
       if (!pointer) return;
       activePointers.delete(event.pointerId);
       if (!pointer.moved && event.type === "pointerup") {
-        boost = 1;
-        requestRender();
+        handleTap(event);
+      } else {
+        lastTap = null;
       }
       if (canvas.hasPointerCapture(event.pointerId)) {
         try { canvas.releasePointerCapture(event.pointerId); } catch {}
@@ -828,6 +855,7 @@ if (surface && canvas) {
     function updateNavigationMode() {
       activePointers.clear();
       passiveTapPointers.clear();
+      lastTap = null;
       if (mobileViewport.matches) manualRotation.set(0, 0);
       dragging = false;
       surface.dataset.dragging = "false";
