@@ -379,8 +379,9 @@ if (surface && canvas) {
       vertexColors: true,
     });
     const peLitMaterial = new THREE.MeshBasicMaterial({
-      color: 0x72d4ff,
+      color: 0xffffff,
       toneMapped: false,
+      vertexColors: true,
     });
     const peBases = new THREE.InstancedMesh(
       new THREE.BoxGeometry(0.43, 0.16, 0.43),
@@ -404,20 +405,17 @@ if (surface && canvas) {
     peLitCores.frustumCulled = false;
     const pePositions = [];
     const peOffDark = new THREE.Color(0x1c405c);
-    const peFilledDark = new THREE.Color(0x72d4ff);
-    const peAfterglowDark = new THREE.Color(0x4d7f9d);
-    const peRowDark = new THREE.Color(0x8de8ff);
-    const peColumnDark = new THREE.Color(0xb5a9ff);
-    const peActiveDark = new THREE.Color(0xc8edff);
+    const peHorizontalDark = new THREE.Color(0x3aaeff);
+    const peVerticalDark = new THREE.Color(0xff536a);
+    const peIntersectionDark = new THREE.Color(0xb77cff);
     const peOffLight = new THREE.Color(0x356b86);
-    const peFilledLight = new THREE.Color(0x69c8ef);
-    const peAfterglowLight = new THREE.Color(0x3f7895);
-    const peRowLight = new THREE.Color(0x8de5ff);
-    const peColumnLight = new THREE.Color(0xb1a7ff);
-    const peActiveLight = new THREE.Color(0xeaf8ff);
+    const peHorizontalLight = new THREE.Color(0x006ac7);
+    const peVerticalLight = new THREE.Color(0xc91836);
+    const peIntersectionLight = new THREE.Color(0x6f2dbd);
     const peBlackout = new THREE.Color(0x000000);
     const colorScratch = new THREE.Color();
-    const brightCore = new THREE.Color(0xbfe8ff);
+    const overlayColorScratch = new THREE.Color();
+    const brightCore = new THREE.Color(0xffffff);
 
     for (let row = 0; row < gridSize; row += 1) {
       for (let column = 0; column < gridSize; column += 1) {
@@ -438,22 +436,24 @@ if (surface && canvas) {
         helper.scale.setScalar(0.001);
         helper.updateMatrix();
         peLitCores.setMatrixAt(index, helper.matrix);
+        peLitCores.setColorAt(index, peOffDark);
       }
     }
     peBases.instanceMatrix.needsUpdate = true;
     peCores.instanceMatrix.needsUpdate = true;
     peCores.instanceColor.needsUpdate = true;
     peLitCores.instanceMatrix.needsUpdate = true;
+    peLitCores.instanceColor.needsUpdate = true;
     model.add(peBases, peCores, peLitCores);
 
     const rowTokenMaterial = new THREE.MeshBasicMaterial({
-      color: 0x48bce2,
+      color: 0x3aaeff,
       transparent: true,
       opacity: 0.78,
       toneMapped: false,
     });
     const columnTokenMaterial = new THREE.MeshBasicMaterial({
-      color: 0x8876d9,
+      color: 0xff536a,
       transparent: true,
       opacity: 0.74,
       toneMapped: false,
@@ -537,9 +537,9 @@ if (surface && canvas) {
       peBaseMaterial.color.setHex(lightTheme ? 0x437b9b : 0x17496d);
       peBaseMaterial.emissive.setHex(lightTheme ? 0x0c3148 : 0x08253b);
       peBaseMaterial.emissiveIntensity = lightTheme ? 0.2 : 0.24;
-      peLitMaterial.color.setHex(lightTheme ? 0x69c8ef : 0x72d4ff);
-      rowTokenMaterial.color.setHex(lightTheme ? 0x147bae : 0x48bce2);
-      columnTokenMaterial.color.setHex(lightTheme ? 0x624db1 : 0x8876d9);
+      peLitMaterial.color.setHex(0xffffff);
+      rowTokenMaterial.color.setHex(lightTheme ? 0x006ac7 : 0x3aaeff);
+      columnTokenMaterial.color.setHex(lightTheme ? 0xc91836 : 0xff536a);
       lastClockStep = -1;
       lastBoostBucket = -1;
       requestRender();
@@ -555,30 +555,38 @@ if (surface && canvas) {
       const blackout = cycleStep === blackoutStep;
       const waveStep = filling ? cycleStep : cycleStep - fillSteps;
       const offColor = lightTheme ? peOffLight : peOffDark;
-      const filledColor = lightTheme ? peFilledLight : peFilledDark;
-      const afterglowColor = lightTheme ? peAfterglowLight : peAfterglowDark;
-      const rowColor = lightTheme ? peRowLight : peRowDark;
-      const columnColor = lightTheme ? peColumnLight : peColumnDark;
-      const activeColor = lightTheme ? peActiveLight : peActiveDark;
+      const horizontalColor = lightTheme ? peHorizontalLight : peHorizontalDark;
+      const verticalColor = lightTheme ? peVerticalLight : peVerticalDark;
+      const intersectionColor = lightTheme ? peIntersectionLight : peIntersectionDark;
 
       pePositions.forEach(({ row, column, x, z }, index) => {
-        const filled = filling
-          ? row <= waveStep || column <= waveStep
-          : draining && (row > waveStep || column > waveStep);
+        const horizontalActive = !blackout && (filling
+          ? row <= waveStep
+          : draining && row > waveStep);
+        const verticalActive = !blackout && (filling
+          ? column <= waveStep
+          : draining && column > waveStep);
+        const filled = horizontalActive || verticalActive;
         const rowPath = filling && row === waveStep;
         const columnPath = filling && column === waveStep;
-        const intersection = rowPath && columnPath;
-        const drainBoundary = draining
-          && ((row === waveStep && column <= waveStep)
-            || (column === waveStep && row <= waveStep));
-        colorScratch.copy(blackout ? peBlackout : filled ? filledColor : offColor);
-        if (drainBoundary) colorScratch.copy(afterglowColor);
-        if (rowPath) colorScratch.copy(rowColor);
-        if (columnPath) colorScratch.copy(columnColor);
-        if (rowPath && columnPath) colorScratch.copy(rowColor).lerp(columnColor, 0.5);
-        if (intersection) colorScratch.copy(activeColor).lerp(brightCore, 0.2 + boostAmount * 0.22);
+        const activeIntersection = horizontalActive && verticalActive;
+        const pathIntersection = rowPath && columnPath;
+        const horizontalDrainBoundary = draining && row === waveStep && column <= waveStep;
+        const verticalDrainBoundary = draining && column === waveStep && row <= waveStep;
+        const drainBoundary = horizontalDrainBoundary || verticalDrainBoundary;
+        colorScratch.copy(blackout ? peBlackout : offColor);
+        if (horizontalDrainBoundary) colorScratch.copy(horizontalColor).lerp(offColor, 0.56);
+        if (verticalDrainBoundary) colorScratch.copy(verticalColor).lerp(offColor, 0.56);
+        if (horizontalDrainBoundary && verticalDrainBoundary) {
+          colorScratch.copy(intersectionColor).lerp(offColor, 0.56);
+        }
+        if (horizontalActive) colorScratch.copy(horizontalColor);
+        if (verticalActive) colorScratch.copy(verticalColor);
+        if (activeIntersection) colorScratch.copy(intersectionColor);
+        if (rowPath || columnPath) colorScratch.lerp(brightCore, 0.12 + boostAmount * 0.08);
+        if (pathIntersection) colorScratch.copy(intersectionColor).lerp(brightCore, 0.2 + boostAmount * 0.16);
         peCores.setColorAt(index, colorScratch);
-        const coreScale = intersection
+        const coreScale = pathIntersection
           ? 1.16 + boostAmount * 0.08
           : rowPath || columnPath
             ? 1.07
@@ -595,10 +603,13 @@ if (surface && canvas) {
 
         if (filled) {
           helper.position.set(x, 0.477, z);
-          helper.scale.setScalar(intersection ? 1.1 : 1);
+          helper.scale.setScalar(pathIntersection ? 1.1 : 1);
+          overlayColorScratch.copy(colorScratch).lerp(brightCore, 0.08 + boostAmount * 0.08);
+          peLitCores.setColorAt(index, overlayColorScratch);
         } else {
           helper.position.set(0, -3, 0);
           helper.scale.setScalar(0.001);
+          peLitCores.setColorAt(index, blackout ? peBlackout : offColor);
         }
         helper.updateMatrix();
         peLitCores.setMatrixAt(index, helper.matrix);
@@ -606,6 +617,7 @@ if (surface && canvas) {
       peCores.instanceMatrix.needsUpdate = true;
       peCores.instanceColor.needsUpdate = true;
       peLitCores.instanceMatrix.needsUpdate = true;
+      peLitCores.instanceColor.needsUpdate = true;
 
       for (let lane = 0; lane < gridSize; lane += 1) {
         for (let tail = 0; tail < tokenTailLength; tail += 1) {
@@ -650,9 +662,7 @@ if (surface && canvas) {
       hbmTopMaterial.emissiveIntensity = 0.06 + boostAmount * 0.16;
       hbmViaMaterial.emissiveIntensity = 0.11 + boostAmount * 0.22;
       hbmViaRingMaterial.emissiveIntensity = 0.06 + boostAmount * 0.16;
-      peLitMaterial.color
-        .setHex(lightTheme ? 0x69c8ef : 0x72d4ff)
-        .lerp(brightCore, boostAmount * 0.14);
+      peLitMaterial.color.setHex(0xffffff);
       rowTokenMaterial.opacity = 0.78 + boostAmount * 0.2;
       columnTokenMaterial.opacity = 0.74 + boostAmount * 0.22;
       rimLight.intensity = 30 + boostAmount * 10;
