@@ -1,9 +1,9 @@
 import "./hbm-stack.js?v=42";
-import "./systolic-array.js?v=19";
+import "./systolic-array.js?v=20";
 import "./vision-map.js?v=7";
 
 const hero = document.querySelector(".hero-horizon");
-const heroSurface = hero?.querySelector(".hero-visual") ?? hero;
+const heroFrame = hero?.querySelector(".hero-frame");
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 let reduceMotion = motionPreference.matches;
 
@@ -47,7 +47,6 @@ const visionMap = document.querySelector(".vision-map");
 const motionRoot = document.documentElement;
 const motionScenes = {
   hero,
-  heroSurface,
   approach,
   vision,
   visionMap,
@@ -73,20 +72,19 @@ function setMotionVariable(name, value, target = motionRoot) {
 function updateScrollMotion() {
   motionFrame = 0;
   const targetScroll = Math.max(0, window.scrollY);
+  const mobile = window.innerWidth <= 780;
 
   if (reduceMotion) {
     motionRoot.classList.remove("scroll-motion");
     return;
   }
 
-  visualScroll = forceMotionFrame
+  visualScroll = forceMotionFrame || mobile
     ? targetScroll
     : visualScroll + (targetScroll - visualScroll) * 0.14;
   forceMotionFrame = false;
 
-  const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
-  const mobile = viewportWidth <= 780;
   const amplitude = mobile ? 0.36 : 1;
   const documentHeight = Math.max(document.documentElement.scrollHeight - viewportHeight, 1);
 
@@ -103,7 +101,6 @@ function updateScrollMotion() {
     const bounds = element.getBoundingClientRect();
     measurements.set(element, {
       top: bounds.top + targetScroll,
-      width: bounds.width,
       height: bounds.height,
     });
   });
@@ -112,15 +109,17 @@ function updateScrollMotion() {
   setMotionVariable("--page-grid-x", px(-visualScroll * 0.012));
   setMotionVariable("--page-grid-y", px(-visualScroll * 0.028));
 
-  if (motionScenes.hero && motionScenes.heroSurface) {
+  if (motionScenes.hero) {
     const heroMetrics = measurements.get(motionScenes.hero);
-    const surfaceHeight = motionScenes.heroSurface.offsetHeight || viewportHeight;
-    const desktopRange = Math.max(heroMetrics.height - surfaceHeight, 1);
-    const mobileRange = Math.max(heroMetrics.height * 0.8, 1);
-    const heroProgress = smoothstep(clamp01((visualScroll - heroMetrics.top) / (mobile ? mobileRange : desktopRange)));
-    const heroHold = mobile ? 0.26 : 0.22;
-    const departure = smoothstep(clamp01((heroProgress - heroHold) / (1 - heroHold)));
-    const metaDeparture = smoothstep(clamp01((heroProgress - heroHold) / (0.84 - heroHold)));
+    const frameHeight = heroFrame?.offsetHeight || viewportHeight;
+    const heroRange = Math.max(heroMetrics.height - frameHeight, 1);
+    const heroProgress = clamp01((visualScroll - heroMetrics.top) / heroRange);
+    const departureStart = mobile ? 0.08 : 0.22;
+    const departureEnd = mobile ? 0.62 : 1;
+    const metaStart = mobile ? 0.04 : 0.22;
+    const metaEnd = mobile ? 0.3 : 0.84;
+    const departure = smoothstep(clamp01((heroProgress - departureStart) / (departureEnd - departureStart)));
+    const metaDeparture = smoothstep(clamp01((heroProgress - metaStart) / (metaEnd - metaStart)));
 
     setMotionVariable("--hero-eyebrow-y", px(-18 * departure * amplitude), motionScenes.hero);
     setMotionVariable("--hero-eyebrow-opacity", unit(1 - metaDeparture * 0.88), motionScenes.hero);
@@ -149,12 +148,10 @@ function updateScrollMotion() {
     setMotionVariable("--vision-plane-y", px((0.5 - visionTravel) * 54 * amplitude), motionScenes.vision);
     setMotionVariable("--vision-plane-scale", unit(1.02 + visionTravel * 0.035), motionScenes.vision);
 
-    [0].forEach((index) => {
-      const lineReveal = smoothstep(clamp01((visionReveal - index * 0.11) / (1 - index * 0.11)));
-      setMotionVariable(`--vision-line-${index + 1}-y`, px((1 - lineReveal) * (58 + index * 10) * amplitude), motionScenes.vision);
-      setMotionVariable(`--vision-line-${index + 1}-opacity`, unit(0.08 + lineReveal * 0.92), motionScenes.vision);
-      setMotionVariable(`--vision-line-${index + 1}-skew`, `${((1 - lineReveal) * 2.4 * amplitude).toFixed(3)}deg`, motionScenes.vision);
-    });
+    const lineReveal = copyReveal;
+    setMotionVariable("--vision-line-1-y", px((1 - lineReveal) * 58 * amplitude), motionScenes.vision);
+    setMotionVariable("--vision-line-1-opacity", unit(0.08 + lineReveal * 0.92), motionScenes.vision);
+    setMotionVariable("--vision-line-1-skew", `${((1 - lineReveal) * 2.4 * amplitude).toFixed(3)}deg`, motionScenes.vision);
 
     const mapReveal = smoothstep(clamp01((visionReveal - 0.18) / 0.82));
     setMotionVariable("--vision-map-opacity", unit(0.08 + mapReveal * 0.92), motionScenes.visionMap);
@@ -199,6 +196,7 @@ window.visualViewport?.addEventListener("resize", () => scheduleScrollMotion(tru
 const sceneResizeObserver = new ResizeObserver(() => scheduleScrollMotion(true));
 [
   motionScenes.hero,
+  heroFrame,
   motionScenes.hero?.querySelector(".hero-copy"),
   motionScenes.approach,
   motionScenes.vision,
