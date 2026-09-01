@@ -8,8 +8,8 @@ const mobileViewport = window.matchMedia("(max-width: 780px)");
 
 const INITIAL_PITCH = 0;
 const INITIAL_YAW = 0;
-const SCROLL_END_PITCH = -Math.PI / 4;
-const SCROLL_END_YAW = 0;
+const SCROLL_END_PITCH = -Math.PI / 3;
+const SCROLL_END_YAW = Math.PI / 6;
 const MIN_PITCH = -Math.PI / 2 + 0.08;
 const MAX_PITCH = Math.PI / 2 - 0.08;
 const CAMERA_DIRECTION = new THREE.Vector3(0, 1, 0);
