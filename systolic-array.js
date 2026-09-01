@@ -187,61 +187,87 @@ if (surface && canvas) {
       })
     ));
     const hbmTopMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0x144b70,
-      metalness: 0.2,
-      roughness: 0.27,
-      clearcoat: 0.58,
+      color: 0x123b59,
+      metalness: 0.22,
+      roughness: 0.3,
+      clearcoat: 0.56,
       clearcoatRoughness: 0.18,
-      iridescence: 0.24,
+      iridescence: 0.3,
       iridescenceIOR: 1.38,
-      iridescenceThicknessRange: [170, 280],
-      sheen: 0.12,
-      sheenColor: new THREE.Color(0x5458a3),
-      sheenRoughness: 0.5,
+      iridescenceThicknessRange: [180, 270],
+      sheen: 0.14,
+      sheenColor: new THREE.Color(0x5257a8),
+      sheenRoughness: 0.52,
       emissive: 0x031522,
-      emissiveIntensity: 0.06,
+      emissiveIntensity: 0.045,
     });
-    const hbmBankMaterials = [0x298f9d, 0x5868b2].map((color) => new THREE.MeshBasicMaterial({
+    const createHbmFeatureMaterial = (color) => new THREE.MeshBasicMaterial({
       color,
-      toneMapped: false,
-    }));
-    const hbmGridMaterial = new THREE.MeshBasicMaterial({
-      color: 0x9bc7d5,
       transparent: true,
-      opacity: 0.64,
+      opacity: 0.82,
       toneMapped: false,
     });
-    const hbmSealMaterial = new THREE.MeshStandardMaterial({
-      color: 0x79a2bb,
-      metalness: 0.62,
-      roughness: 0.32,
-      emissive: 0x071722,
+    const hbmBankMaterials = [0x2a95a0, 0x5368b4].map(createHbmFeatureMaterial);
+    const hbmPhyMaterials = [0x6b55a3, 0x855b92].map(createHbmFeatureMaterial);
+    const hbmGridMaterial = new THREE.MeshStandardMaterial({
+      color: 0x83b7cc,
+      metalness: 0.64,
+      roughness: 0.34,
+      emissive: 0x071821,
       emissiveIntensity: 0.04,
     });
-    const hbmSealLineMaterial = new THREE.LineBasicMaterial({
-      color: 0x79a2bb,
-      transparent: true,
-      opacity: 0.72,
+    const hbmRdlMaterial = new THREE.MeshStandardMaterial({
+      color: 0xa7cfda,
+      metalness: 0.72,
+      roughness: 0.29,
+      emissive: 0x091d25,
+      emissiveIntensity: 0.045,
     });
-    const hbmViaMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xc98f3e,
-      metalness: 0.84,
-      roughness: 0.18,
+    const hbmViaMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd09a43,
+      metalness: 0.82,
+      roughness: 0.27,
       emissive: 0x2a1604,
-      emissiveIntensity: 0.11,
+      emissiveIntensity: 0.045,
     });
     const hbmViaRingMaterial = new THREE.MeshStandardMaterial({
-      color: 0xe0b15a,
-      metalness: 0.78,
-      roughness: 0.23,
-      emissive: 0x231203,
-      emissiveIntensity: 0.06,
+      color: 0xe2b45a,
+      metalness: 0.8,
+      roughness: 0.24,
+      emissive: 0x2a1604,
+      emissiveIntensity: 0.035,
     });
+    const hbmTopIdleColors = {
+      dark: new THREE.Color(0x123b59),
+      light: new THREE.Color(0x215e78),
+    };
+    const hbmTopBoostTargets = {
+      dark: new THREE.Color(0x235982),
+      light: new THREE.Color(0x317da0),
+    };
+    const hbmTopIdleEmissives = {
+      dark: new THREE.Color(0x031520),
+      light: new THREE.Color(0x071c25),
+    };
+    const hbmFeatureIdlePalettes = {
+      dark: {
+        bank: [new THREE.Color(0x2a95a0), new THREE.Color(0x5368b4)],
+        phy: [new THREE.Color(0x6b55a3), new THREE.Color(0x855b92)],
+      },
+      light: {
+        bank: [new THREE.Color(0x217986), new THREE.Color(0x465b94)],
+        phy: [new THREE.Color(0x5d4d86), new THREE.Color(0x76546f)],
+      },
+    };
+    const hbmFeatureBoostTargets = {
+      dark: new THREE.Color(0x376a91),
+      light: new THREE.Color(0x4386a2),
+    };
+    const hbmBoostScratch = new THREE.Color();
 
     const hbmLayerGeometry = createSlab(4.3, 1.18, 0.065, 0.08);
-    const hbmBankGeometry = new THREE.BoxGeometry(0.88, 0.012, 0.66);
-    const hbmGridVertical = new THREE.BoxGeometry(0.012, 0.007, 0.56);
-    const hbmGridHorizontal = new THREE.BoxGeometry(0.78, 0.007, 0.012);
+    const hbmFeatureGeometry = new THREE.BoxGeometry(1, 0.006, 1);
+    const hbmTraceGeometry = new THREE.BoxGeometry(1, 0.004, 1);
     const viaGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1.02, 16);
     const viaRingGeometry = new THREE.TorusGeometry(0.07, 0.014, 8, 20);
     viaRingGeometry.rotateX(Math.PI / 2);
@@ -265,6 +291,7 @@ if (surface && canvas) {
       stack.add(localInterposer);
 
       const layerCount = 8;
+      const layerHeight = 0.065;
       const firstLayerY = 0.25;
       const layerPitch = 0.125;
       hbmLayerMaterials.forEach((material, materialIndex) => {
@@ -279,58 +306,170 @@ if (surface && canvas) {
         stack.add(layers);
       });
 
-      const topDieY = firstLayerY + (layerCount - 1) * layerPitch;
-      const passivation = new THREE.Mesh(createSlab(4.16, 1.06, 0.024, 0.075), hbmTopMaterial);
-      passivation.position.y = topDieY + 0.05;
+      const topWidth = 4.16;
+      const topDepth = 1.06;
+      const topScaleX = topWidth / 4.76;
+      const topScaleZ = topDepth / 2.32;
+      const topDieSurfaceY = firstLayerY + (layerCount - 1) * layerPitch + layerHeight / 2;
+      const topPassivationHeight = 0.01;
+      const passivation = new THREE.Mesh(
+        createSlab(topWidth, topDepth, topPassivationHeight, 0.075),
+        hbmTopMaterial,
+      );
+      passivation.position.y = topDieSurfaceY + topPassivationHeight / 2 + 0.001;
       stack.add(passivation);
 
-      const featureY = topDieY + 0.067;
-      const bankXs = [-1.55, -0.52, 0.52, 1.55];
-      hbmBankMaterials.forEach((material, tone) => {
-        const toneXs = bankXs.filter((_, index) => index % 2 === tone);
-        const banks = new THREE.InstancedMesh(hbmBankGeometry, material, toneXs.length);
-        toneXs.forEach((x, index) => setHbmInstance(banks, index, x, featureY, -0.05));
-        banks.instanceMatrix.needsUpdate = true;
-        banks.frustumCulled = false;
-        stack.add(banks);
-      });
-
-      const verticalGrids = new THREE.InstancedMesh(hbmGridVertical, hbmGridMaterial, bankXs.length * 3);
-      const horizontalGrids = new THREE.InstancedMesh(hbmGridHorizontal, hbmGridMaterial, bankXs.length * 2);
-      let verticalIndex = 0;
-      let horizontalIndex = 0;
-      bankXs.forEach((x) => {
-        [-0.21, 0, 0.21].forEach((offset) => {
-          setHbmInstance(verticalGrids, verticalIndex, x + offset, featureY + 0.01, -0.05);
-          verticalIndex += 1;
-        });
-        [-0.18, 0.18].forEach((offset) => {
-          setHbmInstance(horizontalGrids, horizontalIndex, x, featureY + 0.01, -0.05 + offset);
-          horizontalIndex += 1;
+      const memoryBanks = [];
+      [-0.48, 0.3].forEach((z, row) => {
+        [-1.03, 1.03].forEach((x, column) => {
+          memoryBanks.push({
+            x: x * topScaleX,
+            z: z * topScaleZ,
+            width: 1.92 * topScaleX,
+            depth: 0.7 * topScaleZ,
+            tone: (row + column) % 2,
+          });
         });
       });
-      verticalGrids.instanceMatrix.needsUpdate = true;
-      horizontalGrids.instanceMatrix.needsUpdate = true;
-      verticalGrids.frustumCulled = false;
-      horizontalGrids.frustumCulled = false;
-      stack.add(verticalGrids, horizontalGrids);
 
-      const sealOuter = new THREE.LineSegments(
-        new THREE.EdgesGeometry(createSlab(4.18, 1.08, 0.026, 0.075), 20),
-        hbmSealLineMaterial,
+      const viaXs = [1.04, 1.31, 1.58, 1.85].map((x) => x * topScaleX);
+      const viaZ = 1.14 * topScaleZ;
+      const peripheralBlocks = viaXs.map((x, index) => ({
+        x,
+        z: 0.82 * topScaleZ,
+        width: 0.18 * topScaleX,
+        depth: 0.16 * topScaleZ,
+        tone: index % 2,
+      }));
+      const surfaceFeatures = [
+        ...memoryBanks.map((feature) => ({ ...feature, kind: "bank" })),
+        ...peripheralBlocks.map((feature) => ({ ...feature, kind: "phy" })),
+      ];
+      const featureY = topDieSurfaceY + topPassivationHeight + 0.005;
+      surfaceFeatures.forEach((feature) => {
+        const materials = feature.kind === "bank" ? hbmBankMaterials : hbmPhyMaterials;
+        const mesh = new THREE.Mesh(hbmFeatureGeometry, materials[feature.tone]);
+        mesh.position.set(feature.x, featureY, feature.z);
+        mesh.scale.set(
+          feature.width - 0.045 * topScaleX,
+          1,
+          feature.depth - 0.045 * topScaleZ,
+        );
+        stack.add(mesh);
+      });
+
+      const topTraceY = topDieSurfaceY + topPassivationHeight + 0.009;
+      const topGridSegments = [];
+      const topRdlSegments = [];
+      const addGridTrace = (x1, z1, x2, z2) => {
+        topGridSegments.push(x1, topTraceY, z1, x2, topTraceY, z2);
+      };
+      const addRdlTrace = (x1, z1, x2, z2) => {
+        topRdlSegments.push(x1, topTraceY + 0.001, z1, x2, topTraceY + 0.001, z2);
+      };
+      const addTraceRectangle = (addTrace, { x, z, width, depth }) => {
+        const left = x - width / 2;
+        const right = x + width / 2;
+        const front = z - depth / 2;
+        const back = z + depth / 2;
+        addTrace(left, front, right, front);
+        addTrace(right, front, right, back);
+        addTrace(right, back, left, back);
+        addTrace(left, back, left, front);
+      };
+
+      addTraceRectangle(addGridTrace, {
+        x: 0,
+        z: 0,
+        width: 4.36 * topScaleX,
+        depth: 2.04 * topScaleZ,
+      });
+      addTraceRectangle(addGridTrace, {
+        x: 0,
+        z: 0,
+        width: 4.18 * topScaleX,
+        depth: 1.88 * topScaleZ,
+      });
+      memoryBanks.forEach((bank) => {
+        addTraceRectangle(addGridTrace, bank);
+        [-0.25, 0, 0.25].forEach((offset) => {
+          addGridTrace(
+            bank.x + bank.width * offset,
+            bank.z - bank.depth / 2,
+            bank.x + bank.width * offset,
+            bank.z + bank.depth / 2,
+          );
+          addGridTrace(
+            bank.x - bank.width / 2,
+            bank.z + bank.depth * offset,
+            bank.x + bank.width / 2,
+            bank.z + bank.depth * offset,
+          );
+        });
+      });
+      peripheralBlocks.forEach((block, index) => {
+        addTraceRectangle(addGridTrace, block);
+        addGridTrace(
+          block.x - block.width / 6,
+          block.z - block.depth / 2,
+          block.x - block.width / 6,
+          block.z + block.depth / 2,
+        );
+        addGridTrace(
+          block.x + block.width / 6,
+          block.z - block.depth / 2,
+          block.x + block.width / 6,
+          block.z + block.depth / 2,
+        );
+        addRdlTrace(block.x, block.z + block.depth / 2, viaXs[index], viaZ);
+      });
+
+      const createTopTraceMesh = (segments, material, width) => {
+        const mesh = new THREE.InstancedMesh(
+          hbmTraceGeometry,
+          material,
+          segments.length / 6,
+        );
+        for (let index = 0; index < segments.length; index += 6) {
+          const x1 = segments[index];
+          const y1 = segments[index + 1];
+          const z1 = segments[index + 2];
+          const x2 = segments[index + 3];
+          const z2 = segments[index + 5];
+          const dx = x2 - x1;
+          const dz = z2 - z1;
+          hbmInstanceHelper.position.set((x1 + x2) / 2, y1, (z1 + z2) / 2);
+          hbmInstanceHelper.rotation.set(0, -Math.atan2(dz, dx), 0);
+          hbmInstanceHelper.scale.set(Math.hypot(dx, dz), 1, width);
+          hbmInstanceHelper.updateMatrix();
+          mesh.setMatrixAt(index / 6, hbmInstanceHelper.matrix);
+        }
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.frustumCulled = false;
+        return mesh;
+      };
+      stack.add(
+        createTopTraceMesh(topGridSegments, hbmGridMaterial, 0.012),
+        createTopTraceMesh(topRdlSegments, hbmRdlMaterial, 0.022),
       );
-      sealOuter.position.y = topDieY + 0.05;
-      stack.add(sealOuter);
 
-      const viaHeight = topDieY - 0.1;
-      const viaXs = [-1.48, -0.5, 0.5, 1.48];
+      const viaBottom = 0.14;
+      const viaTop = topDieSurfaceY + topPassivationHeight + 0.011;
+      const viaHeight = viaTop - viaBottom;
       const vias = new THREE.InstancedMesh(viaGeometry, hbmViaMaterial, viaXs.length);
       const viaRings = new THREE.InstancedMesh(viaRingGeometry, hbmViaRingMaterial, viaXs.length * layerCount);
       let ringIndex = 0;
       viaXs.forEach((x, viaIndex) => {
-        setHbmInstance(vias, viaIndex, x, 0.15 + viaHeight / 2, 0.54, viaHeight / 1.02);
+        setHbmInstance(vias, viaIndex, x, viaBottom + viaHeight / 2, viaZ, viaHeight / 1.02);
         for (let layer = 0; layer < layerCount; layer += 1) {
-          setHbmInstance(viaRings, ringIndex, x, firstLayerY + layer * layerPitch + 0.036, 0.54);
+          setHbmInstance(
+            viaRings,
+            ringIndex,
+            x,
+            firstLayerY + layer * layerPitch + layerHeight / 2
+              + (layer === layerCount - 1 ? topPassivationHeight + 0.011 : 0.004),
+            viaZ,
+          );
           ringIndex += 1;
         }
       });
@@ -339,10 +478,6 @@ if (surface && canvas) {
       vias.frustumCulled = false;
       viaRings.frustumCulled = false;
       stack.add(vias, viaRings);
-
-      const rdl = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.014, 0.025), hbmSealMaterial);
-      rdl.position.set(0, featureY + 0.012, 0.42);
-      stack.add(rdl);
       return stack;
     }
 
@@ -541,16 +676,27 @@ if (surface && canvas) {
         material.color.setHex((lightTheme ? lightLayers : darkLayers)[index]);
         material.emissive.setHex(lightTheme ? 0x0a2c4c : 0x041426);
       });
-      hbmTopMaterial.color.setHex(lightTheme ? 0x286881 : 0x144b70);
-      hbmTopMaterial.emissive.setHex(lightTheme ? 0x08212c : 0x031522);
-      hbmBankMaterials[0].color.setHex(lightTheme ? 0x167f8b : 0x298f9d);
-      hbmBankMaterials[1].color.setHex(lightTheme ? 0x514a9b : 0x5868b2);
-      hbmGridMaterial.color.setHex(lightTheme ? 0x315f75 : 0x9bc7d5);
-      hbmSealMaterial.color.setHex(lightTheme ? 0x436b82 : 0x79a2bb);
-      hbmSealLineMaterial.color.setHex(lightTheme ? 0x436b82 : 0x79a2bb);
-      hbmSealLineMaterial.opacity = lightTheme ? 0.78 : 0.72;
-      hbmViaMaterial.color.setHex(lightTheme ? 0x9d6c2f : 0xc98f3e);
-      hbmViaRingMaterial.color.setHex(lightTheme ? 0xa87935 : 0xe0b15a);
+      const hbmTheme = lightTheme ? "light" : "dark";
+      hbmTopMaterial.color.copy(hbmTopIdleColors[hbmTheme]);
+      hbmTopMaterial.emissive.copy(hbmTopIdleEmissives[hbmTheme]);
+      hbmTopMaterial.sheenColor.setHex(lightTheme ? 0x477aa1 : 0x5257a8);
+      hbmTopMaterial.iridescence = lightTheme ? 0.22 : 0.3;
+      hbmBankMaterials.forEach((material, index) => {
+        material.color.copy(hbmFeatureIdlePalettes[hbmTheme].bank[index]);
+        material.opacity = lightTheme ? 0.74 : 0.82;
+      });
+      hbmPhyMaterials.forEach((material, index) => {
+        material.color.copy(hbmFeatureIdlePalettes[hbmTheme].phy[index]);
+        material.opacity = lightTheme ? 0.74 : 0.82;
+      });
+      hbmGridMaterial.color.setHex(lightTheme ? 0x315f75 : 0x83b7cc);
+      hbmGridMaterial.emissive.setHex(lightTheme ? 0x02090c : 0x071821);
+      hbmRdlMaterial.color.setHex(lightTheme ? 0x2a6476 : 0xa7cfda);
+      hbmRdlMaterial.emissive.setHex(lightTheme ? 0x02090c : 0x091d25);
+      hbmViaMaterial.color.setHex(lightTheme ? 0x9a641d : 0xd09a43);
+      hbmViaMaterial.emissive.setHex(lightTheme ? 0x1d0d01 : 0x2a1604);
+      hbmViaRingMaterial.color.setHex(lightTheme ? 0xa96e20 : 0xe2b45a);
+      hbmViaRingMaterial.emissive.setHex(lightTheme ? 0x160a01 : 0x2a1604);
       peBaseMaterial.color.setHex(lightTheme ? 0x437b9b : 0x17496d);
       peBaseMaterial.emissive.setHex(lightTheme ? 0x0c3148 : 0x08253b);
       peBaseMaterial.emissiveIntensity = lightTheme ? 0.2 : 0.24;
@@ -650,13 +796,35 @@ if (surface && canvas) {
 
     function updateBoost(boostAmount) {
       const boostTarget = lightTheme ? lightBoostTarget : darkBoostTarget;
+      const hbmTheme = lightTheme ? "light" : "dark";
       hbmLayerMaterials.forEach((material, index) => {
         material.color.setHex((lightTheme ? lightBaseLayers : darkBaseLayers)[index]).lerp(boostTarget, boostAmount * 0.38);
         material.emissiveIntensity = 0.09 + boostAmount * 0.18;
       });
-      hbmTopMaterial.emissiveIntensity = 0.06 + boostAmount * 0.16;
-      hbmViaMaterial.emissiveIntensity = 0.11 + boostAmount * 0.22;
-      hbmViaRingMaterial.emissiveIntensity = 0.06 + boostAmount * 0.16;
+      hbmBoostScratch.copy(hbmTopIdleColors[hbmTheme]).lerp(hbmTopBoostTargets[hbmTheme], 0.36);
+      hbmTopMaterial.color.copy(hbmTopIdleColors[hbmTheme]).lerp(hbmBoostScratch, boostAmount);
+      hbmTopMaterial.emissive.copy(hbmTopIdleEmissives[hbmTheme]).lerp(
+        hbmBoostScratch,
+        boostAmount * 0.28,
+      );
+      hbmTopMaterial.emissiveIntensity = (lightTheme ? 0.025 : 0.045) + boostAmount * 0.055;
+      hbmTopMaterial.iridescence = (lightTheme ? 0.22 : 0.3) + boostAmount * 0.07;
+      hbmBankMaterials.forEach((material, index) => {
+        material.color.copy(hbmFeatureIdlePalettes[hbmTheme].bank[index]).lerp(
+          hbmFeatureBoostTargets[hbmTheme],
+          boostAmount * 0.16,
+        );
+        material.opacity = (lightTheme ? 0.74 : 0.82) + boostAmount * 0.1;
+      });
+      hbmPhyMaterials.forEach((material, index) => {
+        material.color.copy(hbmFeatureIdlePalettes[hbmTheme].phy[index]).lerp(
+          hbmFeatureBoostTargets[hbmTheme],
+          boostAmount * 0.16,
+        );
+        material.opacity = (lightTheme ? 0.74 : 0.82) + boostAmount * 0.1;
+      });
+      hbmViaMaterial.emissiveIntensity = (lightTheme ? 0.015 : 0.055) + boostAmount * 0.08;
+      hbmViaRingMaterial.emissiveIntensity = (lightTheme ? 0.01 : 0.045) + boostAmount * 0.07;
       const brighten = boostAmount * 0.22;
       peHorizontalMaterial.color.setHex(lightTheme ? 0x087fd3 : 0x32b5ff).lerp(peHorizontalBoost, brighten);
       peVerticalMaterial.color.setHex(lightTheme ? 0xd82745 : 0xff4c68).lerp(peVerticalBoost, brighten);
