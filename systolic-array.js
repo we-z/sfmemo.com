@@ -2,7 +2,6 @@ import * as THREE from "./vendor/three.module.js";
 
 const surface = document.querySelector(".approach-systolic");
 const canvas = document.querySelector("#systolic-canvas");
-const equationReadout = document.querySelector(".systolic-equation");
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 const coarsePointer = window.matchMedia("(hover: none) and (pointer: coarse)");
 
@@ -35,9 +34,8 @@ if (surface && canvas) {
     rimLight.position.set(4.7, 2.1, 4.2);
     scene.add(rimLight);
 
-    const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
+    const clamp = (value, minimum = 0, maximum = 1) => Math.min(maximum, Math.max(minimum, value));
     const fract = (value) => value - Math.floor(value);
-    const modulo = (value, length) => ((value % length) + length) % length;
     const smoothstep = (minimum, maximum, value) => {
       const amount = clamp((value - minimum) / (maximum - minimum), 0, 1);
       return amount * amount * (3 - 2 * amount);
@@ -67,36 +65,6 @@ if (surface && canvas) {
       return geometry;
     }
 
-    function createLabelTexture(text, accent, compact = false) {
-      const labelCanvas = document.createElement("canvas");
-      labelCanvas.width = compact ? 128 : 384;
-      labelCanvas.height = compact ? 72 : 112;
-      const context = labelCanvas.getContext("2d");
-      context.clearRect(0, 0, labelCanvas.width, labelCanvas.height);
-      context.fillStyle = compact ? accent : "rgba(9, 35, 64, 0.94)";
-      context.globalAlpha = compact ? 0.82 : 1;
-      context.beginPath();
-      context.roundRect(3, 3, labelCanvas.width - 6, labelCanvas.height - 6, compact ? 18 : 24);
-      context.fill();
-      context.globalAlpha = 1;
-      if (!compact) {
-        context.strokeStyle = accent;
-        context.lineWidth = 4;
-        context.stroke();
-      }
-      context.fillStyle = "#eef8ff";
-      context.font = `${compact ? 600 : 550} ${compact ? 40 : 48}px ui-monospace, SFMono-Regular, Menlo, monospace`;
-      context.textAlign = "center";
-      context.textBaseline = "middle";
-      context.fillText(text, labelCanvas.width / 2, labelCanvas.height / 2 + 1);
-      const texture = new THREE.CanvasTexture(labelCanvas);
-      texture.colorSpace = THREE.SRGBColorSpace;
-      texture.minFilter = THREE.LinearFilter;
-      texture.magFilter = THREE.LinearFilter;
-      texture.needsUpdate = true;
-      return texture;
-    }
-
     const substrateMaterial = new THREE.MeshPhysicalMaterial({
       color: 0x07111f,
       metalness: 0.58,
@@ -107,33 +75,43 @@ if (surface && canvas) {
       emissiveIntensity: 0.1,
     });
     const interposerMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0x0a2a4c,
+      color: 0x061a2b,
       metalness: 0.5,
       roughness: 0.32,
       clearcoat: 0.4,
       clearcoatRoughness: 0.25,
-      emissive: 0x031326,
-      emissiveIntensity: 0.14,
+      emissive: 0x020914,
+      emissiveIntensity: 0.08,
     });
     const cellMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0x123d69,
+      color: 0x0d2b49,
       metalness: 0.32,
       roughness: 0.3,
       clearcoat: 0.48,
       clearcoatRoughness: 0.24,
-      emissive: 0x041525,
-      emissiveIntensity: 0.2,
+      emissive: 0x020d18,
+      emissiveIntensity: 0.11,
     });
     const coreMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false });
     const activationMaterial = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
+      color: 0x7fb8d8,
       transparent: true,
-      opacity: 0.52,
+      opacity: 0.13,
       depthWrite: false,
       toneMapped: false,
     });
-    const aMaterial = new THREE.MeshBasicMaterial({ color: 0x4cc9f5, toneMapped: false });
-    const bMaterial = new THREE.MeshBasicMaterial({ color: 0xa88cff, toneMapped: false });
+    const aMaterial = new THREE.MeshBasicMaterial({
+      color: 0x4cc9f5,
+      transparent: true,
+      opacity: 0.46,
+      toneMapped: false,
+    });
+    const bMaterial = new THREE.MeshBasicMaterial({
+      color: 0xa88cff,
+      transparent: true,
+      opacity: 0.4,
+      toneMapped: false,
+    });
 
     const substrate = new THREE.Mesh(new THREE.BoxGeometry(8.2, 0.2, 8.2), substrateMaterial);
     substrate.position.y = -0.28;
@@ -155,23 +133,22 @@ if (surface && canvas) {
     arrayRoot.add(substrateEdges);
 
     const gridSize = 8;
-    const scheduleLength = gridSize * 3 - 2;
-    const pitch = 0.72;
+    const pitch = 0.59;
     const gridSpan = (gridSize - 1) * pitch;
     const first = -gridSpan / 2;
     const helper = new THREE.Object3D();
     const cellMesh = new THREE.InstancedMesh(
-      new THREE.BoxGeometry(0.52, 0.13, 0.52),
+      new THREE.BoxGeometry(0.43, 0.11, 0.43),
       cellMaterial,
       gridSize * gridSize,
     );
     const coreMesh = new THREE.InstancedMesh(
-      new THREE.BoxGeometry(0.3, 0.055, 0.3),
+      new THREE.BoxGeometry(0.25, 0.045, 0.25),
       coreMaterial,
       gridSize * gridSize,
     );
     const activationMesh = new THREE.InstancedMesh(
-      new THREE.BoxGeometry(0.46, 0.028, 0.46),
+      new THREE.BoxGeometry(0.36, 0.018, 0.36),
       activationMaterial,
       gridSize * gridSize,
     );
@@ -179,14 +156,14 @@ if (surface && canvas) {
     coreMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     activationMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 
-    const offCoreDark = new THREE.Color(0x24577f);
-    const activeCoreDark = new THREE.Color(0xbfeeff);
-    const boostCoreDark = new THREE.Color(0xe0f7ff);
-    const offCoreLight = new THREE.Color(0x2e6f9f);
-    const activeCoreLight = new THREE.Color(0x0b6fd1);
-    const boostCoreLight = new THREE.Color(0x0b57b1);
-    const activeCapDark = new THREE.Color(0xd8f5ff);
-    const activeCapLight = new THREE.Color(0x2588df);
+    const offCoreDark = new THREE.Color(0x183e5d);
+    const activeCoreDark = new THREE.Color(0x3f7b9f);
+    const boostCoreDark = new THREE.Color(0x5590b5);
+    const offCoreLight = new THREE.Color(0x285f86);
+    const activeCoreLight = new THREE.Color(0x2a72a1);
+    const boostCoreLight = new THREE.Color(0x22638f);
+    const activeCapDark = new THREE.Color(0x75aac8);
+    const activeCapLight = new THREE.Color(0x266f9e);
     const coreColorScratch = new THREE.Color();
     const cellPositions = [];
 
@@ -225,81 +202,28 @@ if (surface && canvas) {
     const lanePositions = Array.from({ length: gridSize }, (_, index) => first + index * pitch);
     const traceVertices = [];
     lanePositions.forEach((lane) => {
-      traceVertices.push(-3.28, -0.015, lane, 3.28, -0.015, lane);
-      traceVertices.push(lane, -0.005, -3.28, lane, -0.005, 3.28);
+      traceVertices.push(-2.72, -0.015, lane, 2.72, -0.015, lane);
+      traceVertices.push(lane, -0.005, -2.72, lane, -0.005, 2.72);
     });
     const traceGeometry = new THREE.BufferGeometry();
     traceGeometry.setAttribute("position", new THREE.Float32BufferAttribute(traceVertices, 3));
-    const traceMaterial = new THREE.LineBasicMaterial({ color: 0x4e94d6, transparent: true, opacity: 0.3 });
+    const traceMaterial = new THREE.LineBasicMaterial({ color: 0x4e94d6, transparent: true, opacity: 0.18 });
     arrayRoot.add(new THREE.LineSegments(traceGeometry, traceMaterial));
 
-    const padMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0x6da9d7,
-      metalness: 0.72,
-      roughness: 0.25,
-      emissive: 0x0d3154,
-      emissiveIntensity: 0.24,
-    });
-    const rowPads = new THREE.InstancedMesh(new THREE.BoxGeometry(0.2, 0.06, 0.34), padMaterial, gridSize * 2);
-    const columnPads = new THREE.InstancedMesh(new THREE.BoxGeometry(0.34, 0.06, 0.2), padMaterial, gridSize * 2);
-    lanePositions.forEach((lane, index) => {
-      [-3.3, 3.3].forEach((x, side) => {
-        helper.position.set(x, 0.045, lane);
-        helper.scale.set(1, 1, 1);
-        helper.updateMatrix();
-        rowPads.setMatrixAt(index * 2 + side, helper.matrix);
-      });
-      [-3.3, 3.3].forEach((z, side) => {
-        helper.position.set(lane, 0.045, z);
-        helper.updateMatrix();
-        columnPads.setMatrixAt(index * 2 + side, helper.matrix);
-      });
-    });
-    rowPads.instanceMatrix.needsUpdate = true;
-    columnPads.instanceMatrix.needsUpdate = true;
-    arrayRoot.add(rowPads, columnPads);
-
     const aTokens = new THREE.InstancedMesh(
-      new THREE.BoxGeometry(0.44, 0.035, 0.11),
+      new THREE.BoxGeometry(0.42, 0.024, 0.1),
       aMaterial,
-      gridSize * gridSize,
+      gridSize,
     );
     const bTokens = new THREE.InstancedMesh(
-      new THREE.BoxGeometry(0.11, 0.045, 0.44),
+      new THREE.BoxGeometry(0.1, 0.028, 0.42),
       bMaterial,
-      gridSize * gridSize,
+      gridSize,
     );
     aTokens.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     bTokens.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     arrayRoot.add(aTokens, bTokens);
 
-    const matrixA = Array.from({ length: gridSize }, (_, row) => (
-      Array.from({ length: gridSize }, (_, k) => ((row * 3 + k * 2) % 5) + 1)
-    ));
-    const matrixB = Array.from({ length: gridSize }, (_, k) => (
-      Array.from({ length: gridSize }, (_, column) => ((k * 2 + column * 3) % 5) + 1)
-    ));
-
-    const valueTexturesA = Array.from({ length: 5 }, (_, index) => createLabelTexture(String(index + 1), "#4cc9f5", true));
-    const valueTexturesB = Array.from({ length: 5 }, (_, index) => createLabelTexture(String(index + 1), "#a88cff", true));
-    const rowLabels = Array.from({ length: gridSize }, () => {
-      const material = new THREE.SpriteMaterial({ transparent: true, depthWrite: false, depthTest: false });
-      const sprite = new THREE.Sprite(material);
-      sprite.scale.set(0.31, 0.17, 1);
-      sprite.renderOrder = 20;
-      sprite.userData.k = 0;
-      arrayRoot.add(sprite);
-      return sprite;
-    });
-    const columnLabels = Array.from({ length: gridSize }, () => {
-      const material = new THREE.SpriteMaterial({ transparent: true, depthWrite: false, depthTest: false });
-      const sprite = new THREE.Sprite(material);
-      sprite.scale.set(0.31, 0.17, 1);
-      sprite.renderOrder = 20;
-      sprite.userData.k = 0;
-      arrayRoot.add(sprite);
-      return sprite;
-    });
     const hbmBaseMaterial = new THREE.MeshPhysicalMaterial({
       color: 0x071b31,
       metalness: 0.58,
@@ -397,18 +321,18 @@ if (surface && canvas) {
 
     function createHbmPackage() {
       const packageGroup = new THREE.Group();
-      const base = new THREE.Mesh(createSlab(3.16, 1.18, 0.09, 0.07), hbmBaseMaterial);
+      const base = new THREE.Mesh(createSlab(5.86, 1.36, 0.1, 0.07), hbmBaseMaterial);
       base.position.y = -0.015;
       packageGroup.add(base);
-      const packageInterposer = new THREE.Mesh(createSlab(3.02, 1.08, 0.04, 0.065), hbmInterposerMaterial);
+      const packageInterposer = new THREE.Mesh(createSlab(5.72, 1.27, 0.045, 0.065), hbmInterposerMaterial);
       packageInterposer.position.y = 0.05;
       packageGroup.add(packageInterposer);
 
       const layerCount = 8;
-      const firstLayerY = 0.095;
-      const layerPitch = 0.068;
-      const layerHeight = 0.032;
-      const layerGeometry = createSlab(2.94, 0.98, layerHeight, 0.055);
+      const firstLayerY = 0.1;
+      const layerPitch = 0.072;
+      const layerHeight = 0.034;
+      const layerGeometry = createSlab(5.62, 1.18, layerHeight, 0.055);
       for (let layer = 0; layer < layerCount; layer += 1) {
         const die = new THREE.Mesh(layerGeometry, hbmLayerMaterials[layer % 2]);
         die.position.y = firstLayerY + layer * layerPitch;
@@ -416,60 +340,65 @@ if (surface && canvas) {
       }
 
       const topY = firstLayerY + (layerCount - 1) * layerPitch + layerHeight / 2;
-      const passivation = new THREE.Mesh(createSlab(2.9, 0.94, 0.018, 0.052), hbmTopMaterial);
+      const passivation = new THREE.Mesh(createSlab(5.58, 1.13, 0.018, 0.052), hbmTopMaterial);
       passivation.position.y = topY + 0.014;
       packageGroup.add(passivation);
       const featureY = topY + 0.03;
 
-      const bankXs = [-0.95, -0.32, 0.32, 0.95];
-      const bankZs = [-0.2, 0.02];
+      const bankXs = [-2.3, -1.72, -1.14, -0.56, 0.02, 0.6, 1.18, 1.76];
+      const bankZs = [-0.27, 0.08];
       bankZs.forEach((z, row) => {
         bankXs.forEach((x, column) => {
           const bank = new THREE.Mesh(
-            new THREE.BoxGeometry(0.48, 0.008, 0.16),
+            new THREE.BoxGeometry(0.49, 0.008, 0.27),
             hbmBankMaterials[(row + column) % 2],
           );
           bank.position.set(x, featureY, z);
           packageGroup.add(bank);
           [-0.12, 0, 0.12].forEach((offset) => {
-            addTopStrip(packageGroup, x + offset, z, 0.011, 0.135, featureY + 0.007, hbmGridMaterial);
+            addTopStrip(packageGroup, x + offset, z, 0.011, 0.235, featureY + 0.007, hbmGridMaterial);
           });
           [-0.04, 0.04].forEach((offset) => {
-            addTopStrip(packageGroup, x, z + offset, 0.44, 0.01, featureY + 0.007, hbmGridMaterial);
+            addTopStrip(packageGroup, x, z + offset * 1.75, 0.45, 0.01, featureY + 0.007, hbmGridMaterial);
           });
         });
       });
 
-      const viaXs = [-0.9, -0.3, 0.3, 0.9];
+      const viaXs = [2.08, 2.28, 2.48, 2.68];
       viaXs.forEach((x) => {
-        const phy = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.008, 0.09), hbmPhyMaterial);
-        phy.position.set(x, featureY, 0.25);
+        const phy = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.008, 0.09), hbmPhyMaterial);
+        phy.position.set(x, featureY, 0.41);
         packageGroup.add(phy);
-        addTopStrip(packageGroup, x, 0.3375, 0.022, 0.085, featureY + 0.008, hbmRdlMaterial);
+        addTopStrip(packageGroup, x, 0.49, 0.022, 0.16, featureY + 0.008, hbmRdlMaterial);
 
         const viaHeight = topY - 0.055;
         const via = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, viaHeight, 14), hbmViaMaterial);
-        via.position.set(x, 0.055 + viaHeight / 2, 0.38);
+        via.position.set(x, 0.055 + viaHeight / 2, 0.52);
         packageGroup.add(via);
 
         [firstLayerY, topY].forEach((ringY) => {
           const ringGeometry = new THREE.TorusGeometry(0.05, 0.01, 7, 18);
           ringGeometry.rotateX(Math.PI / 2);
           const ring = new THREE.Mesh(ringGeometry, hbmViaRingMaterial);
-          ring.position.set(x, ringY + 0.02, 0.38);
+          ring.position.set(x, ringY + 0.02, 0.52);
           packageGroup.add(ring);
         });
       });
 
-      addSealRing(packageGroup, 2.74, 0.79, featureY + 0.009);
+      addTopStrip(packageGroup, -0.26, 0.315, 4.55, 0.018, featureY + 0.008, hbmRdlMaterial);
+      bankXs.forEach((x) => {
+        addTopStrip(packageGroup, x, 0.2, 0.014, 0.22, featureY + 0.008, hbmRdlMaterial);
+      });
+      addSealRing(packageGroup, 5.34, 1.02, featureY + 0.009);
+      addSealRing(packageGroup, 5.18, 0.9, featureY + 0.0095);
       return packageGroup;
     }
 
     const hbmPositions = [
-      { x: 0, z: -3.54, rotation: 0 },
-      { x: 0, z: 3.54, rotation: Math.PI },
-      { x: -3.54, z: 0, rotation: Math.PI / 2 },
-      { x: 3.54, z: 0, rotation: -Math.PI / 2 },
+      { x: 0, z: -3.42, rotation: 0 },
+      { x: 0, z: 3.42, rotation: Math.PI },
+      { x: -3.42, z: 0, rotation: Math.PI / 2 },
+      { x: 3.42, z: 0, rotation: -Math.PI / 2 },
     ];
     const packagePrototype = createHbmPackage();
     hbmPositions.forEach(({ x, z, rotation }, index) => {
@@ -482,8 +411,8 @@ if (surface && canvas) {
     const baseColors = {
       substrateDark: new THREE.Color(0x07111f),
       substrateLight: new THREE.Color(0x15304d),
-      interposerDark: new THREE.Color(0x0a2a4c),
-      interposerLight: new THREE.Color(0x225f91),
+      interposerDark: new THREE.Color(0x061a2b),
+      interposerLight: new THREE.Color(0x173b5b),
       hbmBaseDark: new THREE.Color(0x071b31),
       hbmBaseLight: new THREE.Color(0x1c527f),
       hbmLayersDark: [new THREE.Color(0x123f70), new THREE.Color(0x195083)],
@@ -517,24 +446,21 @@ if (surface && canvas) {
     let visible = true;
     let animationFrame = 0;
     let previousTime = performance.now();
-    let simulationTime = 8.36;
+    let simulationTime = 0.18;
     let boostUntil = 0;
     let reducedMotion = motionPreference.matches;
-    let lastTick = -1;
 
     function applyTheme() {
       lightTheme = document.documentElement.dataset.theme === "light";
       renderer.toneMappingExposure = lightTheme ? 1 : 1.18;
       substrateMaterial.emissive.setHex(lightTheme ? 0x07182b : 0x020813);
-      interposerMaterial.emissive.setHex(lightTheme ? 0x0a3158 : 0x031326);
+      interposerMaterial.emissive.setHex(lightTheme ? 0x051729 : 0x020914);
       substrateEdgeMaterial.color.setHex(lightTheme ? 0x1559c5 : 0x3977b8);
       substrateEdgeMaterial.opacity = lightTheme ? 0.68 : 0.54;
       traceMaterial.color.setHex(lightTheme ? 0x1769b3 : 0x4e94d6);
-      traceMaterial.opacity = lightTheme ? 0.44 : 0.3;
-      padMaterial.color.setHex(lightTheme ? 0x2b74a8 : 0x6da9d7);
-      padMaterial.emissive.setHex(lightTheme ? 0x0e3f70 : 0x0d3154);
-      cellMaterial.color.setHex(lightTheme ? 0x235f92 : 0x123d69);
-      cellMaterial.emissive.setHex(lightTheme ? 0x0b3156 : 0x041525);
+      traceMaterial.opacity = lightTheme ? 0.27 : 0.18;
+      cellMaterial.color.setHex(lightTheme ? 0x1c4d72 : 0x0d2b49);
+      cellMaterial.emissive.setHex(lightTheme ? 0x061d31 : 0x020d18);
       hbmInterposerMaterial.color.setHex(lightTheme ? 0x24658e : 0x0b3155);
       hbmBankMaterials[0].color.setHex(lightTheme ? 0x217986 : 0x1b7087);
       hbmBankMaterials[1].color.setHex(lightTheme ? 0x465b94 : 0x4b5fa8);
@@ -543,76 +469,39 @@ if (surface && canvas) {
       hbmSealMaterial.color.setHex(lightTheme ? 0x4f7591 : 0x668daa);
       hbmRdlMaterial.color.setHex(lightTheme ? 0x2a6476 : 0xa7cfda);
       hbmViaRingMaterial.color.setHex(lightTheme ? 0xa47434 : 0xe2b45a);
-      lastTick = -1;
       if (reducedMotion) requestRender();
     }
 
-    function updateEquationLayout(tick) {
-      const activeCells = cellPositions
-        .filter(({ row, column }) => {
-          const k = tick - row - column;
-          return k >= 0 && k < gridSize;
-        })
-        .sort((left, right) => (
-          Math.hypot(left.row - 3.5, left.column - 3.5)
-          - Math.hypot(right.row - 3.5, right.column - 3.5)
-        ));
-
-      const leadCell = activeCells[0];
-      if (leadCell && equationReadout) {
-        const k = tick - leadCell.row - leadCell.column;
-        const left = matrixA[leadCell.row][k];
-        const right = matrixB[k][leadCell.column];
-        equationReadout.textContent = `${left} × ${right} = ${left * right}`;
-      }
-
-      rowLabels.forEach((sprite, row) => {
-        const k = modulo(tick - row, gridSize);
-        sprite.userData.k = k;
-        sprite.material.map = valueTexturesA[matrixA[row][k] - 1];
-        sprite.material.needsUpdate = true;
-      });
-      columnLabels.forEach((sprite, column) => {
-        const k = modulo(tick - column, gridSize);
-        sprite.userData.k = k;
-        sprite.material.map = valueTexturesB[matrixB[k][column] - 1];
-        sprite.material.needsUpdate = true;
-      });
-    }
-
     function updateSystolicState(boost) {
-      const clock = reducedMotion ? 8.46 : simulationTime;
-      const tick = Math.floor(clock) % scheduleLength;
-      const phase = fract(clock);
-      const move = smoothstep(0, 0.34, phase);
-      const timeline = tick - 1 + move;
-      const latched = phase >= 0.22 && phase < 0.88;
-
-      if (tick !== lastTick) {
-        updateEquationLayout(tick);
-        lastTick = tick;
-      }
+      const progress = reducedMotion ? 0.52 : fract(simulationTime);
+      const easedProgress = smoothstep(0, 1, progress);
+      const travelStart = -2.82;
+      const travelEnd = 2.82;
+      const horizontalPosition = travelStart + (travelEnd - travelStart) * easedProgress;
+      const verticalPosition = travelStart + (travelEnd - travelStart) * easedProgress;
+      const edgeFade = smoothstep(0, 0.12, progress) * (1 - smoothstep(0.88, 1, progress));
 
       cellPositions.forEach(({ row, column, x, z }, index) => {
-        const k = tick - row - column;
-        const active = latched && k >= 0 && k < gridSize;
-        coreColorScratch.copy(active
-          ? (lightTheme ? activeCoreLight : activeCoreDark)
-          : (lightTheme ? offCoreLight : offCoreDark));
-        if (active && boost > 0.01) {
-          coreColorScratch.copy(lightTheme ? activeCoreLight : activeCoreDark)
-            .lerp(lightTheme ? boostCoreLight : boostCoreDark, boost * 0.58);
-        }
+        const horizontalWave = clamp(1 - Math.abs(x - horizontalPosition) / (pitch * 0.82));
+        const verticalWave = clamp(1 - Math.abs(z - verticalPosition) / (pitch * 0.82));
+        const overlap = Math.min(horizontalWave, verticalWave);
+        const activity = Math.max(horizontalWave, verticalWave) * 0.18 + overlap * 0.12;
+        const offColor = lightTheme ? offCoreLight : offCoreDark;
+        const activeColor = lightTheme ? activeCoreLight : activeCoreDark;
+        const boostColor = lightTheme ? boostCoreLight : boostCoreDark;
+        coreColorScratch.copy(offColor).lerp(activeColor, activity);
+        if (boost > 0.01) coreColorScratch.lerp(boostColor, activity * boost * 0.12);
 
-        helper.position.set(x, active ? 0.165 : 0.13, z);
+        helper.position.set(x, 0.13, z);
         helper.rotation.set(0, 0, 0);
-        helper.scale.set(active ? 1.12 : 1, active ? 2.15 : 1, active ? 1.12 : 1);
+        helper.scale.set(1, 1, 1);
         helper.updateMatrix();
         coreMesh.setMatrixAt(index, helper.matrix);
         coreMesh.setColorAt(index, coreColorScratch);
 
-        helper.position.set(x, 0.235, z);
-        helper.scale.set(active ? 1.08 : 0.001, active ? 1 : 0.001, active ? 1.08 : 0.001);
+        helper.position.set(x, 0.205, z);
+        const overlapScale = overlap > 0.04 ? overlap * 0.72 : 0.001;
+        helper.scale.set(overlapScale, 1, overlapScale);
         helper.updateMatrix();
         activationMesh.setMatrixAt(index, helper.matrix);
         activationMesh.setColorAt(index, lightTheme ? activeCapLight : activeCapDark);
@@ -622,41 +511,19 @@ if (surface && canvas) {
       activationMesh.instanceMatrix.needsUpdate = true;
       activationMesh.instanceColor.needsUpdate = true;
 
-      for (let row = 0; row < gridSize; row += 1) {
-        for (let k = 0; k < gridSize; k += 1) {
-          const index = row * gridSize + k;
-          const columnFloat = timeline - row - k;
-          const inRange = columnFloat >= -1.1 && columnFloat <= 8.1;
-          helper.position.set(first + columnFloat * pitch, 0.205, first + row * pitch - 0.16);
-          helper.scale.set(inRange ? 1 : 0.001, inRange ? 1 : 0.001, inRange ? 1 : 0.001);
-          helper.updateMatrix();
-          aTokens.setMatrixAt(index, helper.matrix);
-        }
-      }
-      for (let k = 0; k < gridSize; k += 1) {
-        for (let column = 0; column < gridSize; column += 1) {
-          const index = k * gridSize + column;
-          const rowFloat = timeline - k - column;
-          const inRange = rowFloat >= -1.1 && rowFloat <= 8.1;
-          helper.position.set(first + column * pitch + 0.16, 0.245, first + rowFloat * pitch);
-          helper.scale.set(inRange ? 1 : 0.001, inRange ? 1 : 0.001, inRange ? 1 : 0.001);
-          helper.updateMatrix();
-          bTokens.setMatrixAt(index, helper.matrix);
-        }
-      }
+      lanePositions.forEach((lane, index) => {
+        helper.position.set(horizontalPosition, 0.205, lane - 0.1);
+        helper.rotation.set(0, 0, 0);
+        helper.scale.set(edgeFade, edgeFade, edgeFade);
+        helper.updateMatrix();
+        aTokens.setMatrixAt(index, helper.matrix);
+
+        helper.position.set(lane + 0.1, 0.215, verticalPosition);
+        helper.updateMatrix();
+        bTokens.setMatrixAt(index, helper.matrix);
+      });
       aTokens.instanceMatrix.needsUpdate = true;
       bTokens.instanceMatrix.needsUpdate = true;
-
-      rowLabels.forEach((sprite, row) => {
-        const columnFloat = timeline - row - sprite.userData.k;
-        sprite.visible = columnFloat >= -0.85 && columnFloat <= 7.85;
-        sprite.position.set(first + columnFloat * pitch, 0.46, first + row * pitch - 0.16);
-      });
-      columnLabels.forEach((sprite, column) => {
-        const rowFloat = timeline - sprite.userData.k - column;
-        sprite.visible = rowFloat >= -0.85 && rowFloat <= 7.85;
-        sprite.position.set(first + column * pitch + 0.16, 0.5, first + rowFloat * pitch);
-      });
     }
 
     function updateColors(boost) {
@@ -694,17 +561,17 @@ if (surface && canvas) {
       hbmViaMaterial.color.copy(lightTheme ? baseColors.viaLight : baseColors.viaDark).lerp(boostColors.via, boost * 0.28);
 
       renderer.toneMappingExposure = (lightTheme ? 1 : 1.18) + boost * 0.14;
-      cellMaterial.emissiveIntensity = (lightTheme ? 0.18 : 0.2) + boost * 0.22;
-      activationMaterial.opacity = 0.54 + boost * 0.18;
+      cellMaterial.emissiveIntensity = (lightTheme ? 0.1 : 0.11) + boost * 0.06;
+      activationMaterial.opacity = 0.1 + boost * 0.025;
       substrateEdgeMaterial.opacity = (lightTheme ? 0.68 : 0.54) + boost * 0.16;
-      traceMaterial.opacity = (lightTheme ? 0.44 : 0.3) + boost * 0.3;
+      traceMaterial.opacity = (lightTheme ? 0.27 : 0.18) + boost * 0.08;
       hbmBaseMaterial.emissiveIntensity = (lightTheme ? 0.12 : 0.14) + boost * 0.18;
       hbmLayerMaterials.forEach((material) => {
         material.emissiveIntensity = (lightTheme ? 0.12 : 0.14) + boost * 0.22;
       });
       hbmTopMaterial.emissiveIntensity = 0.05 + boost * 0.1;
       hbmViaMaterial.emissiveIntensity = 0.1 + boost * 0.18;
-      rimLight.intensity = 24 + boost * 18;
+      rimLight.intensity = 21 + boost * 7;
     }
 
     function renderFrame(time) {
@@ -713,7 +580,7 @@ if (surface && canvas) {
       previousTime = time;
       if (!visible && !reducedMotion) return;
       const boost = reducedMotion ? 0 : clamp((boostUntil - time) / 900, 0, 1);
-      if (!reducedMotion) simulationTime += elapsed * (5 + boost * 3.2);
+      if (!reducedMotion) simulationTime += elapsed * (0.13 + boost * 0.16);
 
       updateSystolicState(boost);
       updateColors(boost);
@@ -759,7 +626,6 @@ if (surface && canvas) {
     window.addEventListener("sfmemo:themechange", applyTheme);
     motionPreference.addEventListener("change", (event) => {
       reducedMotion = event.matches;
-      lastTick = -1;
       requestRender();
     });
     coarsePointer.addEventListener("change", resize);

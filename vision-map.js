@@ -122,6 +122,10 @@ if (mapFigure && mapCanvas && mapContext) {
 
   function drawRegionOutlines(lightTheme) {
     regionOutlines.forEach((region) => {
+      mapContext.save();
+      mapContext.lineJoin = "round";
+      mapContext.lineCap = "round";
+      mapContext.miterLimit = 2;
       mapContext.beginPath();
       region.coordinates.forEach((coordinate, index) => {
         const [x, y] = project(coordinate);
@@ -138,10 +142,10 @@ if (mapFigure && mapCanvas && mapContext) {
         ? `rgba(21, 89, 197, ${destination ? 0.9 : 0.78})`
         : `rgba(126, 194, 255, ${destination ? 0.92 : 0.8})`;
       mapContext.lineWidth = destination ? 2.2 : 1.9;
-      mapContext.shadowColor = lightTheme ? "rgba(21, 89, 197, 0.22)" : "rgba(75, 156, 255, 0.45)";
-      mapContext.shadowBlur = destination ? 13 : 9;
+      mapContext.shadowColor = lightTheme ? "rgba(21, 89, 197, 0.2)" : "rgba(75, 156, 255, 0.36)";
+      mapContext.shadowBlur = destination ? 8 : 0;
       mapContext.stroke();
-      mapContext.shadowBlur = 0;
+      mapContext.restore();
     });
   }
 
