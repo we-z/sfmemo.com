@@ -2093,3 +2093,30 @@ html[data-theme="light"] .vision-map::after {
 @media (max-width: 360px) {
   .vision-compact .vision-heading h2 { font-size: clamp(2.9rem, 16vw, 3.8rem); }
 }
+
+/* Compact closing utility band while the final closing statement is intentionally omitted. */
+.closing {
+  min-height: clamp(16rem, 32svh, 22rem);
+  grid-template-rows: 1fr;
+  align-items: center;
+}
+
+.closing .section-label {
+  margin: 0;
+  align-self: center;
+}
+
+.closing-link { grid-row: 1; }
+
+@media (max-width: 780px) {
+  .closing {
+    min-height: 20rem;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    gap: 2rem;
+    align-content: center;
+    padding-block: 4rem;
+  }
+
+  .closing-link { grid-row: auto; }
+}

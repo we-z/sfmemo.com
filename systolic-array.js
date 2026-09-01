@@ -6,11 +6,11 @@ const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 const coarsePointer = window.matchMedia("(hover: none) and (pointer: coarse)");
 const mobileViewport = window.matchMedia("(max-width: 780px)");
 
-const INITIAL_PITCH = -0.08;
-const INITIAL_YAW = -0.52;
-const SCROLL_END_PITCH = 0.04;
-const SCROLL_END_YAW = 0.88;
-const CAMERA_DIRECTION = new THREE.Vector3(0, 4, 1).normalize();
+const INITIAL_PITCH = 0;
+const INITIAL_YAW = 0;
+const SCROLL_END_PITCH = -0.18;
+const SCROLL_END_YAW = 0;
+const CAMERA_DIRECTION = new THREE.Vector3(0, 1, 0);
 
 if (surface && canvas) {
   try {
@@ -26,7 +26,7 @@ if (surface && canvas) {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(39, 1, 0.1, 80);
-    camera.up.set(0, 1, 0);
+    camera.up.set(0, 0, -1);
 
     const rotationRoot = new THREE.Group();
     const model = new THREE.Group();
@@ -391,11 +391,13 @@ if (surface && canvas) {
     peCores.frustumCulled = false;
     const pePositions = [];
     const peOffDark = new THREE.Color(0x1c405c);
+    const peFilledDark = new THREE.Color(0x2d6f91);
     const peAfterglowDark = new THREE.Color(0x4d7f9d);
     const peRowDark = new THREE.Color(0x45b9d5);
     const peColumnDark = new THREE.Color(0x8479dc);
     const peActiveDark = new THREE.Color(0xc8edff);
     const peOffLight = new THREE.Color(0x356b86);
+    const peFilledLight = new THREE.Color(0x2f6c89);
     const peAfterglowLight = new THREE.Color(0x3f7895);
     const peRowLight = new THREE.Color(0x1387aa);
     const peColumnLight = new THREE.Color(0x5d55b5);
@@ -470,7 +472,7 @@ if (surface && canvas) {
     let lightTheme = document.documentElement.dataset.theme === "light";
     let animationFrame = 0;
     let previousTime = performance.now();
-    let simulationTime = 0.4;
+    let simulationTime = 0;
     let boost = 0;
     let lastClockStep = -1;
     let lastBoostBucket = -1;
@@ -524,18 +526,25 @@ if (surface && canvas) {
     }
 
     function updateClockState(step, boostAmount) {
-      const waveStep = step % 15;
+      const diagonalCount = gridSize * 2 - 1;
+      const cycleStep = step % (diagonalCount * 2);
+      const filling = cycleStep < diagonalCount;
+      const waveStep = filling ? cycleStep : cycleStep - diagonalCount;
+      const tokenWaveStep = filling ? waveStep : -1;
       const offColor = lightTheme ? peOffLight : peOffDark;
+      const filledColor = lightTheme ? peFilledLight : peFilledDark;
       const afterglowColor = lightTheme ? peAfterglowLight : peAfterglowDark;
       const rowColor = lightTheme ? peRowLight : peRowDark;
       const columnColor = lightTheme ? peColumnLight : peColumnDark;
       const activeColor = lightTheme ? peActiveLight : peActiveDark;
 
       pePositions.forEach(({ row, column, x, z }, index) => {
-        const intersection = row + column === waveStep;
-        const previousIntersection = row + column === waveStep - 1;
-        const rowHead = waveStep - row;
-        const columnHead = waveStep - column;
+        const cellStep = row + column;
+        const filled = filling ? cellStep <= waveStep : cellStep > waveStep;
+        const intersection = filling && cellStep === waveStep;
+        const drainBoundary = !filling && cellStep === waveStep + 1;
+        const rowHead = tokenWaveStep - row;
+        const columnHead = tokenWaveStep - column;
         const rowPath = rowHead >= 0
           && rowHead < gridSize
           && column < rowHead
@@ -544,8 +553,8 @@ if (surface && canvas) {
           && columnHead < gridSize
           && row < columnHead
           && row >= Math.max(0, columnHead - 3);
-        colorScratch.copy(offColor);
-        if (previousIntersection) colorScratch.copy(afterglowColor);
+        colorScratch.copy(filled ? filledColor : offColor);
+        if (drainBoundary) colorScratch.copy(afterglowColor);
         if (rowPath) colorScratch.copy(rowColor);
         if (columnPath) colorScratch.copy(columnColor);
         if (rowPath && columnPath) colorScratch.copy(rowColor).lerp(columnColor, 0.5);
@@ -555,9 +564,11 @@ if (surface && canvas) {
           ? 1.16 + boostAmount * 0.08
           : rowPath || columnPath
             ? 1.07
-            : previousIntersection
+            : drainBoundary
               ? 1.03
-              : 1;
+              : filled
+                ? 1.03
+                : 1;
         helper.position.set(x, 0.415 + (coreScale - 1) * 0.025, z);
         helper.rotation.set(0, 0, 0);
         helper.scale.set(coreScale, 1, coreScale);
@@ -571,7 +582,7 @@ if (surface && canvas) {
         for (let tail = 0; tail < tokenTailLength; tail += 1) {
           const tokenIndex = lane * tokenTailLength + tail;
           const tailScale = 1 - tail * 0.22;
-          const rowColumn = waveStep - lane - tail;
+          const rowColumn = tokenWaveStep - lane - tail;
           helper.rotation.set(0, 0, 0);
           if (rowColumn >= 0 && rowColumn < gridSize) {
             helper.position.set(gridFirst + rowColumn * gridPitch, 0.56, gridFirst + lane * gridPitch - 0.1);
@@ -583,7 +594,7 @@ if (surface && canvas) {
           helper.updateMatrix();
           rowTokens.setMatrixAt(tokenIndex, helper.matrix);
 
-          const columnRow = waveStep - lane - tail;
+          const columnRow = tokenWaveStep - lane - tail;
           if (columnRow >= 0 && columnRow < gridSize) {
             helper.position.set(gridFirst + lane * gridPitch + 0.1, 0.57, gridFirst + columnRow * gridPitch);
             helper.scale.set(1, 1, tailScale);
