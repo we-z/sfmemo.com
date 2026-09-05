@@ -5,12 +5,5 @@
   "scripts": {
     "dev": "npm run build && python3 -m http.server 4173 -d dist/client",
     "build": "node build.mjs"
-  },
-  "dependencies": {
-    "three": "0.185.1"
-  },
-  "devDependencies": {
-    "topojson-client": "^3.1.0",
-    "world-atlas": "^2.0.2"
   }
 }

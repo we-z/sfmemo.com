@@ -1,20 +1,9 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#05070a">
-  <script>
-    (() => {
-      let theme = "dark";
-      try {
-        const savedTheme = localStorage.getItem("sfmemo-theme");
-        if (savedTheme === "light" || savedTheme === "dark") theme = savedTheme;
-      } catch {}
-      document.documentElement.dataset.theme = theme;
-      document.documentElement.style.colorScheme = theme;
-    })();
-  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
   <meta name="description" content="SF Memo is building DRAM chips for GPUs, AI Accelerators and SOCs.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://sfmemo.com/">
@@ -34,7 +23,6 @@
   <meta name="twitter:image:alt" content="SF Memo wordmark.">
   <link rel="canonical" href="https://sfmemo.com/">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/styles.css?v=74">
   <title>SF Memo: Memory for AI</title>
   <script type="application/ld+json">
     {
@@ -45,85 +33,94 @@
       "description": "SF Memo is building DRAM chips for GPUs, AI Accelerators and SOCs."
     }
   </script>
-  <script type="module" src="/visual.js?v=98"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { color: #111; background: #fff; scroll-behavior: smooth; }
+    body { min-height: 100vh; padding: 2rem; display: flex; justify-content: center; align-items: flex-start; color: #111; background: #fff; font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; font-weight: 300; font-feature-settings: "ss01" on; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    .content { width: 100%; max-width: 720px; padding-top: 2rem; text-align: left; }
+    h1 { margin-bottom: 1.5rem; font-size: clamp(2.125rem, 6vw, 3rem); font-weight: 300; letter-spacing: -0.02em; line-height: 1.08; }
+    p { margin-bottom: 2rem; font-size: 1.2rem; line-height: 1.4; }
+    strong { font-weight: 400; }
+    .sample-request { display: block; width: 100%; margin: 0 0 1.75rem; border: 1px solid #111; border-radius: 8px; padding: 0.8rem 1rem; color: #fff; background: #111; cursor: pointer; font-size: 1.05rem; font-weight: 400; line-height: 1.4; text-align: center; text-decoration: none; transition: background-color 160ms ease, transform 160ms ease; }
+    .sample-request:hover { background: #333; }
+    .sample-request:active { transform: translateY(1px); }
+    .sample-request:focus-visible { outline: 2px solid #111; outline-offset: 3px; }
+    .collapsible-group { display: flow-root; margin: 1rem 0 1.5rem; }
+    .collapsible-summary { display: flex; min-height: 44px; width: 100%; align-items: center; gap: 0.75rem; padding: 0.4rem 0; color: #111; background: transparent; list-style: none; cursor: pointer; border-radius: 8px; -webkit-tap-highlight-color: transparent; }
+    .collapsible-summary::-webkit-details-marker { display: none; }
+    .collapsible-summary::marker { content: ""; }
+    .collapsible-summary:hover { color: #444; }
+    .collapsible-summary:active { background: transparent; }
+    .collapsible-summary:focus-visible { outline: 2px solid #111; outline-offset: 4px; }
+    .group-title { margin: 0; font-size: 2rem; font-weight: 300; letter-spacing: -0.02em; line-height: 1.1; }
+    .section-chevron { width: 0.55rem; height: 0.55rem; flex: 0 0 0.55rem; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); transition: transform 180ms ease; }
+    details[open] > .collapsible-summary > .section-chevron { transform: rotate(45deg); }
+    .group-content { padding: 0.5rem 0 0.25rem 1.45rem; }
+    .feature-title { margin: 0 0 1.25rem; font-size: 1.625rem; font-weight: 300; letter-spacing: -0.01em; line-height: 1.12; }
+    .feature-title span { display: block; }
+    .group-content p { margin-bottom: 1.25rem; }
+    .closing { margin-top: 2.5rem; }
+    .closing-label { margin-bottom: 0.625rem; font-size: 1.35rem; font-weight: 400; letter-spacing: -0.01em; }
+    .back-link { display: inline-block; margin-bottom: 2.5rem; color: #111; font-size: 1.2rem; font-weight: 400; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
+    .back-link:hover { color: #555; }
+    .back-link:focus-visible { outline: 2px solid #111; outline-offset: 3px; border-radius: 2px; }
+    footer { margin-bottom: 0.75rem; padding: 0.25rem 0; font-size: 1.2rem; font-weight: 300; line-height: 1.5; }
+    footer .wordmark { margin-bottom: 0.625rem; font-size: 1.35rem; font-weight: 400; letter-spacing: -0.01em; }
+    footer p { margin: 0.2rem 0; }
+    @media (max-width: 640px) {
+      .group-content { padding-left: 0.75rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .sample-request, .section-chevron { transition: none; }
+    }
+  </style>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
-  <div class="page-grid" aria-hidden="true"></div>
-  <div class="scroll-rail" aria-hidden="true"><span></span></div>
-
-  <header class="site-header">
-    <a class="wordmark" href="#top" aria-label="SF Memo home"><span>SF</span>MEMO</a>
-    <nav aria-label="Primary navigation">
-      <a href="#approach">Approach</a>
-      <a href="#vision">Vision</a>
-      <button class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light mode">
-        <span class="theme-toggle-text">Light</span>
-        <span class="theme-toggle-icon" aria-hidden="true"></span>
-      </button>
-    </nav>
-  </header>
-
-  <main id="main">
-    <section class="hero hero-horizon" id="top" aria-labelledby="hero-title">
-      <div class="hero-frame">
-        <div class="hero-visual" aria-hidden="true">
-          <canvas id="hero-canvas"></canvas>
-        </div>
-        <p class="hero-visual-label" aria-hidden="true"><small>Drag or swipe to rotate</small></p>
-        <div class="hero-copy">
-          <h1 id="hero-title">
-            <span>Memory<br>for AI</span>
-          </h1>
-          <div class="hero-meta">
-            <p class="hero-intro">We are building HBM chips for GPUs, AI Accelerators and SOCs.</p>
-            <a class="hero-link" href="#approach">
-              <span>Explore the approach</span>
-              <b aria-hidden="true">↓</b>
-            </a>
-          </div>
-        </div>
-      </div>
+  <main class="content" id="top">
+    <section>
+      <h1>Memory<br>for AI</h1>
+      <p>We are building HBM chips for GPUs, AI Accelerators and SOCs.</p>
+      <a class="sample-request" href="#approach">Explore the approach</a>
     </section>
 
-    <section class="approach approach-editorial" id="approach" aria-labelledby="approach-title">
-      <div class="section-copy">
-        <p class="section-label">Approach</p>
-        <h2 id="approach-title"><span>Innovating</span><span>on Design</span></h2>
-        <div class="approach-research">
+    <section id="approach">
+      <details class="collapsible-group">
+        <summary class="collapsible-summary">
+          <span class="section-chevron" aria-hidden="true"></span>
+          <h2 class="group-title">Approach</h2>
+        </summary>
+        <div class="group-content">
+          <h3 class="feature-title"><span>Innovating</span><span>on Design</span></h3>
           <p>SF Memo's proprietary Verilog IP and chip-design methodology are active today with leading U.S. frontier AI labs. That current traction is the foundation for a broader memory-system research program spanning package-aware simulation, controller and PHY integration, interposer and RDL design, and preparation for package test vehicles with thermal, signal-integrity, and power-integrity validation.</p>
           <p>Ongoing research is preparing TSV-aware thermal-management architectures for <strong>future 32-die and 64-die HBM stacks</strong>. The goal is greater capacity and bandwidth without compromising thermals, yield, or reliability.</p>
           <p>Packaging is part of the memory product, not a downstream assembly step. The plan is to turn simulation into lab data and qualification evidence, expand U.S. packaging capability, and pursue California manufacturing.</p>
         </div>
-      </div>
-
-      <div class="approach-systolic" role="region" aria-label="Interactive 3D systolic array and HBM package">
-        <canvas id="systolic-canvas" role="img" tabindex="0" aria-label="3D systolic array surrounded by four HBM stacks. Scroll to rotate. On desktop, drag with a mouse or use arrow keys to inspect the package. Double tap or double click to recenter."></canvas>
-      </div>
+      </details>
     </section>
 
-    <section class="vision vision-editorial vision-compact" id="vision" aria-labelledby="vision-title">
-      <div class="vision-plane" aria-hidden="true"></div>
-      <div class="vision-heading">
-        <p class="section-label">Vision</p>
-        <h2 id="vision-title"><span>Chips made</span><span>in California</span></h2>
-        <p>Our objective is a domestic path from memory architecture through advanced packaging to HBM manufacturing.</p>
-      </div>
-      <figure class="vision-map" aria-labelledby="vision-map-title">
-        <canvas id="vision-map-canvas" aria-hidden="true"></canvas>
-        <span id="vision-map-title" class="sr-only">Bay Area land and operations map with synchronized outbound routes</span>
-      </figure>
+    <section id="vision">
+      <details class="collapsible-group">
+        <summary class="collapsible-summary">
+          <span class="section-chevron" aria-hidden="true"></span>
+          <h2 class="group-title">Vision</h2>
+        </summary>
+        <div class="group-content">
+          <h3 class="feature-title"><span>Chips made</span><span>in California</span></h3>
+          <p>Our objective is a domestic path from memory architecture through advanced packaging to HBM manufacturing.</p>
+        </div>
+      </details>
     </section>
 
     <section class="closing">
-      <p class="section-label">SF Memo</p>
-      <a class="closing-link" href="#top"><span>Back to the horizon</span><i aria-hidden="true">↑</i></a>
+      <p class="closing-label">SF Memo</p>
+      <a class="back-link" href="#top">Back to the horizon</a>
     </section>
-  </main>
 
-  <footer>
-    <a class="wordmark" href="#top"><span>SF</span>MEMO</a>
-    <p>San Francisco, California · © 2026</p>
-  </footer>
+    <footer>
+      <div class="wordmark"><span>SF</span>MEMO</div>
+      <p>San Francisco, California · © 2026</p>
+    </footer>
+  </main>
 </body>
 </html>
