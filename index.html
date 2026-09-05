@@ -1,14 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="SF Memo is building DRAM chips for GPUs, AI Accelerators and SOCs.">
+  <meta name="description" content="We are building HBM chips for GPUs, AI Accelerators and SOCs.">
+  <meta name="author" content="SF Memo">
+  <meta name="application-name" content="SF Memo">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://sfmemo.com/">
+  <meta property="og:locale" content="en_US">
   <meta property="og:site_name" content="SF Memo">
-  <meta property="og:title" content="SF Memo: Memory for AI">
+  <meta property="og:title" content="SF Memo: The SF memory company">
   <meta property="og:description" content="We are building HBM chips for GPUs, AI Accelerators and SOCs.">
   <meta property="og:image" content="https://sfmemo.com/og-sfmemo-wordmark-2026.png">
   <meta property="og:image:secure_url" content="https://sfmemo.com/og-sfmemo-wordmark-2026.png">
@@ -17,20 +21,72 @@
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="SF Memo wordmark.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="SF Memo: Memory for AI">
+  <meta name="twitter:title" content="SF Memo: The SF memory company">
   <meta name="twitter:description" content="We are building HBM chips for GPUs, AI Accelerators and SOCs.">
   <meta name="twitter:image" content="https://sfmemo.com/og-sfmemo-wordmark-2026.png">
   <meta name="twitter:image:alt" content="SF Memo wordmark.">
   <link rel="canonical" href="https://sfmemo.com/">
+  <link rel="alternate" hreflang="en-US" href="https://sfmemo.com/">
+  <link rel="alternate" hreflang="x-default" href="https://sfmemo.com/">
+  <link rel="alternate" type="text/plain" href="https://sfmemo.com/llms.txt" title="SF Memo machine-readable overview">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <title>SF Memo: Memory for AI</title>
+  <title>SF Memo: The SF memory company</title>
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "SF Memo",
-      "url": "https://sfmemo.com/",
-      "description": "SF Memo is building DRAM chips for GPUs, AI Accelerators and SOCs."
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://sfmemo.com/#organization",
+          "name": "SF Memo",
+          "url": "https://sfmemo.com/",
+          "description": "We are building HBM chips for GPUs, AI Accelerators and SOCs.",
+          "email": "root@puul.ai",
+          "slogan": "The SF memory company",
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "business inquiries",
+            "email": "root@puul.ai",
+            "availableLanguage": "English"
+          },
+          "knowsAbout": [
+            "High Bandwidth Memory (HBM)",
+            "GPU and AI accelerator memory",
+            "System-on-chip memory",
+            "Proprietary Verilog intellectual property",
+            "Chip design",
+            "HBM architecture",
+            "Advanced semiconductor packaging",
+            "Through-silicon vias (TSVs)",
+            "Thermal management for future 32-die and 64-die stacks"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://sfmemo.com/#website",
+          "url": "https://sfmemo.com/",
+          "name": "SF Memo",
+          "description": "The SF memory company",
+          "publisher": {
+            "@id": "https://sfmemo.com/#organization"
+          },
+          "inLanguage": "en-US"
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://sfmemo.com/#webpage",
+          "url": "https://sfmemo.com/",
+          "name": "SF Memo: The SF memory company",
+          "description": "We are building HBM chips for GPUs, AI Accelerators and SOCs.",
+          "isPartOf": {
+            "@id": "https://sfmemo.com/#website"
+          },
+          "about": {
+            "@id": "https://sfmemo.com/#organization"
+          },
+          "inLanguage": "en-US"
+        }
+      ]
     }
   </script>
   <style>
@@ -38,7 +94,7 @@
     html { color: #111; background: #fff; scroll-behavior: smooth; }
     body { min-height: 100vh; padding: 2rem; display: flex; justify-content: center; align-items: flex-start; color: #111; background: #fff; font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; font-weight: 300; font-feature-settings: "ss01" on; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
     .content { width: 100%; max-width: 720px; padding-top: 2rem; text-align: left; }
-    h1 { margin-bottom: 1.5rem; font-size: clamp(2.125rem, 6vw, 3rem); font-weight: 300; letter-spacing: -0.02em; line-height: 1.08; }
+    h1 { margin-bottom: 1.5rem; font-size: clamp(1.25rem, 7.7vw, 3rem); font-weight: 300; letter-spacing: -0.02em; line-height: 1.08; white-space: nowrap; }
     p { margin-bottom: 2rem; font-size: 1.2rem; line-height: 1.4; }
     strong { font-weight: 400; }
     .sample-request { display: block; width: 100%; margin: 0 0 1.75rem; border: 1px solid #111; border-radius: 8px; padding: 0.8rem 1rem; color: #fff; background: #111; cursor: pointer; font-size: 1.05rem; font-weight: 400; line-height: 1.4; text-align: center; text-decoration: none; transition: background-color 160ms ease, transform 160ms ease; }
@@ -46,11 +102,8 @@
     .sample-request:active { transform: translateY(1px); }
     .sample-request:focus-visible { outline: 2px solid #111; outline-offset: 3px; }
     .content-section { margin: 1rem 0 2rem; }
-    .feature-title { margin: 0 0 1.25rem; font-size: 1.625rem; font-weight: 300; letter-spacing: -0.01em; line-height: 1.12; }
+    .feature-title { margin: 0 0 1.25rem; font-size: clamp(1.25rem, 5.5vw, 1.625rem); font-weight: 300; letter-spacing: -0.01em; line-height: 1.12; white-space: nowrap; }
     .content-section p { margin-bottom: 1.25rem; }
-    footer { margin-bottom: 0.75rem; padding: 0.25rem 0; font-size: 1.2rem; font-weight: 300; line-height: 1.5; }
-    footer .wordmark { margin-bottom: 0.625rem; font-size: 1.35rem; font-weight: 400; letter-spacing: -0.01em; }
-    footer p { margin: 0.2rem 0; }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
       .sample-request { transition: none; }
@@ -60,15 +113,13 @@
 <body>
   <main class="content" id="top">
     <section>
-      <h1>Memory for AI</h1>
+      <h1>The SF memory company</h1>
       <p>We are building HBM chips for GPUs, AI Accelerators and SOCs.</p>
     </section>
 
     <section class="content-section">
       <h2 class="feature-title">Innovating on Design</h2>
-      <p>SF Memo's proprietary Verilog IP and chip-design methodology are active today with leading U.S. frontier AI labs. That current traction is the foundation for a broader memory-system research program spanning package-aware simulation, controller and PHY integration, interposer and RDL design, and preparation for package test vehicles with thermal, signal-integrity, and power-integrity validation.</p>
-      <p>Ongoing research is preparing TSV-aware thermal-management architectures for <strong>future 32-die and 64-die HBM stacks</strong>. The goal is greater capacity and bandwidth without compromising thermals, yield, or reliability.</p>
-      <p>Packaging is part of the memory product, not a downstream assembly step. The plan is to turn simulation into lab data and qualification evidence, expand U.S. packaging capability, and pursue California manufacturing.</p>
+      <p>SF Memo's proprietary Verilog IP is active today with leading U.S. frontier AI labs. Our HBM research covers architecture, advanced packaging, and TSV-aware thermal management for future 32-die and 64-die stacks.</p>
     </section>
 
     <section class="content-section">
@@ -77,11 +128,6 @@
     </section>
 
     <a class="sample-request" href="mailto:root@puul.ai">Contact</a>
-
-    <footer>
-      <div class="wordmark"><span>SF</span>MEMO</div>
-      <p>San Francisco, California · © 2026</p>
-    </footer>
   </main>
 </body>
 </html>

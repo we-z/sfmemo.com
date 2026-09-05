@@ -1,0 +1,25 @@
+# SF Memo
+
+> The SF memory company.
+
+SF Memo is building HBM chips for GPUs, AI Accelerators and SOCs.
+
+Canonical website: https://sfmemo.com/
+Contact: root@puul.ai
+
+## Current work
+
+- SF Memo's proprietary Verilog IP is active today with leading U.S. frontier AI labs.
+- HBM research covers architecture and advanced semiconductor packaging.
+
+## Research direction
+
+- TSV-aware thermal management for future 32-die and 64-die HBM stacks.
+
+## Objective
+
+- A domestic path from memory architecture through advanced packaging to HBM manufacturing.
+
+## Primary source
+
+- https://sfmemo.com/
