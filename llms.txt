@@ -1,6 +1,6 @@
 # SF Memo
 
-> The SF memory company.
+> The SF Memory Company.
 
 SF Memo is building HBM chips for GPUs, AI Accelerators and SOCs.
 
