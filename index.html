@@ -45,29 +45,15 @@
     .sample-request:hover { background: #333; }
     .sample-request:active { transform: translateY(1px); }
     .sample-request:focus-visible { outline: 2px solid #111; outline-offset: 3px; }
-    .collapsible-group { display: flow-root; margin: 1rem 0 1.5rem; }
-    .collapsible-summary { display: flex; min-height: 44px; width: 100%; align-items: center; gap: 0.75rem; padding: 0.4rem 0; color: #111; background: transparent; list-style: none; cursor: pointer; border-radius: 8px; -webkit-tap-highlight-color: transparent; }
-    .collapsible-summary::-webkit-details-marker { display: none; }
-    .collapsible-summary::marker { content: ""; }
-    .collapsible-summary:hover { color: #444; }
-    .collapsible-summary:active { background: transparent; }
-    .collapsible-summary:focus-visible { outline: 2px solid #111; outline-offset: 4px; }
-    .group-title { margin: 0; font-size: 2rem; font-weight: 300; letter-spacing: -0.02em; line-height: 1.1; }
-    .section-chevron { width: 0.55rem; height: 0.55rem; flex: 0 0 0.55rem; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); transition: transform 180ms ease; }
-    details[open] > .collapsible-summary > .section-chevron { transform: rotate(45deg); }
-    .group-content { padding: 0.5rem 0 0.25rem 1.45rem; }
+    .content-section { margin: 1rem 0 2rem; }
     .feature-title { margin: 0 0 1.25rem; font-size: 1.625rem; font-weight: 300; letter-spacing: -0.01em; line-height: 1.12; }
-    .feature-title span { display: block; }
-    .group-content p { margin-bottom: 1.25rem; }
+    .content-section p { margin-bottom: 1.25rem; }
     footer { margin-bottom: 0.75rem; padding: 0.25rem 0; font-size: 1.2rem; font-weight: 300; line-height: 1.5; }
     footer .wordmark { margin-bottom: 0.625rem; font-size: 1.35rem; font-weight: 400; letter-spacing: -0.01em; }
     footer p { margin: 0.2rem 0; }
-    @media (max-width: 640px) {
-      .group-content { padding-left: 0.75rem; }
-    }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
-      .sample-request, .section-chevron { transition: none; }
+      .sample-request { transition: none; }
     }
   </style>
 </head>
@@ -78,32 +64,16 @@
       <p>We are building HBM chips for GPUs, AI Accelerators and SOCs.</p>
     </section>
 
-    <section id="approach">
-      <details class="collapsible-group">
-        <summary class="collapsible-summary">
-          <span class="section-chevron" aria-hidden="true"></span>
-          <h2 class="group-title">Approach</h2>
-        </summary>
-        <div class="group-content">
-          <h3 class="feature-title"><span>Innovating</span><span>on Design</span></h3>
-          <p>SF Memo's proprietary Verilog IP and chip-design methodology are active today with leading U.S. frontier AI labs. That current traction is the foundation for a broader memory-system research program spanning package-aware simulation, controller and PHY integration, interposer and RDL design, and preparation for package test vehicles with thermal, signal-integrity, and power-integrity validation.</p>
-          <p>Ongoing research is preparing TSV-aware thermal-management architectures for <strong>future 32-die and 64-die HBM stacks</strong>. The goal is greater capacity and bandwidth without compromising thermals, yield, or reliability.</p>
-          <p>Packaging is part of the memory product, not a downstream assembly step. The plan is to turn simulation into lab data and qualification evidence, expand U.S. packaging capability, and pursue California manufacturing.</p>
-        </div>
-      </details>
+    <section class="content-section">
+      <h2 class="feature-title">Innovating on Design</h2>
+      <p>SF Memo's proprietary Verilog IP and chip-design methodology are active today with leading U.S. frontier AI labs. That current traction is the foundation for a broader memory-system research program spanning package-aware simulation, controller and PHY integration, interposer and RDL design, and preparation for package test vehicles with thermal, signal-integrity, and power-integrity validation.</p>
+      <p>Ongoing research is preparing TSV-aware thermal-management architectures for <strong>future 32-die and 64-die HBM stacks</strong>. The goal is greater capacity and bandwidth without compromising thermals, yield, or reliability.</p>
+      <p>Packaging is part of the memory product, not a downstream assembly step. The plan is to turn simulation into lab data and qualification evidence, expand U.S. packaging capability, and pursue California manufacturing.</p>
     </section>
 
-    <section id="vision">
-      <details class="collapsible-group">
-        <summary class="collapsible-summary">
-          <span class="section-chevron" aria-hidden="true"></span>
-          <h2 class="group-title">Vision</h2>
-        </summary>
-        <div class="group-content">
-          <h3 class="feature-title"><span>Chips made</span><span>in California</span></h3>
-          <p>Our objective is a domestic path from memory architecture through advanced packaging to HBM manufacturing.</p>
-        </div>
-      </details>
+    <section class="content-section">
+      <h2 class="feature-title">Chips made in California</h2>
+      <p>Our objective is a domestic path from memory architecture through advanced packaging to HBM manufacturing.</p>
     </section>
 
     <a class="sample-request" href="mailto:root@puul.ai">Contact</a>
