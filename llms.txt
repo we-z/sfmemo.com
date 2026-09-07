@@ -9,7 +9,7 @@ Contact: root@sfmemo.com
 
 ## Current work
 
-- SF Memo's proprietary Verilog IP is active today with leading U.S. frontier AI labs.
+- SF Memo's proprietary Verilog chip designs are being used by leading U.S. frontier AI labs.
 
 ## Objective
 
