@@ -6,8 +6,6 @@ await mkdir("dist/server", { recursive: true });
 
 const publicFiles = [
   "index.html",
-  "favicon.svg",
-  "og-sfmemo-wordmark-2026.png",
   "robots.txt",
   "sitemap.xml",
   "llms.txt",
