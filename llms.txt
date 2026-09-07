@@ -5,7 +5,7 @@
 SF Memo is building HBM chips for GPUs, AI Accelerators and SOCs.
 
 Canonical website: https://sfmemo.com/
-Contact: root@puul.ai
+Contact: root@sfmemo.com
 
 ## Current work
 
