@@ -13,7 +13,7 @@ Contact: root@sfmemo.com
 
 ## Objective
 
-- A domestic path from memory architecture through advanced packaging to HBM manufacturing in California using US based fabs operating X-ray lithography.
+- Our objective is to manufacture HBM chips in California using US based fabs operating advanced X-ray lithography machines.
 
 ## Primary source
 
