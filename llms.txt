@@ -13,7 +13,7 @@ Contact: root@sfmemo.com
 
 ## Objective
 
-- A domestic path from memory architecture through advanced packaging to HBM manufacturing in California with X-ray lithography to pattern advanced 300 mm wafers.
+- A domestic path from memory architecture through advanced packaging to HBM manufacturing in California using US based fabs operating X-ray lithography.
 
 ## Primary source
 
