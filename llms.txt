@@ -9,7 +9,7 @@ Contact: root@sfmemo.com
 
 ## Current work
 
-- SF Memo's proprietary Verilog chip designs are being used by leading U.S. frontier AI labs.
+- SF Memo's proprietary Verilog chip designs are being used by leading U.S. frontier AI labs to design the next generation of American AI chips.
 
 ## Objective
 
