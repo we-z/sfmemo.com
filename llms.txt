@@ -11,13 +11,9 @@ Contact: root@sfmemo.com
 
 - SF Memo's proprietary Verilog IP is active today with leading U.S. frontier AI labs.
 
-## Research direction
-
-- Advanced uses of X-ray lithography.
-
 ## Objective
 
-- A domestic path from memory architecture through advanced packaging to HBM manufacturing in California.
+- A domestic path from memory architecture through advanced packaging to HBM manufacturing in California, using particle-accelerator-powered X-ray lithography, precision optics, and high-speed wafer systems to pattern advanced 300 mm wafers.
 
 ## Primary source
 
