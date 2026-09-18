@@ -1,5 +1,5 @@
 import * as THREE from "./vendor/three.module.js";
-import { shadeDieGeometry } from "./die-surface.js?v=3";
+import { shadeDieGeometry, partitionMemoryBanks } from "./die-surface.js?v=4";
 
 const surface = document.querySelector(".approach-systolic");
 const canvas = document.querySelector("#systolic-canvas");
@@ -73,15 +73,15 @@ if (surface && canvas) {
       return mesh;
     }
 
-    const hemisphere = new THREE.HemisphereLight(0xedeaff, 0x070a16, 2.2);
+    const hemisphere = new THREE.HemisphereLight(0xdefdec, 0x020b06, 2.2);
     scene.add(hemisphere);
-    const keyLight = new THREE.DirectionalLight(0xfff5e9, 4.5);
+    const keyLight = new THREE.DirectionalLight(0xf5fef9, 4.5);
     keyLight.position.set(-6, 9, 8);
     scene.add(keyLight);
-    const rimLight = new THREE.PointLight(0xb1b9ff, 30, 24, 2);
+    const rimLight = new THREE.PointLight(0x49f596, 30, 24, 2);
     rimLight.position.set(6.5, 3.5, 5.5);
     scene.add(rimLight);
-    const fillLight = new THREE.PointLight(0xefbb93, 13, 18, 2);
+    const fillLight = new THREE.PointLight(0x5cb388, 13, 18, 2);
     fillLight.position.set(-5.5, 2.5, -5.5);
     scene.add(fillLight);
 
@@ -104,13 +104,12 @@ if (surface && canvas) {
       emissiveIntensity: 0.1,
     });
     const logicMaterial = new THREE.MeshPhysicalMaterial({
-      vertexColors: true,
-      color: 0x8992a4,
+      color: 0x10502c,
       metalness: 0.38,
       roughness: 0.3,
       clearcoat: 0.54,
       clearcoatRoughness: 0.22,
-      emissive: 0x111325,
+      emissive: 0x052011,
       emissiveIntensity: 0.09,
     });
     const logicEdgeMaterial = new THREE.LineBasicMaterial({
@@ -139,7 +138,7 @@ if (surface && canvas) {
     interposerEdges.position.y = -0.078;
     model.add(interposerEdges);
 
-    const logicDie = new THREE.Mesh(shadeDieGeometry(createSlab(5.35, 5.35, 0.2, 0.18)), logicMaterial);
+    const logicDie = new THREE.Mesh(createSlab(5.35, 5.35, 0.2, 0.18), logicMaterial);
     logicDie.position.y = 0.08;
     model.add(logicDie);
     const logicEdges = new THREE.LineSegments(
@@ -177,32 +176,30 @@ if (surface && canvas) {
       emissive: 0x052814,
       emissiveIntensity: 0.12,
     });
-    const hbmLayerMaterials = [0x8891a4, 0x9593a6, 0xa59a9b, 0x939da7].map((color, index) => (
+    const hbmLayerMaterials = [0x165b34, 0x1a6b3d, 0x1e7543, 0x22814b].map((color, index) => (
       new THREE.MeshPhysicalMaterial({
-        vertexColors: true,
         color,
         metalness: 0.2,
         roughness: 0.33 + index * 0.018,
         clearcoat: 0.42,
         clearcoatRoughness: 0.27,
-        emissive: 0x151221,
+        emissive: 0x062413,
         emissiveIntensity: 0.09,
       })
     ));
     const hbmTopMaterial = new THREE.MeshPhysicalMaterial({
-      vertexColors: true,
-      color: 0xb3b6c6,
+      color: 0x165531,
       metalness: 0.22,
       roughness: 0.3,
       clearcoat: 0.56,
       clearcoatRoughness: 0.18,
-      iridescence: 0.72,
+      iridescence: 0.08,
       iridescenceIOR: 1.38,
-      iridescenceThicknessRange: [180, 520],
+      iridescenceThicknessRange: [180, 270],
       sheen: 0.14,
-      sheenColor: new THREE.Color(0xc4b8e5),
+      sheenColor: new THREE.Color(0x56a47c),
       sheenRoughness: 0.52,
-      emissive: 0x151021,
+      emissive: 0x052010,
       emissiveIntensity: 0.045,
     });
     const createHbmFeatureMaterial = (color) => new THREE.MeshBasicMaterial({
@@ -212,20 +209,20 @@ if (surface && canvas) {
       opacity: 0.82,
       toneMapped: false,
     });
-    const hbmBankMaterials = [0xe8e5fa, 0xece3fa].map(createHbmFeatureMaterial);
-    const hbmPhyMaterials = [0xf6dcaa, 0xc5c6ed].map(createHbmFeatureMaterial);
+    const hbmBankMaterials = [0x659aa6, 0x738dbb, 0xa085b5, 0xc19370, 0xc6b17b].map(createHbmFeatureMaterial);
+    const hbmPhyMaterials = [0xb59b72, 0x987968].map(createHbmFeatureMaterial);
     const hbmGridMaterial = new THREE.MeshStandardMaterial({
-      color: 0xd3b879,
+      color: 0xaa9c73,
       metalness: 0.64,
       roughness: 0.34,
-      emissive: 0x20170b,
+      emissive: 0x082012,
       emissiveIntensity: 0.04,
     });
     const hbmRdlMaterial = new THREE.MeshStandardMaterial({
-      color: 0xf2d99c,
+      color: 0xcab48b,
       metalness: 0.72,
       roughness: 0.29,
-      emissive: 0x271b0d,
+      emissive: 0x0a2415,
       emissiveIntensity: 0.045,
     });
     const hbmViaMaterial = new THREE.MeshStandardMaterial({
@@ -243,34 +240,34 @@ if (surface && canvas) {
       emissiveIntensity: 0.035,
     });
     const hbmTopIdleColors = {
-      dark: new THREE.Color(0xb3b6c6),
-      light: new THREE.Color(0x979aae),
+      dark: new THREE.Color(0x367f57),
+      light: new THREE.Color(0x49a169),
     };
     const hbmTopBoostTargets = {
-      dark: new THREE.Color(0xd3cada),
-      light: new THREE.Color(0xc2bdd1),
+      dark: new THREE.Color(0x287d4c),
+      light: new THREE.Color(0x379a60),
     };
     const hbmTopIdleEmissives = {
-      dark: new THREE.Color(0x151021),
-      light: new THREE.Color(0x100e1b),
+      dark: new THREE.Color(0x041f0f),
+      light: new THREE.Color(0x082414),
     };
     const hbmFeatureIdlePalettes = {
       dark: {
-        bank: [new THREE.Color(0xe8e5fa), new THREE.Color(0xece3fa)],
-        phy: [new THREE.Color(0xf6dcaa), new THREE.Color(0xc5c6ed)],
+        bank: [0x659aa6, 0x738dbb, 0xa085b5, 0xc19370, 0xc6b17b].map((color) => new THREE.Color(color)),
+        phy: [new THREE.Color(0xb59b72), new THREE.Color(0x987968)],
       },
       light: {
-        bank: [new THREE.Color(0xc9c6df), new THREE.Color(0xd1c3e2)],
-        phy: [new THREE.Color(0xe2c493), new THREE.Color(0xb7b4d8)],
+        bank: [0x4f808c, 0x59749d, 0x856d9b, 0xa17b5f, 0xa49164].map((color) => new THREE.Color(color)),
+        phy: [new THREE.Color(0x9c825a), new THREE.Color(0x806757)],
       },
     };
     const hbmFeatureBoostTargets = {
-      dark: new THREE.Color(0xe4e0f2),
-      light: new THREE.Color(0xede4d9),
+      dark: new THREE.Color(0xd8c8b8),
+      light: new THREE.Color(0xd1c6af),
     };
     const hbmBoostScratch = new THREE.Color();
 
-    const hbmLayerGeometry = shadeDieGeometry(createSlab(4.3, 1.18, 0.065, 0.08), 0.12);
+    const hbmLayerGeometry = createSlab(4.3, 1.18, 0.065, 0.08);
     const hbmFeatureGeometry = shadeDieGeometry(new THREE.BoxGeometry(1, 0.006, 1, 24, 1, 12), 0.25);
     const hbmTraceGeometry = new THREE.BoxGeometry(1, 0.004, 1);
     const viaGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1.02, 16);
@@ -318,7 +315,7 @@ if (surface && canvas) {
       const topDieSurfaceY = firstLayerY + (layerCount - 1) * layerPitch + layerHeight / 2;
       const topPassivationHeight = 0.01;
       const passivation = new THREE.Mesh(
-        shadeDieGeometry(createSlab(topWidth, topDepth, topPassivationHeight, 0.075)),
+        createSlab(topWidth, topDepth, topPassivationHeight, 0.075),
         hbmTopMaterial,
       );
       passivation.position.y = topDieSurfaceY + topPassivationHeight / 2 + 0.001;
@@ -347,7 +344,7 @@ if (surface && canvas) {
         tone: index % 2,
       }));
       const surfaceFeatures = [
-        ...memoryBanks.map((feature) => ({ ...feature, kind: "bank" })),
+        ...partitionMemoryBanks(memoryBanks).map((feature) => ({ ...feature, kind: "bank" })),
         ...peripheralBlocks.map((feature) => ({ ...feature, kind: "phy" })),
       ];
       const featureY = topDieSurfaceY + topPassivationHeight + 0.005;
@@ -356,9 +353,9 @@ if (surface && canvas) {
         const mesh = new THREE.Mesh(hbmFeatureGeometry, materials[feature.tone]);
         mesh.position.set(feature.x, featureY, feature.z);
         mesh.scale.set(
-          feature.width - 0.045 * topScaleX,
+          feature.width - (feature.kind === "bank" ? 0.025 : 0.045) * topScaleX,
           1,
-          feature.depth - 0.045 * topScaleZ,
+          feature.depth - (feature.kind === "bank" ? 0.025 : 0.045) * topScaleZ,
         );
         stack.add(mesh);
       });
@@ -506,17 +503,15 @@ if (surface && canvas) {
     const peCount = gridSize * gridSize;
     const helper = new THREE.Object3D();
     const peBaseMaterial = new THREE.MeshPhysicalMaterial({
-      vertexColors: true,
-      color: 0x768397,
+      color: 0x0c3a20,
       metalness: 0.34,
       roughness: 0.34,
       clearcoat: 0.38,
-      emissive: 0x111021,
+      emissive: 0x03130a,
       emissiveIntensity: 0.08,
     });
     const peCoreMaterial = new THREE.MeshBasicMaterial({
-      vertexColors: true,
-      color: 0x9193af,
+      color: 0x1f5938,
       toneMapped: false,
     });
     const peHorizontalMaterial = new THREE.MeshBasicMaterial({
@@ -532,12 +527,12 @@ if (surface && canvas) {
       toneMapped: false,
     });
     const peBases = new THREE.InstancedMesh(
-      shadeDieGeometry(new THREE.BoxGeometry(0.43, 0.16, 0.43, 6, 1, 6)),
+      new THREE.BoxGeometry(0.43, 0.16, 0.43),
       peBaseMaterial,
       peCount,
     );
     const peCores = new THREE.InstancedMesh(
-      shadeDieGeometry(new THREE.BoxGeometry(0.27, 0.09, 0.27, 6, 1, 6)),
+      new THREE.BoxGeometry(0.27, 0.09, 0.27),
       peCoreMaterial,
       peCount,
     );
@@ -567,8 +562,8 @@ if (surface && canvas) {
     peVerticalFaces.frustumCulled = false;
     peIntersectionFaces.frustumCulled = false;
     const pePositions = [];
-    const peOffDark = new THREE.Color(0x9193af);
-    const peOffLight = new THREE.Color(0x757c9d);
+    const peOffDark = new THREE.Color(0x1f5938);
+    const peOffLight = new THREE.Color(0x398257);
     const peBlackout = new THREE.Color(0x000000);
     const peHorizontalBoost = new THREE.Color(0xb9ebff);
     const peVerticalBoost = new THREE.Color(0xffc4cf);
@@ -580,10 +575,6 @@ if (surface && canvas) {
         const x = gridFirst + column * gridPitch;
         const z = gridFirst + row * gridPitch;
         pePositions.push({ row, column, x, z });
-        const tint = new THREE.Color().setScalar(0.82 + (column + row) / (gridSize - 1) * 0.09);
-        [peBases, peCores].forEach((mesh) => {
-          mesh.setColorAt(index, tint);
-        });
         helper.position.set(x, 0.29, z);
         helper.rotation.set(0, 0, 0);
         helper.scale.set(1, 1, 1);
@@ -600,9 +591,6 @@ if (surface && canvas) {
         peIntersectionFaces.setMatrixAt(index, helper.matrix);
       }
     }
-    [peBases, peCores].forEach((mesh) => {
-      mesh.instanceColor.needsUpdate = true;
-    });
     peBases.instanceMatrix.needsUpdate = true;
     peCores.instanceMatrix.needsUpdate = true;
     peHorizontalFaces.instanceMatrix.needsUpdate = true;
@@ -669,52 +657,52 @@ if (surface && canvas) {
     function applyTheme() {
       lightTheme = document.documentElement.dataset.theme === "light";
       renderer.toneMappingExposure = lightTheme ? 1.02 : 1.2;
-      hemisphere.color.setHex(lightTheme ? 0xffffff : 0xedeaff);
-      hemisphere.groundColor.setHex(lightTheme ? 0xc6c8d5 : 0x070a16);
+      hemisphere.color.setHex(lightTheme ? 0xffffff : 0xdefdec);
+      hemisphere.groundColor.setHex(lightTheme ? 0xb8d6c5 : 0x020b06);
       hemisphere.intensity = lightTheme ? 2.45 : 2.2;
       keyLight.intensity = lightTheme ? 4 : 4.5;
-      rimLight.color.setHex(lightTheme ? 0xadb5df : 0xb1b9ff);
-      fillLight.color.setHex(lightTheme ? 0xdfbca5 : 0xefbb93);
+      rimLight.color.setHex(lightTheme ? 0x29b566 : 0x49f596);
+      fillLight.color.setHex(lightTheme ? 0x68a587 : 0x5cb388);
       substrateMaterial.color.setHex(lightTheme ? 0x1b4c30 : 0x081c11);
       substrateMaterial.emissive.setHex(lightTheme ? 0x082113 : 0x030f08);
       interposerMaterial.color.setHex(lightTheme ? 0x298a53 : 0x0c4123);
-      logicMaterial.color.setHex(lightTheme ? 0x7b8498 : 0x8992a4);
+      logicMaterial.color.setHex(lightTheme ? 0x298951 : 0x10502c);
       logicEdgeMaterial.color.setHex(lightTheme ? 0x15803d : 0x64d997);
       traceMaterial.color.setHex(lightTheme ? 0x1fab5b : 0x51d188);
       traceMaterial.opacity = lightTheme ? 0.42 : 0.26;
       hbmBaseMaterial.color.setHex(lightTheme ? 0x27824e : 0x0d3d22);
       hbmInterposerMaterial.color.setHex(lightTheme ? 0x339a5e : 0x116234);
-      const lightLayers = [0x7f8799, 0x8a8699, 0x948b8d, 0x88919b];
-      const darkLayers = [0x8891a4, 0x9593a6, 0xa59a9b, 0x939da7];
+      const lightLayers = [0x308f58, 0x369960, 0x3ba467, 0x40af6f];
+      const darkLayers = [0x165b34, 0x1a6b3d, 0x1e7543, 0x22814b];
       hbmLayerMaterials.forEach((material, index) => {
         material.color.setHex((lightTheme ? lightLayers : darkLayers)[index]);
-        material.emissive.setHex(lightTheme ? 0x171724 : 0x151221);
+        material.emissive.setHex(lightTheme ? 0x0d4927 : 0x062413);
       });
       const hbmTheme = lightTheme ? "light" : "dark";
       hbmTopMaterial.color.copy(hbmTopIdleColors[hbmTheme]);
       hbmTopMaterial.emissive.copy(hbmTopIdleEmissives[hbmTheme]);
-      hbmTopMaterial.sheenColor.setHex(lightTheme ? 0xc9b4a3 : 0xc4b8e5);
-      hbmTopMaterial.iridescence = lightTheme ? 0.5 : 0.72;
+      hbmTopMaterial.sheenColor.setHex(lightTheme ? 0x4c9c6e : 0x56a47c);
+      hbmTopMaterial.iridescence = lightTheme ? 0.05 : 0.08;
       hbmBankMaterials.forEach((material, index) => {
         material.color.copy(hbmFeatureIdlePalettes[hbmTheme].bank[index]);
-        material.opacity = lightTheme ? 0.74 : 0.82;
+        material.opacity = lightTheme ? 0.88 : 0.94;
       });
       hbmPhyMaterials.forEach((material, index) => {
         material.color.copy(hbmFeatureIdlePalettes[hbmTheme].phy[index]);
-        material.opacity = lightTheme ? 0.74 : 0.82;
+        material.opacity = lightTheme ? 0.88 : 0.94;
       });
-      hbmGridMaterial.color.setHex(lightTheme ? 0x8c693e : 0xd3b879);
-      hbmGridMaterial.emissive.setHex(lightTheme ? 0x0c0803 : 0x20170b);
-      hbmRdlMaterial.color.setHex(lightTheme ? 0x987947 : 0xf2d99c);
-      hbmRdlMaterial.emissive.setHex(lightTheme ? 0x0c0803 : 0x271b0d);
+      hbmGridMaterial.color.setHex(lightTheme ? 0x76613e : 0xaa9c73);
+      hbmGridMaterial.emissive.setHex(lightTheme ? 0x020c06 : 0x082012);
+      hbmRdlMaterial.color.setHex(lightTheme ? 0x8c7048 : 0xcab48b);
+      hbmRdlMaterial.emissive.setHex(lightTheme ? 0x020c06 : 0x0a2415);
       hbmViaMaterial.color.setHex(lightTheme ? 0x9a641d : 0xd09a43);
       hbmViaMaterial.emissive.setHex(lightTheme ? 0x1d0d01 : 0x2a1604);
       hbmViaRingMaterial.color.setHex(lightTheme ? 0xa96e20 : 0xe2b45a);
       hbmViaRingMaterial.emissive.setHex(lightTheme ? 0x160a01 : 0x2a1604);
-      peBaseMaterial.color.setHex(lightTheme ? 0x7c8498 : 0x8491a8);
-      peBaseMaterial.emissive.setHex(lightTheme ? 0x161526 : 0x141321);
-      peBaseMaterial.emissiveIntensity = lightTheme ? 0.035 : 0.055;
-      peCoreMaterial.color.setHex(lightTheme ? 0x757c9d : 0x9193af);
+      peBaseMaterial.color.setHex(lightTheme ? 0x479768 : 0x1b693c);
+      peBaseMaterial.emissive.setHex(lightTheme ? 0x0f4526 : 0x0b381e);
+      peBaseMaterial.emissiveIntensity = lightTheme ? 0.2 : 0.24;
+      peCoreMaterial.color.setHex(lightTheme ? 0x398257 : 0x1f5938);
       peHorizontalMaterial.color.setHex(lightTheme ? 0x087fd3 : 0x32b5ff);
       peVerticalMaterial.color.setHex(lightTheme ? 0xd82745 : 0xff4c68);
       peIntersectionMaterial.color.setHex(lightTheme ? 0x783ccc : 0xc77dff);
@@ -803,17 +791,17 @@ if (surface && canvas) {
       columnTokens.instanceMatrix.needsUpdate = true;
     }
 
-    const darkBaseLayers = [0x8891a4, 0x9593a6, 0xa59a9b, 0x939da7];
-    const lightBaseLayers = [0x7f8799, 0x8a8699, 0x948b8d, 0x88919b];
-    const darkBoostTarget = new THREE.Color(0xc2bfd4);
-    const lightBoostTarget = new THREE.Color(0xb5afc5);
+    const darkBaseLayers = [0x165b34, 0x1a6b3d, 0x1e7543, 0x22814b];
+    const lightBaseLayers = [0x308f58, 0x369960, 0x3ba467, 0x40af6f];
+    const darkBoostTarget = new THREE.Color(0x33a062);
+    const lightBoostTarget = new THREE.Color(0x51b97d);
 
     function updateBoost(boostAmount) {
       const boostTarget = lightTheme ? lightBoostTarget : darkBoostTarget;
       const hbmTheme = lightTheme ? "light" : "dark";
       hbmLayerMaterials.forEach((material, index) => {
         material.color.setHex((lightTheme ? lightBaseLayers : darkBaseLayers)[index]).lerp(boostTarget, boostAmount * 0.38);
-        material.emissiveIntensity = 0.035 + boostAmount * 0.07;
+        material.emissiveIntensity = 0.09 + boostAmount * 0.18;
       });
       hbmBoostScratch.copy(hbmTopIdleColors[hbmTheme]).lerp(hbmTopBoostTargets[hbmTheme], 0.36);
       hbmTopMaterial.color.copy(hbmTopIdleColors[hbmTheme]).lerp(hbmBoostScratch, boostAmount);
@@ -822,20 +810,20 @@ if (surface && canvas) {
         boostAmount * 0.28,
       );
       hbmTopMaterial.emissiveIntensity = (lightTheme ? 0.025 : 0.045) + boostAmount * 0.055;
-      hbmTopMaterial.iridescence = (lightTheme ? 0.5 : 0.72) + boostAmount * 0.12;
+      hbmTopMaterial.iridescence = (lightTheme ? 0.05 : 0.08) + boostAmount * 0.02;
       hbmBankMaterials.forEach((material, index) => {
         material.color.copy(hbmFeatureIdlePalettes[hbmTheme].bank[index]).lerp(
           hbmFeatureBoostTargets[hbmTheme],
           boostAmount * 0.16,
         );
-        material.opacity = (lightTheme ? 0.74 : 0.82) + boostAmount * 0.1;
+        material.opacity = (lightTheme ? 0.88 : 0.94) + boostAmount * 0.04;
       });
       hbmPhyMaterials.forEach((material, index) => {
         material.color.copy(hbmFeatureIdlePalettes[hbmTheme].phy[index]).lerp(
           hbmFeatureBoostTargets[hbmTheme],
           boostAmount * 0.16,
         );
-        material.opacity = (lightTheme ? 0.74 : 0.82) + boostAmount * 0.1;
+        material.opacity = (lightTheme ? 0.88 : 0.94) + boostAmount * 0.04;
       });
       hbmViaMaterial.emissiveIntensity = (lightTheme ? 0.015 : 0.055) + boostAmount * 0.08;
       hbmViaRingMaterial.emissiveIntensity = (lightTheme ? 0.01 : 0.045) + boostAmount * 0.07;
