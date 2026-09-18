@@ -1,16 +1,17 @@
 import * as THREE from "./vendor/three.module.js";
 
 // Baked surface shading follows the silicon as it rotates and costs no work per frame.
-const oxideTones = [0x195637, 0x53c47d, 0xedff97, 0x287e54, 0x9fffd0].map((hex) => new THREE.Color(hex));
+const oxideTones = [0x305bc0, 0x7050c1, 0xbe5ba7, 0xe99a60, 0xe8ce78, 0x70bdb4, 0x417cc5].map((hex) => new THREE.Color(hex));
 const shade = new THREE.Color();
 
 export function dieSurfaceTint(u, v, phase = 0) {
-  const sweep = THREE.MathUtils.clamp(u * 0.64 + v * 0.36, 0, 1) * (oxideTones.length - 1);
+  const opticalPath = u * 0.68 + v * 0.32 + 0.055 * Math.sin((v * 1.5 + phase) * Math.PI);
+  const sweep = THREE.MathUtils.clamp(opticalPath, 0, 1) * (oxideTones.length - 1);
   const band = Math.min(Math.floor(sweep), oxideTones.length - 2);
   const blend = THREE.MathUtils.smoothstep(sweep - band, 0, 1);
   shade.copy(oxideTones[band]).lerp(oxideTones[band + 1], blend);
-  const reflection = 0.72 + 0.28 * Math.cos((u * 1.6 - v + phase) * Math.PI);
-  return shade.multiplyScalar(reflection * 2.4);
+  const reflection = 0.85 + 0.15 * Math.cos((u * 1.6 - v + phase) * Math.PI);
+  return shade.multiplyScalar(reflection * 1.3);
 }
 
 export function shadeDieGeometry(geometry, phase = 0) {
@@ -45,7 +46,10 @@ export function shadeDieGeometry(geometry, phase = 0) {
   for (let index = 0; index < positions.count; index += 1) {
     const u = (positions.getX(index) - min.x) / Math.max(max.x - min.x, 0.001);
     const v = (positions.getZ(index) - min.z) / Math.max(max.z - min.z, 0.001);
-    dieSurfaceTint(u, v, phase).toArray(colors, index * 3);
+    const surfaceColor = dieSurfaceTint(u, v, phase);
+    // Exposed silicon carries the spectrum; cut edges remain darker and metallic.
+    const face = Math.abs(geometry.attributes.normal.getY(index));
+    surfaceColor.multiplyScalar(0.4 + face * 0.6).toArray(colors, index * 3);
   }
   geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   return geometry;
