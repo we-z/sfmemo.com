@@ -1,5 +1,5 @@
 import * as THREE from "./vendor/three.module.js";
-import { shadeDieGeometry } from "./die-surface.js?v=1";
+import { shadeDieGeometry } from "./die-surface.js?v=2";
 
 const hero = document.querySelector(".hero-horizon");
 const heroFrame = hero?.querySelector(".hero-frame");
@@ -97,6 +97,7 @@ if (hero && surface && canvas) {
       roughness: 0.36,
     });
     const baseMaterial = new THREE.MeshPhysicalMaterial({
+      vertexColors: true,
       color: 0x17683a,
       metalness: 0.48,
       roughness: 0.3,
@@ -113,7 +114,7 @@ if (hero && surface && canvas) {
     stackRoot.add(interposer);
 
     const baseDie = new THREE.Mesh(
-      createSlab(5.08, 2.58, 0.23, 0.12),
+      shadeDieGeometry(createSlab(5.08, 2.58, 0.23, 0.12)),
       baseMaterial,
     );
     baseDie.position.y = -1.05;
@@ -125,7 +126,7 @@ if (hero && surface && canvas) {
     const layerHeight = 0.09;
     const layerPitch = 0.24;
     const firstLayerY = -0.79;
-    const layerGeometry = createSlab(layerWidth, layerDepth, layerHeight, 0.11);
+    const layerGeometry = shadeDieGeometry(createSlab(layerWidth, layerDepth, layerHeight, 0.11), 0.12);
     const layerMaterials = [];
     const layerMeshes = [];
     const darkLayerPalette = [0x11502d, 0x145731, 0x165e35, 0x186439];
@@ -137,6 +138,7 @@ if (hero && surface && canvas) {
 
     for (let index = 0; index < layerCount; index += 1) {
       const material = new THREE.MeshPhysicalMaterial({
+        vertexColors: true,
         color: darkLayerPalette[index % darkLayerPalette.length],
         metalness: 0.14 + (index % 4) * 0.012,
         roughness: 0.38 + ((index + 2) % 5) * 0.022,

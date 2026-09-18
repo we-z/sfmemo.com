@@ -1,5 +1,5 @@
 import * as THREE from "./vendor/three.module.js";
-import { shadeDieGeometry, dieSurfaceTint } from "./die-surface.js?v=1";
+import { shadeDieGeometry, dieSurfaceTint } from "./die-surface.js?v=2";
 
 const surface = document.querySelector(".approach-systolic");
 const canvas = document.querySelector("#systolic-canvas");
@@ -179,6 +179,7 @@ if (surface && canvas) {
     });
     const hbmLayerMaterials = [0x165b34, 0x1a6b3d, 0x1e7543, 0x22814b].map((color, index) => (
       new THREE.MeshPhysicalMaterial({
+        vertexColors: true,
         color,
         metalness: 0.2,
         roughness: 0.33 + index * 0.018,
@@ -269,7 +270,7 @@ if (surface && canvas) {
     };
     const hbmBoostScratch = new THREE.Color();
 
-    const hbmLayerGeometry = createSlab(4.3, 1.18, 0.065, 0.08);
+    const hbmLayerGeometry = shadeDieGeometry(createSlab(4.3, 1.18, 0.065, 0.08), 0.12);
     const hbmFeatureGeometry = shadeDieGeometry(new THREE.BoxGeometry(1, 0.006, 1, 24, 1, 12), 0.25);
     const hbmTraceGeometry = new THREE.BoxGeometry(1, 0.004, 1);
     const viaGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1.02, 16);
