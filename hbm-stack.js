@@ -1,4 +1,5 @@
 import * as THREE from "./vendor/three.module.js";
+import { shadeDieGeometry } from "./die-surface.js?v=1";
 
 const hero = document.querySelector(".hero-horizon");
 const heroFrame = hero?.querySelector(".hero-frame");
@@ -182,12 +183,13 @@ if (hero && surface && canvas) {
     // A restrained oxide/passivation sheen gives the top die a real silicon
     // character. Patterned regions stay almost coplanar with the die surface.
     const topPassivationMaterial = new THREE.MeshPhysicalMaterial({
+      vertexColors: true,
       color: 0x165531,
       metalness: 0.22,
       roughness: 0.3,
       clearcoat: 0.56,
       clearcoatRoughness: 0.18,
-      iridescence: 0.3,
+      iridescence: 0.08,
       iridescenceIOR: 1.38,
       iridescenceThicknessRange: [180, 270],
       sheen: 0.14,
@@ -198,7 +200,7 @@ if (hero && surface && canvas) {
     });
     const topPassivationHeight = 0.01;
     const topPassivation = new THREE.Mesh(
-      createSlab(4.76, 2.32, topPassivationHeight, 0.09),
+      shadeDieGeometry(createSlab(4.76, 2.32, topPassivationHeight, 0.09)),
       topPassivationMaterial,
     );
     topPassivation.position.y = topDieY + topPassivationHeight / 2 + 0.001;
@@ -213,7 +215,7 @@ if (hero && surface && canvas) {
           z,
           width: 1.92,
           depth: 0.7,
-          tone: (row + column) % 2,
+          tone: row * bankX.length + column,
         });
       });
     });
@@ -232,23 +234,24 @@ if (hero && surface && canvas) {
       ...peripheralBlocks.map((block) => ({ ...block, kind: "phy" })),
     ];
     const topFeatureMaterial = new THREE.MeshBasicMaterial({
+      vertexColors: true,
       color: 0xffffff,
       transparent: true,
       opacity: 0.82,
       toneMapped: false,
     });
     const topFeatureMesh = new THREE.InstancedMesh(
-      new THREE.BoxGeometry(1, 0.006, 1),
+      shadeDieGeometry(new THREE.BoxGeometry(1, 0.006, 1, 24, 1, 12), 0.25),
       topFeatureMaterial,
       surfaceFeatures.length,
     );
     const darkTopFeaturePalettes = {
-      bank: [0x309a59, 0x58af81],
-      phy: [0x6b55a3, 0x855b92],
+      bank: [0x459c66, 0x96c77a, 0x48b387, 0x82c693],
+      phy: [0x83a95d, 0x4f9573],
     };
     const lightTopFeaturePalettes = {
-      bank: [0x268149, 0x4a906a],
-      phy: [0x5d4d86, 0x76546f],
+      bank: [0x358951, 0x79ab5d, 0x32946b, 0x6dad7c],
+      phy: [0x6d914b, 0x407d5b],
     };
     surfaceFeatures.forEach((feature, index) => {
       helper.position.set(feature.x, topDieY + topPassivationHeight + 0.005, feature.z);
@@ -289,7 +292,7 @@ if (hero && surface && canvas) {
     addTraceRectangle(addGridTrace, { x: 0, z: 0, width: 4.18, depth: 1.88 });
     memoryBanks.forEach((bank) => {
       addTraceRectangle(addGridTrace, bank);
-      [-0.25, 0, 0.25].forEach((offset) => {
+      Array.from({ length: 15 }, (_, index) => (index + 1) / 16 - 0.5).forEach((offset) => {
         addGridTrace(
           bank.x + bank.width * offset,
           bank.z - bank.depth / 2,
@@ -354,7 +357,7 @@ if (hero && surface && canvas) {
       mesh.instanceMatrix.needsUpdate = true;
       return mesh;
     };
-    const topGridMesh = createTopTraceMesh(topGridSegments, topGridMaterial, 0.012);
+    const topGridMesh = createTopTraceMesh(topGridSegments, topGridMaterial, 0.005);
     const topRdlMesh = createTopTraceMesh(topRdlSegments, topRdlMaterial, 0.022);
     stackRoot.add(topGridMesh, topRdlMesh);
 
@@ -614,7 +617,7 @@ if (hero && surface && canvas) {
         material.color.copy(layerIdleColors[index]);
         material.emissive.copy(layerIdleEmissives[index]);
       });
-      topPassivationIdleColor.set(light ? 0x257445 : 0x165531);
+      topPassivationIdleColor.set(light ? 0x49a169 : 0x367f57);
       topPassivationBoostColor.copy(topPassivationIdleColor).lerp(
         tempColor.setHex(light ? 0x379a60 : 0x287d4c),
         0.36,
@@ -624,7 +627,7 @@ if (hero && surface && canvas) {
       topPassivationMaterial.color.copy(topPassivationIdleColor);
       topPassivationMaterial.emissive.copy(topPassivationIdleEmissive);
       topPassivationMaterial.sheenColor.set(light ? 0x4c9c6e : 0x56a47c);
-      topPassivationMaterial.iridescence = light ? 0.22 : 0.3;
+      topPassivationMaterial.iridescence = light ? 0.05 : 0.08;
       const topFeaturePalettes = light ? lightTopFeaturePalettes : darkTopFeaturePalettes;
       surfaceFeatures.forEach((feature, index) => {
         const palette = topFeaturePalettes[feature.kind];
@@ -920,7 +923,7 @@ if (hero && surface && canvas) {
       topPassivationMaterial.color.copy(topPassivationIdleColor).lerp(topPassivationBoostColor, boostAmount);
       topPassivationMaterial.emissive.copy(topPassivationIdleEmissive).lerp(topPassivationBoostEmissive, boostAmount);
       topPassivationMaterial.emissiveIntensity = (themeLight ? 0.025 : 0.045) + boostAmount * 0.055;
-      topPassivationMaterial.iridescence = (themeLight ? 0.22 : 0.3) + boostAmount * 0.07;
+      topPassivationMaterial.iridescence = (themeLight ? 0.05 : 0.08) + boostAmount * 0.02;
       surfaceFeatures.forEach((_, index) => {
         topFeatureMesh.setColorAt(
           index,

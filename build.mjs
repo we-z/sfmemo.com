@@ -6,7 +6,7 @@ await mkdir("dist/client", { recursive: true });
 await mkdir("dist/server", { recursive: true });
 await mkdir("dist/client/vendor", { recursive: true });
 
-const publicFiles = ["index.html", "styles.css", "visual.js", "hbm-stack.js", "systolic-array.js", "vision-map.js", "map-boundaries.js", "robots.txt", "sitemap.xml", "llms.txt", "160c7627b72757bd5b12aab96bca9324.txt"];
+const publicFiles = ["index.html", "styles.css", "visual.js", "hbm-stack.js", "systolic-array.js", "die-surface.js", "favicon.svg", "vision-map.js", "map-boundaries.js", "robots.txt", "sitemap.xml", "llms.txt", "160c7627b72757bd5b12aab96bca9324.txt"];
 
 const mapBounds = { minX: -124.5, minY: 35.8, maxX: -120.2, maxY: 39.4 };
 

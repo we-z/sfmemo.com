@@ -1,5 +1,5 @@
-import "./hbm-stack.js?v=43";
-import "./systolic-array.js?v=34";
+import "./hbm-stack.js?v=44";
+import "./systolic-array.js?v=35";
 import "./vision-map.js?v=8";
 
 const hero = document.querySelector(".hero-horizon");
