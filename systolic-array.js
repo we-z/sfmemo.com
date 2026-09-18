@@ -519,18 +519,15 @@ if (surface && canvas) {
       toneMapped: false,
     });
     const peHorizontalMaterial = new THREE.MeshBasicMaterial({
-      vertexColors: true,
-      color: 0x3cf589,
+      color: 0x32b5ff,
       toneMapped: false,
     });
     const peVerticalMaterial = new THREE.MeshBasicMaterial({
-      vertexColors: true,
-      color: 0xa4d879,
+      color: 0xff4c68,
       toneMapped: false,
     });
     const peIntersectionMaterial = new THREE.MeshBasicMaterial({
-      vertexColors: true,
-      color: 0xd2f2b3,
+      color: 0x3cf589,
       toneMapped: false,
     });
     const peBases = new THREE.InstancedMesh(
@@ -543,7 +540,7 @@ if (surface && canvas) {
       peCoreMaterial,
       peCount,
     );
-    const peFaceGeometry = shadeDieGeometry(new THREE.BoxGeometry(0.265, 0.028, 0.265, 6, 1, 6));
+    const peFaceGeometry = new THREE.BoxGeometry(0.265, 0.028, 0.265);
     const peHorizontalFaces = new THREE.InstancedMesh(
       peFaceGeometry,
       peHorizontalMaterial,
@@ -572,9 +569,9 @@ if (surface && canvas) {
     const peOffDark = new THREE.Color(0x1f5938);
     const peOffLight = new THREE.Color(0x398257);
     const peBlackout = new THREE.Color(0x000000);
-    const peHorizontalBoost = new THREE.Color(0xbdfbd6);
-    const peVerticalBoost = new THREE.Color(0xdaf4bb);
-    const peIntersectionBoost = new THREE.Color(0xf0fbdc);
+    const peHorizontalBoost = new THREE.Color(0xb9ebff);
+    const peVerticalBoost = new THREE.Color(0xffc4cf);
+    const peIntersectionBoost = new THREE.Color(0xbdfbd6);
 
     for (let row = 0; row < gridSize; row += 1) {
       for (let column = 0; column < gridSize; column += 1) {
@@ -583,7 +580,7 @@ if (surface && canvas) {
         const z = gridFirst + row * gridPitch;
         pePositions.push({ row, column, x, z });
         const tint = dieSurfaceTint(column / (gridSize - 1), row / (gridSize - 1));
-        [peBases, peCores, peHorizontalFaces, peVerticalFaces, peIntersectionFaces].forEach((mesh) => {
+        [peBases, peCores].forEach((mesh) => {
           mesh.setColorAt(index, tint);
         });
         helper.position.set(x, 0.29, z);
@@ -602,7 +599,7 @@ if (surface && canvas) {
         peIntersectionFaces.setMatrixAt(index, helper.matrix);
       }
     }
-    [peBases, peCores, peHorizontalFaces, peVerticalFaces, peIntersectionFaces].forEach((mesh) => {
+    [peBases, peCores].forEach((mesh) => {
       mesh.instanceColor.needsUpdate = true;
     });
     peBases.instanceMatrix.needsUpdate = true;
@@ -613,13 +610,13 @@ if (surface && canvas) {
     model.add(peBases, peCores, peHorizontalFaces, peVerticalFaces, peIntersectionFaces);
 
     const rowTokenMaterial = new THREE.MeshBasicMaterial({
-      color: 0x44f58f,
+      color: 0x3aaeff,
       transparent: true,
       opacity: 0.78,
       toneMapped: false,
     });
     const columnTokenMaterial = new THREE.MeshBasicMaterial({
-      color: 0xb0df7a,
+      color: 0xff536a,
       transparent: true,
       opacity: 0.74,
       toneMapped: false,
@@ -717,11 +714,11 @@ if (surface && canvas) {
       peBaseMaterial.emissive.setHex(lightTheme ? 0x0f4526 : 0x0b381e);
       peBaseMaterial.emissiveIntensity = lightTheme ? 0.2 : 0.24;
       peCoreMaterial.color.setHex(lightTheme ? 0x398257 : 0x1f5938);
-      peHorizontalMaterial.color.setHex(lightTheme ? 0x12c95f : 0x3cf589);
-      peVerticalMaterial.color.setHex(lightTheme ? 0x669b43 : 0xa4d879);
-      peIntersectionMaterial.color.setHex(lightTheme ? 0x8dbc69 : 0xd2f2b3);
-      rowTokenMaterial.color.setHex(lightTheme ? 0x0abd57 : 0x44f58f);
-      columnTokenMaterial.color.setHex(lightTheme ? 0x70a845 : 0xb0df7a);
+      peHorizontalMaterial.color.setHex(lightTheme ? 0x087fd3 : 0x32b5ff);
+      peVerticalMaterial.color.setHex(lightTheme ? 0xd82745 : 0xff4c68);
+      peIntersectionMaterial.color.setHex(lightTheme ? 0x12c95f : 0x3cf589);
+      rowTokenMaterial.color.setHex(lightTheme ? 0x006ac7 : 0x3aaeff);
+      columnTokenMaterial.color.setHex(lightTheme ? 0xc91836 : 0xff536a);
       lastClockStep = -1;
       lastBoostBucket = -1;
       requestRender();
@@ -842,9 +839,9 @@ if (surface && canvas) {
       hbmViaMaterial.emissiveIntensity = (lightTheme ? 0.015 : 0.055) + boostAmount * 0.08;
       hbmViaRingMaterial.emissiveIntensity = (lightTheme ? 0.01 : 0.045) + boostAmount * 0.07;
       const brighten = boostAmount * 0.22;
-      peHorizontalMaterial.color.setHex(lightTheme ? 0x12c95f : 0x3cf589).lerp(peHorizontalBoost, brighten);
-      peVerticalMaterial.color.setHex(lightTheme ? 0x669b43 : 0xa4d879).lerp(peVerticalBoost, brighten);
-      peIntersectionMaterial.color.setHex(lightTheme ? 0x8dbc69 : 0xd2f2b3).lerp(peIntersectionBoost, brighten);
+      peHorizontalMaterial.color.setHex(lightTheme ? 0x087fd3 : 0x32b5ff).lerp(peHorizontalBoost, brighten);
+      peVerticalMaterial.color.setHex(lightTheme ? 0xd82745 : 0xff4c68).lerp(peVerticalBoost, brighten);
+      peIntersectionMaterial.color.setHex(lightTheme ? 0x12c95f : 0x3cf589).lerp(peIntersectionBoost, brighten);
       rowTokenMaterial.opacity = 0.78 + boostAmount * 0.2;
       columnTokenMaterial.opacity = 0.74 + boostAmount * 0.22;
       rimLight.intensity = 30 + boostAmount * 10;
