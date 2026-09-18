@@ -157,14 +157,14 @@ if (mapFigure && mapCanvas && mapContext) {
       mapContext.closePath();
       const destination = region.role === "destination";
       if (destination) {
-        mapContext.fillStyle = lightTheme ? "rgba(21, 89, 197, 0.11)" : "rgba(55, 128, 225, 0.14)";
+        mapContext.fillStyle = lightTheme ? "rgba(21, 128, 61, 0.11)" : "rgba(64, 216, 131, 0.14)";
         mapContext.fill();
       }
       mapContext.strokeStyle = lightTheme
-        ? `rgba(21, 89, 197, ${destination ? 0.9 : 0.78})`
-        : `rgba(126, 194, 255, ${destination ? 0.92 : 0.8})`;
+        ? `rgba(21, 128, 61, ${destination ? 0.9 : 0.78})`
+        : `rgba(132, 249, 182, ${destination ? 0.92 : 0.8})`;
       mapContext.lineWidth = destination ? 2.2 : 1.9;
-      mapContext.shadowColor = lightTheme ? "rgba(21, 89, 197, 0.2)" : "rgba(75, 156, 255, 0.36)";
+      mapContext.shadowColor = lightTheme ? "rgba(21, 128, 61, 0.2)" : "rgba(84, 246, 155, 0.36)";
       mapContext.shadowBlur = destination ? 8 : 0;
       mapContext.stroke();
       mapContext.restore();
@@ -173,7 +173,7 @@ if (mapFigure && mapCanvas && mapContext) {
 
   function drawGrid(lightTheme) {
     mapContext.save();
-    mapContext.strokeStyle = lightTheme ? "rgba(36, 75, 126, 0.16)" : "rgba(100, 139, 187, 0.12)";
+    mapContext.strokeStyle = lightTheme ? "rgba(40, 122, 76, 0.16)" : "rgba(104, 183, 139, 0.12)";
     mapContext.lineWidth = 1;
     mapContext.setLineDash([2, 8]);
     for (let longitude = -124.5; longitude <= -120.2; longitude += 0.5) {
@@ -205,8 +205,8 @@ if (mapFigure && mapCanvas && mapContext) {
       geometry.end[1],
     );
     mapContext.strokeStyle = lightTheme
-      ? `rgba(21, 89, 197, ${emphasis ? 0.56 : 0.32})`
-      : `rgba(96, 165, 250, ${emphasis ? 0.5 : 0.28})`;
+      ? `rgba(21, 128, 61, ${emphasis ? 0.56 : 0.32})`
+      : `rgba(74, 222, 128, ${emphasis ? 0.5 : 0.28})`;
     mapContext.lineWidth = emphasis ? 1.8 : 1.1;
     mapContext.setLineDash([]);
     mapContext.stroke();
@@ -221,9 +221,9 @@ if (mapFigure && mapCanvas && mapContext) {
       if (step === 0) mapContext.moveTo(point[0], point[1]);
       else mapContext.lineTo(point[0], point[1]);
     }
-    mapContext.strokeStyle = lightTheme ? "rgba(19, 88, 202, 0.98)" : "rgba(165, 222, 255, 0.98)";
+    mapContext.strokeStyle = lightTheme ? "rgba(28, 193, 102, 0.98)" : "rgba(169, 251, 203, 0.98)";
     mapContext.lineWidth = emphasis ? 2.6 : 2;
-    mapContext.shadowColor = lightTheme ? "rgba(21, 89, 197, 0.38)" : "rgba(75, 156, 255, 0.82)";
+    mapContext.shadowColor = lightTheme ? "rgba(21, 128, 61, 0.38)" : "rgba(84, 246, 155, 0.82)";
     mapContext.shadowBlur = emphasis ? 15 : 11;
     mapContext.stroke();
     mapContext.shadowBlur = 0;
@@ -232,7 +232,7 @@ if (mapFigure && mapCanvas && mapContext) {
     const head = quadraticPoint(geometry.start, geometry.control, geometry.end, clamp(endAmount));
     mapContext.beginPath();
     mapContext.arc(head[0], head[1], emphasis ? 3.4 : 2.5, 0, Math.PI * 2);
-    mapContext.fillStyle = lightTheme ? "#1559c5" : "#d7f1ff";
+    mapContext.fillStyle = lightTheme ? "#15803d" : "#d9fde8";
     mapContext.fill();
   }
 
@@ -245,10 +245,10 @@ if (mapFigure && mapCanvas && mapContext) {
 
   function drawNode(point, lightTheme, emphasized = false) {
     const [x, y] = point;
-    const primary = lightTheme ? "#1559c5" : "#9fd7ff";
+    const primary = lightTheme ? "#15803d" : "#a4fac8";
     mapContext.beginPath();
     mapContext.arc(x, y, emphasized ? 12 : 10, 0, Math.PI * 2);
-    mapContext.strokeStyle = lightTheme ? "rgba(21, 89, 197, 0.42)" : "rgba(96, 165, 250, 0.48)";
+    mapContext.strokeStyle = lightTheme ? "rgba(21, 128, 61, 0.42)" : "rgba(74, 222, 128, 0.48)";
     mapContext.lineWidth = 1;
     mapContext.stroke();
     mapContext.beginPath();
@@ -279,8 +279,8 @@ if (mapFigure && mapCanvas && mapContext) {
 
     drawGrid(lightTheme);
     traceLand();
-    mapContext.fillStyle = lightTheme ? "rgba(21, 89, 197, 0.1)" : "rgba(43, 78, 120, 0.3)";
-    mapContext.strokeStyle = lightTheme ? "rgba(38, 76, 126, 0.56)" : "rgba(142, 174, 214, 0.58)";
+    mapContext.fillStyle = lightTheme ? "rgba(21, 128, 61, 0.1)" : "rgba(47, 116, 77, 0.3)";
+    mapContext.strokeStyle = lightTheme ? "rgba(42, 122, 77, 0.56)" : "rgba(146, 210, 174, 0.58)";
     mapContext.lineWidth = lightTheme ? 1.2 : 1;
     mapContext.fill("evenodd");
     mapContext.stroke();

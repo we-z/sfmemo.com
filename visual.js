@@ -1,6 +1,6 @@
-import "./hbm-stack.js?v=42";
-import "./systolic-array.js?v=33";
-import "./vision-map.js?v=7";
+import "./hbm-stack.js?v=43";
+import "./systolic-array.js?v=34";
+import "./vision-map.js?v=8";
 
 const hero = document.querySelector(".hero-horizon");
 const heroFrame = hero?.querySelector(".hero-frame");
@@ -16,7 +16,7 @@ function applyTheme(theme, persist = false) {
   const light = nextTheme === "light";
   themeRoot.dataset.theme = nextTheme;
   themeRoot.style.colorScheme = nextTheme;
-  themeColor?.setAttribute("content", light ? "#f4f7fb" : "#05070a");
+  themeColor?.setAttribute("content", light ? "#f4fbf7" : "#050a07");
   themeToggle?.setAttribute("aria-pressed", String(light));
   themeToggle?.setAttribute("aria-label", light ? "Switch to dark mode" : "Switch to light mode");
   const label = themeToggle?.querySelector(".theme-toggle-text");
@@ -168,8 +168,6 @@ function updateScrollMotion() {
     setMotionVariable("--closing-opacity", unit(0.06 + closingReveal * 0.94), motionScenes.closing);
     setMotionVariable("--closing-label-y", px((1 - labelReveal) * 24 * amplitude), motionScenes.closing);
     setMotionVariable("--closing-label-opacity", unit(0.15 + labelReveal * 0.85), motionScenes.closing);
-    setMotionVariable("--closing-link-x", px((1 - closingReveal) * 64 * amplitude), motionScenes.closing);
-    setMotionVariable("--closing-link-opacity", unit(0.1 + closingReveal * 0.9), motionScenes.closing);
   }
 
   motionRoot.classList.add("scroll-motion");
