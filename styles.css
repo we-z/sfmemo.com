@@ -645,34 +645,61 @@ h2 {
 .closing-link {
   display: flex;
   min-height: 9rem;
+  gap: 1.5rem;
+  padding: clamp(1.25rem, 2.5vw, 2.25rem);
   grid-column: 2;
   grid-row: 1 / 3;
   align-self: center;
   align-items: center;
   justify-content: space-between;
-  border-top: 1px solid var(--blue);
-  border-bottom: 1px solid var(--grid);
-  color: var(--text);
-  font-size: 1rem;
+  border: 1px solid color-mix(in srgb, var(--blue-2) 38%, var(--grid));
+  border-radius: 1rem;
+  color: var(--white);
+  background: linear-gradient(125deg, color-mix(in srgb, var(--blue-2) 12%, var(--bg)), var(--bg-2));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--blue-2) 12%, transparent), 0 1rem 3rem rgba(0, 0, 0, 0.08);
+  font-size: clamp(1.6rem, 2.8vw, 2.5rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
   text-decoration: none;
-  transition: border-color 180ms ease, color 180ms ease;
+  transition: border-color 220ms ease, box-shadow 220ms ease, color 220ms ease;
 }
 
 .closing-link i {
+  display: inline-flex;
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--blue-2) 45%, transparent);
+  border-radius: 50%;
   color: var(--blue-2);
-  font-size: 1.7rem;
+  background: color-mix(in srgb, var(--blue-2) 8%, transparent);
+  font-size: 1.5rem;
   font-style: normal;
-  transition: transform 180ms ease;
+  letter-spacing: 0;
+  transition: transform 220ms ease, background-color 220ms ease, color 220ms ease;
 }
 
 .closing-link:hover,
 .closing-link:focus-visible {
-  border-color: var(--cyan);
+  border-color: var(--blue-2);
   color: var(--white);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--blue-2) 24%, transparent), 0 0.75rem 3rem color-mix(in srgb, var(--blue-2) 12%, transparent);
+}
+
+.closing-link:focus-visible {
+  outline: 2px solid var(--blue-2);
+  outline-offset: 5px;
 }
 
 .closing-link:hover i,
-.closing-link:focus-visible i { transform: translateY(-0.2rem); }
+.closing-link:focus-visible i {
+  color: var(--bg);
+  background: var(--blue-2);
+  transform: translate(0.15rem, -0.15rem);
+}
 
 footer {
   display: flex;
@@ -1850,7 +1877,8 @@ html[data-theme="light"] .approach-research { border-color: rgba(64, 83, 109, 0.
   .vision-plane,
   .closing h2 span,
   .closing .section-label,
-  .closing-link {
+  .closing-link,
+  .closing-link i {
     opacity: 1 !important;
     transform: none !important;
   }
@@ -2131,6 +2159,7 @@ html[data-theme="light"] .vision-map::after {
 /* Compact closing utility band while the final closing statement is intentionally omitted. */
 .closing {
   min-height: clamp(16rem, 32svh, 22rem);
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.85fr);
   grid-template-rows: 1fr;
   align-items: center;
 }
