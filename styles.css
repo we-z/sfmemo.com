@@ -661,22 +661,24 @@ h2 {
   letter-spacing: -0.04em;
   line-height: 1.15;
   text-decoration: none;
+  transition: border-color 180ms ease, background-color 180ms ease;
+  background-color: transparent;
+  background-blend-mode: screen;
 }
 
 .closing-link i {
-  display: inline-flex;
-  width: 3rem;
-  height: 3rem;
   flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid color-mix(in srgb, var(--green-2) 45%, transparent);
-  border-radius: 50%;
   color: var(--green-2);
-  background: color-mix(in srgb, var(--green-2) 8%, transparent);
   font-size: 1.5rem;
   font-style: normal;
   letter-spacing: 0;
+}
+
+@media (hover: hover) {
+  .closing-link:hover {
+    border-color: color-mix(in srgb, var(--green-2) 58%, var(--grid));
+    background-color: color-mix(in srgb, var(--green-2) 4%, transparent);
+  }
 }
 
 .closing-link:focus-visible {
