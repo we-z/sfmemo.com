@@ -1,10 +1,11 @@
-import "./hbm-stack.js?v=47";
-import "./systolic-array.js?v=40";
+import "./hbm-stack.js?v=48";
+import "./systolic-array.js?v=41";
 import "./vision-map.js?v=8";
 
 const hero = document.querySelector(".hero-horizon");
 const heroFrame = hero?.querySelector(".hero-frame");
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+const nativeScrollPreference = window.matchMedia("(max-width: 780px), (hover: none) and (pointer: coarse), (max-width: 960px) and (max-height: 480px)");
 let reduceMotion = motionPreference.matches;
 
 const themeRoot = document.documentElement;
@@ -74,7 +75,7 @@ function updateScrollMotion() {
   const targetScroll = Math.max(0, window.scrollY);
   const mobile = window.innerWidth <= 780;
 
-  if (reduceMotion) {
+  if (reduceMotion || nativeScrollPreference.matches) {
     motionRoot.classList.remove("scroll-motion");
     return;
   }
@@ -104,6 +105,7 @@ function updateScrollMotion() {
       height: bounds.height,
     });
   });
+  const frameHeight = heroFrame?.offsetHeight || viewportHeight;
 
   setMotionVariable("--scroll-progress", unit(clamp01(targetScroll / documentHeight)));
   setMotionVariable("--page-grid-x", px(-visualScroll * 0.012));
@@ -111,7 +113,6 @@ function updateScrollMotion() {
 
   if (motionScenes.hero) {
     const heroMetrics = measurements.get(motionScenes.hero);
-    const frameHeight = heroFrame?.offsetHeight || viewportHeight;
     const heroRange = Math.max(heroMetrics.height - frameHeight, 1);
     const heroProgress = clamp01((visualScroll - heroMetrics.top) / heroRange);
     const departureStart = mobile ? 0.08 : 0.22;
@@ -180,6 +181,12 @@ function updateScrollMotion() {
 }
 
 function scheduleScrollMotion(force = false) {
+  if (reduceMotion || nativeScrollPreference.matches) {
+    if (motionFrame) cancelAnimationFrame(motionFrame);
+    motionFrame = 0;
+    motionRoot.classList.remove("scroll-motion");
+    return;
+  }
   if (force) forceMotionFrame = true;
   if (!motionFrame) motionFrame = requestAnimationFrame(updateScrollMotion);
 }
@@ -190,6 +197,7 @@ window.addEventListener("orientationchange", () => scheduleScrollMotion(true), {
 window.addEventListener("pageshow", () => scheduleScrollMotion(true));
 window.addEventListener("hashchange", () => scheduleScrollMotion(true));
 window.visualViewport?.addEventListener("resize", () => scheduleScrollMotion(true), { passive: true });
+nativeScrollPreference.addEventListener("change", () => scheduleScrollMotion(true));
 
 const sceneResizeObserver = new ResizeObserver(() => scheduleScrollMotion(true));
 [

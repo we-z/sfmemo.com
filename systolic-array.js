@@ -268,7 +268,7 @@ if (surface && canvas) {
     const hbmBoostScratch = new THREE.Color();
 
     const hbmLayerGeometry = createSlab(4.3, 1.18, 0.065, 0.08);
-    const hbmFeatureGeometry = shadeDieGeometry(new THREE.BoxGeometry(1, 0.006, 1, 24, 1, 12), 0.25);
+    const hbmFeatureGeometry = shadeDieGeometry(new THREE.BoxGeometry(1, 0.006, 1, 8, 1, 4));
     const hbmTraceGeometry = new THREE.BoxGeometry(1, 0.004, 1);
     const viaGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1.02, 16);
     const viaRingGeometry = new THREE.TorusGeometry(0.07, 0.014, 8, 20);
@@ -348,15 +348,27 @@ if (surface && canvas) {
         ...peripheralBlocks.map((feature) => ({ ...feature, kind: "phy" })),
       ];
       const featureY = topDieSurfaceY + topPassivationHeight + 0.005;
+      const featuresByMaterial = new Map();
       surfaceFeatures.forEach((feature) => {
         const materials = feature.kind === "bank" ? hbmBankMaterials : hbmPhyMaterials;
-        const mesh = new THREE.Mesh(hbmFeatureGeometry, materials[feature.tone]);
-        mesh.position.set(feature.x, featureY, feature.z);
-        mesh.scale.set(
-          feature.width - (feature.kind === "bank" ? 0.025 : 0.045) * topScaleX,
-          1,
-          feature.depth - (feature.kind === "bank" ? 0.025 : 0.045) * topScaleZ,
-        );
+        const material = materials[feature.tone];
+        if (!featuresByMaterial.has(material)) featuresByMaterial.set(material, []);
+        featuresByMaterial.get(material).push(feature);
+      });
+      featuresByMaterial.forEach((features, material) => {
+        const mesh = new THREE.InstancedMesh(hbmFeatureGeometry, material, features.length);
+        features.forEach((feature, index) => {
+          hbmInstanceHelper.position.set(feature.x, featureY, feature.z);
+          hbmInstanceHelper.rotation.set(0, 0, 0);
+          hbmInstanceHelper.scale.set(
+            feature.width - (feature.kind === "bank" ? 0.025 : 0.045) * topScaleX,
+            1,
+            feature.depth - (feature.kind === "bank" ? 0.025 : 0.045) * topScaleZ,
+          );
+          hbmInstanceHelper.updateMatrix();
+          mesh.setMatrixAt(index, hbmInstanceHelper.matrix);
+        });
+        mesh.instanceMatrix.needsUpdate = true;
         stack.add(mesh);
       });
 
@@ -640,15 +652,22 @@ if (surface && canvas) {
     const activePointers = new Map();
     const passiveTapPointers = new Map();
     let dragging = false;
-    let visible = true;
+    let visible = false;
     let reducedMotion = motionPreference.matches;
     let lightTheme = document.documentElement.dataset.theme === "light";
     let animationFrame = 0;
     let previousTime = performance.now();
+    let lastRenderAt = 0;
+    let renderWidth = 0;
+    let renderHeight = 0;
+    let renderPixelRatio = 0;
+    let surfaceTop = 0;
+    let surfaceHeight = 1;
     let simulationTime = 0;
     let boost = 0;
     let lastClockStep = -1;
     let lastBoostBucket = -1;
+    let lastBoostAmount = -1;
     let scrollRotationFrame = 0;
     let lastTap = null;
     const stepDuration = 0.46;
@@ -710,6 +729,7 @@ if (surface && canvas) {
       columnTokenMaterial.color.setHex(lightTheme ? 0xc91836 : 0xff536a);
       lastClockStep = -1;
       lastBoostBucket = -1;
+      lastBoostAmount = -1;
       requestRender();
     }
 
@@ -838,7 +858,13 @@ if (surface && canvas) {
 
     function renderFrame(time = performance.now()) {
       animationFrame = 0;
-      if (!visible) return;
+      if (!visible || document.hidden) return;
+      if (!reducedMotion && (coarsePointer.matches || mobileViewport.matches)
+        && !dragging && time - lastRenderAt < 31) {
+        animationFrame = requestAnimationFrame(renderFrame);
+        return;
+      }
+      lastRenderAt = time;
       const elapsed = Math.min(0.05, Math.max(0, (time - previousTime) / 1000));
       previousTime = time;
       if (!reducedMotion) {
@@ -862,13 +888,16 @@ if (surface && canvas) {
         lastClockStep = clockStep;
         lastBoostBucket = boostBucket;
       }
-      updateBoost(boostAmount);
+      if (boostAmount > 0 || lastBoostAmount !== boostAmount) {
+        updateBoost(boostAmount);
+        lastBoostAmount = boostAmount;
+      }
       renderer.render(scene, camera);
       if (!reducedMotion) animationFrame = requestAnimationFrame(renderFrame);
     }
 
     function requestRender() {
-      if (animationFrame) return;
+      if (animationFrame || !visible || document.hidden) return;
       previousTime = performance.now();
       animationFrame = requestAnimationFrame(renderFrame);
     }
@@ -877,9 +906,19 @@ if (surface && canvas) {
       const bounds = surface.getBoundingClientRect();
       const width = Math.max(1, Math.round(bounds.width));
       const height = Math.max(1, Math.round(bounds.height));
+      surfaceTop = bounds.top + window.scrollY;
+      surfaceHeight = bounds.height;
+      const reducedRenderQuality = coarsePointer.matches || mobileViewport.matches;
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, reducedRenderQuality ? 1.15 : 1.5);
+      if (width === renderWidth && height === renderHeight && pixelRatio === renderPixelRatio) {
+        updateScrollRotation();
+        return;
+      }
+      renderWidth = width;
+      renderHeight = height;
+      renderPixelRatio = pixelRatio;
       const aspect = width / height;
       camera.aspect = aspect;
-      const reducedRenderQuality = coarsePointer.matches || mobileViewport.matches;
       camera.fov = reducedRenderQuality ? 41 : 39;
       camera.updateProjectionMatrix();
       const verticalFov = THREE.MathUtils.degToRad(camera.fov);
@@ -892,7 +931,7 @@ if (surface && canvas) {
       camera.far = distance + modelSphere.radius * 2.4;
       camera.lookAt(0, 0, 0);
       camera.updateProjectionMatrix();
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, reducedRenderQuality ? 1.15 : 1.5));
+      if (renderer.getPixelRatio() !== pixelRatio) renderer.setPixelRatio(pixelRatio);
       renderer.setSize(width, height, false);
       updateScrollRotation();
       requestRender();
@@ -940,10 +979,9 @@ if (surface && canvas) {
     }
 
     function updateScrollRotation() {
-      const bounds = surface.getBoundingClientRect();
       const viewportTrigger = window.innerHeight * 0.88;
-      const travel = Math.max(1, viewportTrigger + bounds.height);
-      const sectionProgress = clamp((viewportTrigger - bounds.top) / travel);
+      const travel = Math.max(1, viewportTrigger + surfaceHeight);
+      const sectionProgress = clamp((viewportTrigger - surfaceTop + window.scrollY) / travel);
       const tiltProgress = reducedMotion
         ? 0
         : smoothstep(clamp((sectionProgress - 0.3) / 0.54));
@@ -956,9 +994,10 @@ if (surface && canvas) {
     }
 
     function scheduleScrollRotation() {
-      if (scrollRotationFrame) return;
+      if (scrollRotationFrame || !visible || document.hidden) return;
       scrollRotationFrame = requestAnimationFrame(() => {
         scrollRotationFrame = 0;
+        if (!visible || document.hidden) return;
         updateScrollRotation();
       });
     }
@@ -1065,10 +1104,29 @@ if (surface && canvas) {
     });
 
     new ResizeObserver(fitCamera).observe(surface);
+    window.addEventListener("resize", fitCamera, { passive: true });
+    document.fonts?.ready.then(fitCamera);
     new IntersectionObserver((entries) => {
       visible = entries.some((entry) => entry.isIntersecting);
-      if (visible) requestRender();
-    }, { rootMargin: "160px" }).observe(surface);
+      if (visible) {
+        const bounds = surface.getBoundingClientRect();
+        surfaceTop = bounds.top + window.scrollY;
+        surfaceHeight = bounds.height;
+        updateScrollRotation();
+        requestRender();
+      } else {
+        cancelAnimationFrame(animationFrame);
+        animationFrame = 0;
+      }
+    }).observe(surface);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        cancelAnimationFrame(animationFrame);
+        animationFrame = 0;
+      } else {
+        requestRender();
+      }
+    });
     window.addEventListener("sfmemo:themechange", applyTheme);
     motionPreference.addEventListener("change", (event) => {
       reducedMotion = event.matches;
@@ -1087,7 +1145,7 @@ if (surface && canvas) {
     coarsePointer.addEventListener("change", updateNavigationMode);
     mobileViewport.addEventListener("change", updateNavigationMode);
     window.addEventListener("scroll", scheduleScrollRotation, { passive: true });
-    window.addEventListener("pageshow", scheduleScrollRotation);
+    window.addEventListener("pageshow", fitCamera);
 
     canvas.tabIndex = 0;
     applyTheme();

@@ -7,6 +7,7 @@ const surface = hero?.querySelector(".hero-visual");
 const canvas = document.querySelector("#hero-canvas");
 const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
 const touchNavigationPreference = window.matchMedia("(hover: none) and (pointer: coarse)");
+const nativeScrollPreference = window.matchMedia("(max-width: 780px), (hover: none) and (pointer: coarse), (max-width: 960px) and (max-height: 480px)");
 const finePointer = window.matchMedia("(pointer: fine)").matches;
 const INITIAL_ROTATION_X = 0.18;
 const INITIAL_ROTATION_Y = 0.46;
@@ -240,7 +241,7 @@ if (hero && surface && canvas) {
       toneMapped: false,
     });
     const topFeatureMesh = new THREE.InstancedMesh(
-      shadeDieGeometry(new THREE.BoxGeometry(1, 0.006, 1, 24, 1, 12), 0.25),
+      shadeDieGeometry(new THREE.BoxGeometry(1, 0.006, 1, 8, 1, 4)),
       topFeatureMaterial,
       surfaceFeatures.length,
     );
@@ -663,7 +664,7 @@ if (hero && surface && canvas) {
     let reduceMotion = motionPreference.matches;
     let mobile = false;
     let touchNavigation = touchNavigationPreference.matches;
-    let visible = true;
+    let visible = false;
     let frameId = 0;
     let lastFrameAt = performance.now();
     let flowTime = 0.18;
@@ -672,7 +673,11 @@ if (hero && surface && canvas) {
     let lastTouchTapX = 0;
     let lastTouchTapY = 0;
     let scrollRotationFrame = 0;
-    let lastScrollAt = 0;
+    let renderWidth = 0;
+    let renderHeight = 0;
+    let renderPixelRatio = 0;
+    let heroTop = 0;
+    let heroTravel = 1;
     let particleBoost = 0;
     let particleBoostResetTimer = 0;
 
@@ -826,8 +831,7 @@ if (hero && surface && canvas) {
     }
 
     function updateScrollRotation() {
-      const travel = Math.max(1, hero.offsetHeight - (heroFrame?.offsetHeight ?? window.innerHeight));
-      const rawProgress = clamp(-hero.getBoundingClientRect().top / travel, 0, 1);
+      const rawProgress = clamp((window.scrollY - heroTop) / heroTravel, 0, 1);
       const reveal = reduceMotion ? 0 : smoothstep(clamp(rawProgress / 0.82, 0, 1));
       scrollRotation.set(
         INITIAL_ROTATION_X + (SCROLL_REVEAL_ROTATION_X - INITIAL_ROTATION_X) * reveal,
@@ -842,10 +846,10 @@ if (hero && surface && canvas) {
     }
 
     function render(now = performance.now(), force = false) {
-      frameId = 0;
-      const scrollingModel = now - lastScrollAt < 140;
-      const mobileFrameInterval = dragging || scrollingModel ? 0 : 31;
-      if (!force && mobile && now - lastFrameAt < mobileFrameInterval) {
+      // A forced paint must not lose the ID of an already scheduled frame.
+      if (!force) frameId = 0;
+      if (!force && (!visible || document.hidden)) return;
+      if (!force && touchNavigation && !dragging && now - lastFrameAt < 31) {
         frameId = requestAnimationFrame(render);
         return;
       }
@@ -950,13 +954,28 @@ if (hero && surface && canvas) {
       const wasMobile = mobile;
       const wasTouchNavigation = touchNavigation;
       mobile = window.innerWidth <= 780
-        || (!finePointer && window.innerWidth <= 960 && window.innerHeight <= 480);
+        || (window.innerWidth <= 960 && window.innerHeight <= 480);
       const shortMobile = mobile && window.innerWidth <= 780 && window.innerHeight <= 720;
-      touchNavigation = window.innerWidth <= 780 || touchNavigationPreference.matches;
+      touchNavigation = nativeScrollPreference.matches;
+      heroTop = hero.getBoundingClientRect().top + window.scrollY;
+      heroTravel = Math.max(1, touchNavigation
+        ? hero.offsetHeight
+        : hero.offsetHeight - (heroFrame?.offsetHeight ?? window.innerHeight));
+      const width = Math.round(bounds.width);
+      const height = Math.round(bounds.height);
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, mobile ? 1.05 : finePointer ? 1.3 : 1.15);
+      if (width === renderWidth && height === renderHeight && pixelRatio === renderPixelRatio
+        && wasMobile === mobile && wasTouchNavigation === touchNavigation) {
+        updateScrollRotation();
+        return;
+      }
+      renderWidth = width;
+      renderHeight = height;
+      renderPixelRatio = pixelRatio;
       surface.dataset.touchNavigation = String(touchNavigation);
       stackRoot.position.y = mobile ? (shortMobile ? -1 : 0) : -0.5;
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.05 : finePointer ? 1.3 : 1.15));
-      renderer.setSize(bounds.width, bounds.height, false);
+      if (renderer.getPixelRatio() !== pixelRatio) renderer.setPixelRatio(pixelRatio);
+      renderer.setSize(width, height, false);
 
       const aspect = bounds.width / bounds.height;
       // Fit the complete rotational envelope, not only the initial angle.
@@ -1131,10 +1150,10 @@ if (hero && surface && canvas) {
     });
 
     function scheduleScrollRotation() {
-      if (scrollRotationFrame) return;
+      if (scrollRotationFrame || !visible || document.hidden) return;
       scrollRotationFrame = requestAnimationFrame(() => {
         scrollRotationFrame = 0;
-        lastScrollAt = performance.now();
+        if (!visible || document.hidden) return;
         updateScrollRotation();
         if (reduceMotion) render(performance.now(), true);
         else start();
@@ -1157,11 +1176,15 @@ if (hero && surface && canvas) {
     }
 
     new ResizeObserver(resize).observe(surface);
+    nativeScrollPreference.addEventListener("change", resize);
     new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;
-      if (visible) start();
+      if (visible) {
+        updateScrollRotation();
+        start();
+      }
       else stop();
-    }, { rootMargin: "100px" }).observe(hero);
+    }).observe(surface);
 
     document.addEventListener("visibilitychange", () => {
       if ([...activePointers.values()].some((pointer) => pointer.mode === "rotate")) commitRotation();

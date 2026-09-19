@@ -1676,12 +1676,12 @@ html[data-theme="light"] .approach-research { border-color: rgba(66, 107, 84, 0.
 @media (max-width: 780px) {
   .hero.hero-horizon {
     --hero-frame-height: max(100svh, 54rem);
-    --hero-scroll-runway: 32svh;
+    --hero-scroll-runway: 0px;
     padding: 0;
   }
 
   .hero-frame {
-    position: sticky;
+    position: relative;
     top: 0;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -1742,11 +1742,11 @@ html[data-theme="light"] .approach-research { border-color: rgba(66, 107, 84, 0.
 @media (orientation: landscape) and (max-height: 480px) and (max-width: 960px) {
   .hero.hero-horizon {
     --hero-frame-height: max(100svh, 23rem);
-    --hero-scroll-runway: 30svh;
+    --hero-scroll-runway: 0px;
   }
 
   .hero-frame {
-    position: sticky;
+    position: relative;
     top: 0;
     display: block;
     padding: calc(6rem + env(safe-area-inset-top, 0px)) var(--gutter) calc(1.5rem + env(safe-area-inset-bottom, 0px));
@@ -1802,6 +1802,8 @@ html[data-theme="light"] .approach-research { border-color: rgba(66, 107, 84, 0.
 }
 
 @media (hover: none) and (pointer: coarse) {
+  .hero.hero-horizon { --hero-scroll-runway: 0px; }
+  .hero-frame { position: relative; }
   .hero-visual #hero-canvas { cursor: default; }
   .hero-visual-label { display: none; }
 }
@@ -1997,10 +1999,12 @@ html[data-theme="light"] .approach-systolic::before {
   background:
     radial-gradient(circle at 44% 54%, rgba(34, 197, 94, 0.1), transparent 18%),
     linear-gradient(180deg, rgba(7, 17, 11, 0.18), rgba(5, 13, 9, 0.44));
-  opacity: var(--vision-map-opacity, 1);
+  opacity: 1;
   transform: translate3d(0, var(--vision-map-y, 0), 0) scale(var(--vision-map-scale, 1));
   transform-origin: center;
 }
+
+.scroll-motion .vision-map { opacity: var(--vision-map-opacity, 1); }
 
 .vision-map::after {
   content: "";
