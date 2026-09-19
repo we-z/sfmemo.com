@@ -1,4 +1,4 @@
-import "./hbm-stack.js?v=48";
+import "./hbm-stack.js?v=49";
 import "./systolic-array.js?v=41";
 import "./vision-map.js?v=8";
 
@@ -17,7 +17,7 @@ function applyTheme(theme, persist = false) {
   const light = nextTheme === "light";
   themeRoot.dataset.theme = nextTheme;
   themeRoot.style.colorScheme = nextTheme;
-  themeColor?.setAttribute("content", light ? "#f4fbf7" : "#050a07");
+  themeColor?.setAttribute("content", light ? "#ffffff" : "#000000");
   themeToggle?.setAttribute("aria-pressed", String(light));
   themeToggle?.setAttribute("aria-label", light ? "Switch to dark mode" : "Switch to light mode");
   const label = themeToggle?.querySelector(".theme-toggle-text");

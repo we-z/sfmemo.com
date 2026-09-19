@@ -550,7 +550,7 @@ if (hero && surface && canvas) {
         void main() {
           vec2 point = (vUv - 0.5) * vec2(1.0, 2.5);
           float falloff = 1.0 - smoothstep(0.05, 0.5, length(point));
-          gl_FragColor = vec4(0.01, 0.07, 0.035, falloff * uOpacity);
+          gl_FragColor = vec4(0.0, 0.0, 0.0, falloff * uOpacity);
         }
       `,
     });

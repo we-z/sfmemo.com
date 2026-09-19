@@ -1,6 +1,6 @@
 :root {
-  --bg: #050a07;
-  --bg-2: #0b150f;
+  --bg: #000000;
+  --bg-2: #000000;
   --panel: #0f1f16;
   --white: #f7fcf9;
   --text: #e8f4ed;
@@ -21,6 +21,7 @@
 * { box-sizing: border-box; }
 
 html {
+  background: var(--bg);
   color-scheme: dark;
   scroll-behavior: smooth;
 }
@@ -72,6 +73,7 @@ a { color: inherit; }
 }
 
 .page-grid {
+  display: none;
   position: fixed;
   z-index: -1;
   inset: 0;
@@ -869,9 +871,7 @@ footer p { margin: 0; }
 }
 
 .vision-compact .vision-plane {
-  background:
-    radial-gradient(circle at 84% 46%, rgba(34, 197, 94, 0.11), transparent 31%),
-    linear-gradient(180deg, transparent, rgba(11, 21, 15, 0.42));
+  background: none;
 }
 
 .vision-compact .vision-heading {
@@ -972,8 +972,8 @@ footer p { margin: 0; }
 }
 
 html[data-theme="light"] {
-  --bg: #f4fbf7;
-  --bg-2: #eaf6ef;
+  --bg: #ffffff;
+  --bg-2: #ffffff;
   --panel: #ffffff;
   --white: #0c2718;
   --text: #193526;
@@ -989,9 +989,7 @@ html[data-theme="light"] {
 }
 
 html[data-theme="light"] body {
-  background:
-    radial-gradient(70rem 48rem at 72% 10%, rgba(93, 214, 147, 0.12), transparent 68%),
-    linear-gradient(180deg, #f8fefb 0%, var(--bg) 38%, #eff8f3 100%);
+  background: var(--bg);
 }
 
 html[data-theme="light"] ::selection {
@@ -1035,9 +1033,7 @@ html[data-theme="light"] .theme-toggle-icon {
 }
 
 html[data-theme="light"] .hero-frame::before {
-  background:
-    linear-gradient(90deg, rgba(248, 254, 251, 0.99) 0%, rgba(244, 251, 247, 0.95) 28%, rgba(244, 251, 247, 0.54) 44%, rgba(244, 251, 247, 0.08) 61%, transparent 74%),
-    linear-gradient(180deg, rgba(244, 251, 247, 0.35), transparent 40%, rgba(230, 245, 237, 0.24));
+  background: none;
 }
 
 html[data-theme="light"] .hero-frame::after,
@@ -1061,7 +1057,7 @@ html[data-theme="light"] .scroll-rail span {
 }
 
 html[data-theme="light"] .vision-plane {
-  background: linear-gradient(180deg, transparent, rgba(201, 232, 215, 0.62));
+  background: none;
 }
 
 
@@ -1078,15 +1074,13 @@ html[data-theme="light"] .vision-plane {
 
 @media (max-width: 780px) {
   html[data-theme="light"] .hero-frame::before {
-    background:
-      linear-gradient(180deg, rgba(248, 254, 251, 0.97) 0%, rgba(244, 251, 247, 0.9) 30%, rgba(244, 251, 247, 0.55) 49%, rgba(244, 251, 247, 0.12) 72%, rgba(230, 245, 237, 0.2) 100%),
-      linear-gradient(90deg, rgba(244, 251, 247, 0.28), transparent 82%);
+    background: none;
   }
 }
 
 @media (orientation: landscape) and (max-height: 480px) and (max-width: 960px) {
   html[data-theme="light"] .hero-frame::before {
-    background: linear-gradient(90deg, rgba(248, 254, 251, 0.99) 0%, rgba(244, 251, 247, 0.96) 42%, rgba(244, 251, 247, 0.28) 62%, rgba(244, 251, 247, 0.04) 100%);
+    background: none;
   }
 }
 
@@ -1154,8 +1148,7 @@ footer .wordmark {
 .hero-visual[data-dragging="true"] #hero-canvas { cursor: grabbing; }
 
 .hero-package-fallback {
-  background:
-    radial-gradient(48% 42% at 56% 56%, rgba(48, 209, 121, 0.2), transparent 72%);
+  background: none;
   transition: opacity 700ms ease;
 }
 
@@ -1410,7 +1403,7 @@ html[data-theme="light"] .approach-research { border-color: rgba(66, 107, 84, 0.
   z-index: -2;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, transparent, rgba(11, 21, 15, 0.6));
+  background: none;
   opacity: 0.9;
 }
 
@@ -1533,9 +1526,7 @@ html[data-theme="light"] .approach-research { border-color: rgba(66, 107, 84, 0.
   z-index: 2;
   inset: 0;
   pointer-events: none;
-  background:
-    linear-gradient(90deg, rgba(5, 10, 7, 0.98) 0%, rgba(5, 10, 7, 0.92) 28%, rgba(5, 10, 7, 0.5) 44%, rgba(5, 10, 7, 0.06) 61%, transparent 74%),
-    linear-gradient(180deg, rgba(5, 10, 7, 0.28), transparent 40%, rgba(5, 10, 7, 0.2));
+  background: none;
 }
 
 .hero-frame::after {
@@ -1695,9 +1686,7 @@ html[data-theme="light"] .approach-research { border-color: rgba(66, 107, 84, 0.
 
   .hero-frame::before {
     z-index: 2;
-    background:
-      linear-gradient(180deg, rgba(5, 10, 7, 0.92) 0%, rgba(5, 10, 7, 0.78) 30%, rgba(5, 10, 7, 0.42) 49%, rgba(5, 10, 7, 0.08) 72%, rgba(5, 10, 7, 0.14) 100%),
-      linear-gradient(90deg, rgba(5, 10, 7, 0.2), transparent 82%);
+    background: none;
   }
 
   .hero-horizon .hero-copy {
@@ -1754,7 +1743,7 @@ html[data-theme="light"] .approach-research { border-color: rgba(66, 107, 84, 0.
   }
 
   .hero-frame::before {
-    background: linear-gradient(90deg, rgba(5, 10, 7, 0.99) 0%, rgba(5, 10, 7, 0.94) 42%, rgba(5, 10, 7, 0.22) 62%, rgba(5, 10, 7, 0.04) 100%);
+    background: none;
   }
 
   .hero-horizon .hero-copy {
@@ -1917,7 +1906,7 @@ html[data-theme="light"] .approach-research { border-color: rgba(66, 107, 84, 0.
   z-index: -1;
   inset: 10% 2% 4%;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(49, 213, 122, 0.14), rgba(19, 85, 48, 0.055) 45%, transparent 72%);
+  background: none;
   filter: blur(1.3rem);
   pointer-events: none;
 }
@@ -1954,7 +1943,7 @@ html[data-theme="light"] #systolic-canvas:focus-visible {
 .approach-systolic.is-unavailable { min-height: 18rem; }
 
 html[data-theme="light"] .approach-systolic::before {
-  background: radial-gradient(circle, rgba(21, 128, 61, 0.13), rgba(74, 222, 128, 0.04) 48%, transparent 72%);
+  background: none;
 }
 
 @media (max-width: 70rem) {
@@ -1996,9 +1985,7 @@ html[data-theme="light"] .approach-systolic::before {
   overflow: hidden;
   border-top: 1px solid rgba(118, 149, 132, 0.3);
   border-bottom: 1px solid rgba(118, 149, 132, 0.3);
-  background:
-    radial-gradient(circle at 44% 54%, rgba(34, 197, 94, 0.1), transparent 18%),
-    linear-gradient(180deg, rgba(7, 17, 11, 0.18), rgba(5, 13, 9, 0.44));
+  background: none;
   opacity: 1;
   transform: translate3d(0, var(--vision-map-y, 0), 0) scale(var(--vision-map-scale, 1));
   transform-origin: center;
@@ -2011,7 +1998,7 @@ html[data-theme="light"] .approach-systolic::before {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(90deg, rgba(5, 10, 7, 0.28), transparent 16%, transparent 84%, rgba(5, 10, 7, 0.28));
+  background: none;
 }
 
 #vision-map-canvas {
@@ -2024,21 +2011,17 @@ html[data-theme="light"] .approach-systolic::before {
 
 html[data-theme="light"] .vision-map {
   border-color: rgba(51, 96, 71, 0.28);
-  background:
-    radial-gradient(circle at 44% 54%, rgba(21, 128, 61, 0.1), transparent 18%),
-    linear-gradient(180deg, rgba(226, 245, 234, 0.28), rgba(220, 241, 229, 0.52));
+  background: none;
 }
 
 html[data-theme="light"] .vision-map::after {
-  background: linear-gradient(90deg, rgba(244, 251, 247, 0.3), transparent 16%, transparent 84%, rgba(244, 251, 247, 0.3));
+  background: none;
 }
 
 @media (max-width: 780px) {
   .vision-map {
     height: clamp(25rem, 92vw, 34rem);
-    background:
-      radial-gradient(circle at 44% 54%, rgba(34, 197, 94, 0.12), transparent 21%),
-      linear-gradient(180deg, rgba(7, 17, 11, 0.14), rgba(5, 13, 9, 0.38));
+    background: none;
   }
 
 }
