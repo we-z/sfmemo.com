@@ -1232,24 +1232,25 @@ footer .wordmark {
   display: inline-flex;
   width: max-content;
   min-height: 3.4rem;
+  margin-top: 0;
   gap: 0.8rem;
   align-items: center;
   justify-self: start;
-  color: var(--white);
+  color: var(--bg);
   font-size: 0.92rem;
   text-decoration: none;
   pointer-events: auto;
 }
 
 .hero-link b {
-  color: var(--white);
+  color: currentColor;
   font-size: 1.15rem;
   font-weight: 400;
   transition: transform 300ms ease;
 }
 
 .hero-link:hover b,
-.hero-link:focus-visible b { transform: translateY(0.3rem); }
+.hero-link:focus-visible b { transform: translate(0.15rem, -0.15rem); }
 
 .hero-link:focus-visible {
   outline: 1px solid var(--white);
