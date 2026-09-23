@@ -2214,3 +2214,78 @@ html[data-theme="light"] .vision-map::after {
 
 .wordmark,
 .closing .section-label { text-transform: none; }
+
+/* Flat package markings, inspired by a manufactured memory chip. */
+.hero-visual {
+  display: grid;
+  place-items: center;
+  container-type: inline-size;
+}
+
+.hero-chip {
+  position: relative;
+  width: 82%;
+  aspect-ratio: 1.12;
+  border-radius: 0;
+  background: #505153;
+  color: #d5d5d0;
+  font-family: "Courier New", monospace;
+  font-weight: 400;
+}
+
+.hero-chip-brand {
+  position: absolute;
+  top: 12%;
+  left: 10%;
+  font-family: Arial, sans-serif;
+  font-size: 7.8cqw;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.hero-chip-qr {
+  position: absolute;
+  top: 8%;
+  right: 6%;
+  width: 24%;
+  height: auto;
+}
+
+.hero-chip-trace {
+  position: absolute;
+  top: 36%;
+  left: 10%;
+  font-size: 3.8cqw;
+  line-height: 1.55;
+  letter-spacing: 0.055em;
+}
+
+.hero-chip-origin {
+  position: absolute;
+  right: 8%;
+  bottom: 9%;
+  left: 6%;
+  display: flex;
+  align-items: center;
+  gap: 4%;
+  font-size: 3.25cqw;
+  white-space: nowrap;
+}
+
+.hero-chip-dot {
+  width: 2.2cqw;
+  height: 2.2cqw;
+  flex: none;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+@media (max-width: 780px) {
+  .hero-frame { grid-template-rows: auto auto; }
+  .hero-visual {
+    width: 100%;
+    height: auto;
+    margin: 1.5rem 0 0;
+  }
+  .hero-chip { width: 100%; }
+}

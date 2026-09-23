@@ -1,4 +1,3 @@
-import "./hbm-stack.js?v=51";
 import "./systolic-array.js?v=42";
 import "./vision-map.js?v=8";
 
