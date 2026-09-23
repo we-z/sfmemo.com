@@ -95,7 +95,7 @@ footer {
 }
 
 .site-header {
-  width: 100%;
+  width: min(100%, 100rem);
   position: absolute;
   z-index: 20;
   top: 0;
