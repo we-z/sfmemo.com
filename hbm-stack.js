@@ -236,8 +236,8 @@ if (hero && surface && canvas) {
     const topFeatureMaterial = new THREE.MeshBasicMaterial({
       vertexColors: true,
       color: 0xffffff,
-      transparent: true,
-      opacity: 0.82,
+      transparent: false,
+      opacity: 1,
       toneMapped: false,
     });
     const topFeatureMesh = new THREE.InstancedMesh(
@@ -246,17 +246,17 @@ if (hero && surface && canvas) {
       surfaceFeatures.length,
     );
     const darkTopFeaturePalettes = {
-      bank: [0x659aa6, 0x738dbb, 0xa085b5, 0xc19370, 0xc6b17b],
+      bank: [0x294a50, 0x355c62, 0x3c6469, 0x28474e, 0x416b70],
       phy: [0xb59b72, 0x987968],
     };
     const lightTopFeaturePalettes = {
-      bank: [0x4f808c, 0x59749d, 0x856d9b, 0xa17b5f, 0xa49164],
+      bank: [0x29464c, 0x36565c, 0x3f6267, 0x304d54, 0x456b6e],
       phy: [0x9c825a, 0x806757],
     };
     surfaceFeatures.forEach((feature, index) => {
       helper.position.set(feature.x, topDieY + topPassivationHeight + 0.005, feature.z);
       helper.rotation.set(0, 0, 0);
-      const gutter = feature.kind === "bank" ? 0.025 : 0.045;
+      const gutter = feature.kind === "bank" ? 0.055 : 0.045;
       helper.scale.set(feature.width - gutter, 1, feature.depth - gutter);
       helper.updateMatrix();
       topFeatureMesh.setMatrixAt(index, helper.matrix);
@@ -293,7 +293,7 @@ if (hero && surface && canvas) {
     addTraceRectangle(addGridTrace, { x: 0, z: 0, width: 4.18, depth: 1.88 });
     memoryBanks.forEach((bank) => {
       addTraceRectangle(addGridTrace, bank);
-      Array.from({ length: 15 }, (_, index) => (index + 1) / 16 - 0.5).forEach((offset) => {
+      Array.from({ length: 7 }, (_, index) => (index + 1) / 8 - 0.5).forEach((offset) => {
         addGridTrace(
           bank.x + bank.width * offset,
           bank.z - bank.depth / 2,
@@ -301,7 +301,7 @@ if (hero && surface && canvas) {
           bank.z + bank.depth / 2,
         );
       });
-      [-0.25, 0, 0.25].forEach((offset) => {
+      [0].forEach((offset) => {
         addGridTrace(
           bank.x - bank.width / 2,
           bank.z + bank.depth * offset,
@@ -358,7 +358,7 @@ if (hero && surface && canvas) {
       mesh.instanceMatrix.needsUpdate = true;
       return mesh;
     };
-    const topGridMesh = createTopTraceMesh(topGridSegments, topGridMaterial, 0.005);
+    const topGridMesh = createTopTraceMesh(topGridSegments, topGridMaterial, 0.012);
     const topRdlMesh = createTopTraceMesh(topRdlSegments, topRdlMaterial, 0.022);
     stackRoot.add(topGridMesh, topRdlMesh);
 
@@ -618,7 +618,7 @@ if (hero && surface && canvas) {
         material.color.copy(layerIdleColors[index]);
         material.emissive.copy(layerIdleEmissives[index]);
       });
-      topPassivationIdleColor.set(light ? 0x49a169 : 0x367f57);
+      topPassivationIdleColor.set(light ? 0x246848 : 0x1b5139);
       topPassivationBoostColor.copy(topPassivationIdleColor).lerp(
         tempColor.setHex(light ? 0x379a60 : 0x287d4c),
         0.36,
@@ -963,7 +963,7 @@ if (hero && surface && canvas) {
         : hero.offsetHeight - (heroFrame?.offsetHeight ?? window.innerHeight));
       const width = Math.round(bounds.width);
       const height = Math.round(bounds.height);
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, mobile ? 1.05 : finePointer ? 1.3 : 1.15);
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
       if (width === renderWidth && height === renderHeight && pixelRatio === renderPixelRatio
         && wasMobile === mobile && wasTouchNavigation === touchNavigation) {
         updateScrollRotation();
