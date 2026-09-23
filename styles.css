@@ -2169,3 +2169,17 @@ html[data-theme="light"] .vision-map::after {
   .site-header .wordmark { gap: 0.4rem; }
   .wordmark-logo { width: 1.65rem; height: 1.85rem; }
 }
+
+/* Contact actions share a fine green underline and directional accent. */
+.site-header nav > a,
+.hero-link > span,
+.closing-link > span {
+  text-decoration-line: underline;
+  text-decoration-color: var(--green);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.4em;
+  text-decoration-skip-ink: none;
+}
+
+.hero-link b,
+.closing-link i { color: var(--green); }
