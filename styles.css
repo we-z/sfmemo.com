@@ -2151,40 +2151,49 @@ html[data-theme="light"] .vision-map::after {
   .closing-link:focus-visible { outline-offset: -2px; }
 }
 
-/* Header identity: stacked silicon dies with a continuous TSV. */
+/* Header identity and contact buttons. */
 .site-header .wordmark {
-  gap: 0.6rem;
+  font-size: clamp(1.65rem, 2.2vw, 2rem);
   letter-spacing: -0.035em;
   font-weight: 500;
 }
 
-.wordmark-logo {
-  display: block;
-  width: 2rem;
-  height: 2.2rem;
-  flex: 0 0 auto;
-}
-
-@media (max-width: 420px) {
-  .site-header .wordmark { gap: 0.4rem; }
-  .wordmark-logo { width: 1.65rem; height: 1.85rem; }
-}
-
-/* Green contact actions. */
 .site-header nav > a,
 .hero-link,
-.hero-link > span,
-.closing-link,
-.closing-link > span {
-  color: var(--green);
+.closing-link {
+  display: inline-flex;
+  min-height: 3.25rem;
+  padding: 0.85rem 1.25rem;
+  align-items: center;
+  gap: 1.1rem;
+  border: 1px solid #22c55e;
+  border-radius: 0.25rem;
+  color: #000;
+  background: #22c55e;
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1.25;
   text-decoration: none;
+  transition: background-color 180ms ease, border-color 180ms ease;
 }
 
-.site-header nav > a {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-}
+.hero-link > span,
+.closing-link > span,
+.hero-link b,
+.closing-link i { color: #000; text-decoration: none; }
 
 .hero-link b,
-.closing-link i { color: var(--green); }
+.closing-link i { font-size: 1.25rem; }
+
+.site-header nav > a:hover,
+.hero-link:hover,
+.closing-link:hover {
+  color: #000;
+  background: #4ade80;
+  border-color: #4ade80;
+}
+
+@media (max-width: 520px) {
+  .site-header .wordmark { font-size: 1.6rem; }
+  .site-header nav > a { padding: 0.7rem 0.9rem; gap: 0.65rem; font-size: 0.95rem; min-height: 2.9rem; }
+}
