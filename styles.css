@@ -2241,7 +2241,7 @@ html[data-theme="light"] .vision-map::after {
     7px 17px 17px rgb(0 0 0 / 65%),
     15px 30px 40px rgb(0 0 0 / 35%);
   color: #92928b;
-  text-shadow: 0 1px 1px rgb(0 0 0 / 75%);
+  text-shadow: none;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-weight: 400;
 }
@@ -2267,6 +2267,16 @@ html[data-theme="light"] .vision-map::after {
   border-left-color: rgb(255 255 255 / 2%);
   border-bottom-color: rgb(0 0 0 / 25%);
   border-right-color: rgb(0 0 0 / 20%);
+}
+
+/* Laser marking changes the surface tone without raised edges or shadows. */
+.hero-chip-brand,
+.hero-chip-trace,
+.hero-chip-origin > span:last-child,
+.hero-chip-matrix {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='etch'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .55 0 0 0 .45'/%3E%3C/filter%3E%3Cpath fill='white' filter='url(%23etch)' d='M0 0h160v160H0z'/%3E%3C/svg%3E");
+  mask-repeat: repeat;
+  mask-size: 160px 160px;
 }
 
 .hero-chip-brand {
