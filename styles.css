@@ -2274,7 +2274,7 @@ html[data-theme="light"] .vision-map::after {
   top: 7%;
   left: 5%;
   font-family: Arial, sans-serif;
-  font-size: 6cqw;
+  font-size: 9cqw;
   letter-spacing: -0.045em;
   line-height: 1;
 }
@@ -2291,8 +2291,8 @@ html[data-theme="light"] .vision-map::after {
   position: absolute;
   top: 32%;
   left: 5%;
-  font-size: 2.3cqw;
-  line-height: 1.65;
+  font-size: 5cqw;
+  line-height: 1.2;
   letter-spacing: 0.055em;
 }
 
@@ -2304,13 +2304,13 @@ html[data-theme="light"] .vision-map::after {
   display: flex;
   align-items: center;
   gap: 3%;
-  font-size: 2.25cqw;
+  font-size: 4.8cqw;
   white-space: nowrap;
 }
 
 .hero-chip-dot {
-  width: 1.3cqw;
-  height: 1.3cqw;
+  width: 2cqw;
+  height: 2cqw;
   flex: none;
   border-radius: 50%;
   background: #303232;
