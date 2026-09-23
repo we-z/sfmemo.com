@@ -105,7 +105,7 @@ footer {
   align-items: center;
   justify-content: space-between;
   transform: translateX(-50%);
-  border-bottom: 1px solid var(--grid);
+  border-bottom: 0;
 }
 
 .wordmark {
