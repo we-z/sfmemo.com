@@ -2170,15 +2170,20 @@ html[data-theme="light"] .vision-map::after {
   .wordmark-logo { width: 1.65rem; height: 1.85rem; }
 }
 
-/* Contact actions share a fine green underline and directional accent. */
+/* Green contact actions. */
 .site-header nav > a,
+.hero-link,
 .hero-link > span,
+.closing-link,
 .closing-link > span {
-  text-decoration-line: underline;
-  text-decoration-color: var(--green);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.4em;
-  text-decoration-skip-ink: none;
+  color: var(--green);
+  text-decoration: none;
+}
+
+.site-header nav > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .hero-link b,
