@@ -93,7 +93,7 @@
       ]
     }
   </script>
-  <link rel="stylesheet" href="/styles.css?v=84">
+  <link rel="stylesheet" href="/styles.css?v=85">
   <script type="module" src="/visual.js?v=107"></script>
 </head>
 <body>
@@ -102,7 +102,20 @@
   <div class="scroll-rail" aria-hidden="true"><span></span></div>
 
   <header class="site-header">
-    <a class="wordmark" href="#top" aria-label="SF Memo home"><span>SF</span>MEMO</a>
+    <a class="wordmark" href="#top" aria-label="SF Memo home">
+      <svg class="wordmark-logo" viewBox="0 0 40 44" fill="none" aria-hidden="true">
+        <g stroke="currentColor" stroke-width="1.35" stroke-linejoin="round">
+          <path d="m4 28 16-8 16 8-16 8Z"/>
+          <path d="m4 22 16-8 16 8-16 8Z" fill="var(--bg)"/>
+          <path d="m4 16 16-8 16 8-16 8Z" fill="var(--bg)"/>
+          <path d="m4 10 16-8 16 8-16 8Z" fill="var(--bg)"/>
+        </g>
+        <path d="M20 10v30" stroke="var(--bg)" stroke-width="4"/>
+        <path d="M20 10v30" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="20" cy="10" r="2" fill="currentColor"/>
+      </svg>
+      <span>sfmemo</span>
+    </a>
     <nav aria-label="Primary navigation">
       <a href="#approach">Approach</a>
       <a href="#vision">Vision</a>

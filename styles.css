@@ -2150,3 +2150,22 @@ html[data-theme="light"] .vision-map::after {
   }
   .closing-link:focus-visible { outline-offset: -2px; }
 }
+
+/* Header identity: stacked silicon dies with a continuous TSV. */
+.site-header .wordmark {
+  gap: 0.6rem;
+  letter-spacing: -0.035em;
+  font-weight: 500;
+}
+
+.wordmark-logo {
+  display: block;
+  width: 2rem;
+  height: 2.2rem;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 420px) {
+  .site-header .wordmark { gap: 0.4rem; }
+  .wordmark-logo { width: 1.65rem; height: 1.85rem; }
+}
