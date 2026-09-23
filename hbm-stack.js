@@ -266,7 +266,7 @@ if (hero && surface && canvas) {
     });
     topFeatureMesh.instanceMatrix.needsUpdate = true;
     topFeatureMesh.instanceColor.needsUpdate = true;
-    stackRoot.add(topFeatureMesh);
+    // The top surface uses circuit traces only, without filled bank blocks.
 
     const topTraceY = topDieY + topPassivationHeight + 0.009;
     const topGridSegments = [];
@@ -618,7 +618,7 @@ if (hero && surface && canvas) {
         material.color.copy(layerIdleColors[index]);
         material.emissive.copy(layerIdleEmissives[index]);
       });
-      topPassivationIdleColor.set(light ? 0x246848 : 0x1b5139);
+      topPassivationIdleColor.set(light ? 0x279456 : 0x22854b);
       topPassivationBoostColor.copy(topPassivationIdleColor).lerp(
         tempColor.setHex(light ? 0x379a60 : 0x287d4c),
         0.36,
@@ -640,9 +640,9 @@ if (hero && surface && canvas) {
         topFeatureMesh.setColorAt(index, topFeatureIdleColors[index]);
       });
       topFeatureMesh.instanceColor.needsUpdate = true;
-      topGridMaterial.color.set(light ? 0x76613e : 0xaa9c73);
+      topGridMaterial.color.set(light ? 0x8aefa8 : 0x91f5b0);
       topGridMaterial.emissive.set(light ? 0x020c06 : 0x082012);
-      topRdlMaterial.color.set(light ? 0x8c7048 : 0xcab48b);
+      topRdlMaterial.color.set(light ? 0xa4f5bd : 0xb0ffcb);
       topRdlMaterial.emissive.set(light ? 0x020c06 : 0x0a2415);
       edgeIdle.set(light ? 0x3ba067 : 0x6eb98f);
       edgeActive.set(light ? 0x8fedb8 : 0xcafce0);

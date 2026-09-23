@@ -2210,3 +2210,5 @@ html[data-theme="light"] .vision-map::after {
   .site-header .wordmark { font-size: 2rem; }
   .site-header nav > a { font-size: 0.95rem; }
 }
+
+.section-label, footer .wordmark { text-transform: lowercase; }

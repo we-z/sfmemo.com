@@ -240,8 +240,8 @@ if (surface && canvas) {
       emissiveIntensity: 0.035,
     });
     const hbmTopIdleColors = {
-      dark: new THREE.Color(0x367f57),
-      light: new THREE.Color(0x49a169),
+      dark: new THREE.Color(0x22854b),
+      light: new THREE.Color(0x279456),
     };
     const hbmTopBoostTargets = {
       dark: new THREE.Color(0x287d4c),
@@ -369,7 +369,7 @@ if (surface && canvas) {
           mesh.setMatrixAt(index, hbmInstanceHelper.matrix);
         });
         mesh.instanceMatrix.needsUpdate = true;
-        stack.add(mesh);
+        // Circuit traces replace filled surface blocks.
       });
 
       const topTraceY = topDieSurfaceY + topPassivationHeight + 0.009;
@@ -463,7 +463,7 @@ if (surface && canvas) {
         return mesh;
       };
       stack.add(
-        createTopTraceMesh(topGridSegments, hbmGridMaterial, 0.006),
+        createTopTraceMesh(topGridSegments, hbmGridMaterial, 0.012),
         createTopTraceMesh(topRdlSegments, hbmRdlMaterial, 0.022),
       );
 
@@ -710,9 +710,9 @@ if (surface && canvas) {
         material.color.copy(hbmFeatureIdlePalettes[hbmTheme].phy[index]);
         material.opacity = lightTheme ? 0.88 : 0.94;
       });
-      hbmGridMaterial.color.setHex(lightTheme ? 0x76613e : 0xaa9c73);
+      hbmGridMaterial.color.setHex(lightTheme ? 0x8aefa8 : 0x91f5b0);
       hbmGridMaterial.emissive.setHex(lightTheme ? 0x020c06 : 0x082012);
-      hbmRdlMaterial.color.setHex(lightTheme ? 0x8c7048 : 0xcab48b);
+      hbmRdlMaterial.color.setHex(lightTheme ? 0xa4f5bd : 0xb0ffcb);
       hbmRdlMaterial.emissive.setHex(lightTheme ? 0x020c06 : 0x0a2415);
       hbmViaMaterial.color.setHex(lightTheme ? 0x9a641d : 0xd09a43);
       hbmViaMaterial.emissive.setHex(lightTheme ? 0x1d0d01 : 0x2a1604);
@@ -909,7 +909,7 @@ if (surface && canvas) {
       surfaceTop = bounds.top + window.scrollY;
       surfaceHeight = bounds.height;
       const reducedRenderQuality = coarsePointer.matches || mobileViewport.matches;
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, reducedRenderQuality ? 1.15 : 1.5);
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
       if (width === renderWidth && height === renderHeight && pixelRatio === renderPixelRatio) {
         updateScrollRotation();
         return;
