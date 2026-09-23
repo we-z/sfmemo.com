@@ -2,7 +2,7 @@
 
 > Memory for AI.
 
-sfmemo is building HBM chips in California for GPUs and AI accelerators.
+sfmemo is building HBM chips in California for GPUs AI accelerators and SoCs.
 
 Canonical website: https://sfmemo.com/
 Contact: root@sfmemo.com
