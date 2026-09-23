@@ -2225,56 +2225,56 @@ html[data-theme="light"] .vision-map::after {
 .hero-chip {
   position: relative;
   width: 82%;
-  aspect-ratio: 1.12;
+  aspect-ratio: 1.65;
   border-radius: 0;
-  background: #505153;
-  color: #d5d5d0;
-  font-family: "Courier New", monospace;
+  background: #151515;
+  color: #a3a3a3;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-weight: 400;
 }
 
 .hero-chip-brand {
   position: absolute;
-  top: 12%;
-  left: 10%;
+  top: 7%;
+  left: 5%;
   font-family: Arial, sans-serif;
-  font-size: 7.8cqw;
+  font-size: 6cqw;
   letter-spacing: -0.045em;
   line-height: 1;
 }
 
 .hero-chip-qr {
   position: absolute;
-  top: 8%;
-  right: 6%;
-  width: 24%;
+  top: 2%;
+  right: 1.5%;
+  width: 22%;
   height: auto;
 }
 
 .hero-chip-trace {
   position: absolute;
-  top: 36%;
-  left: 10%;
-  font-size: 3.8cqw;
-  line-height: 1.55;
+  top: 32%;
+  left: 5%;
+  font-size: 2.3cqw;
+  line-height: 1.65;
   letter-spacing: 0.055em;
 }
 
 .hero-chip-origin {
   position: absolute;
-  right: 8%;
-  bottom: 9%;
-  left: 6%;
+  right: 5%;
+  bottom: 7%;
+  left: 5%;
   display: flex;
   align-items: center;
-  gap: 4%;
-  font-size: 3.25cqw;
+  gap: 3%;
+  font-size: 2.25cqw;
   white-space: nowrap;
 }
 
 .hero-chip-dot {
-  width: 2.2cqw;
-  height: 2.2cqw;
+  width: 1.3cqw;
+  height: 1.3cqw;
   flex: none;
   border-radius: 50%;
   background: currentColor;
