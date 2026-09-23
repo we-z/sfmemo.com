@@ -2215,7 +2215,7 @@ html[data-theme="light"] .vision-map::after {
 .wordmark,
 .closing .section-label { text-transform: none; }
 
-/* Flat package markings, inspired by a manufactured memory chip. */
+/* Molded package with a fine-grain surface and laser-etched markings. */
 .hero-visual {
   display: grid;
   place-items: center;
@@ -2227,10 +2227,46 @@ html[data-theme="light"] .vision-map::after {
   width: 82%;
   aspect-ratio: 1.65;
   border-radius: 0;
-  background: #151515;
-  color: #a3a3a3;
+  isolation: isolate;
+  background: linear-gradient(125deg, #242526 0%, #1b1c1d 44%, #121314 100%);
+  border: 1px solid #323435;
+  border-right-color: #111213;
+  border-bottom-color: #090a0a;
+  box-shadow:
+    inset 2px 2px 2px rgb(255 255 255 / 5%),
+    inset -2px -3px 3px rgb(0 0 0 / 65%),
+    1px 2px 0 #111514,
+    2px 5px 0 #242b28,
+    3px 8px 0 #0c100e,
+    7px 17px 17px rgb(0 0 0 / 65%),
+    15px 30px 40px rgb(0 0 0 / 35%);
+  color: #92928b;
+  text-shadow: 0 1px 1px rgb(0 0 0 / 75%);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-weight: 400;
+}
+
+.hero-chip::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 2px;
+  pointer-events: none;
+  opacity: 0.14;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Cpath fill='%23888' filter='url(%23grain)' d='M0 0h180v180H0z'/%3E%3C/svg%3E");
+  mix-blend-mode: screen;
+}
+
+.hero-chip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 3px solid transparent;
+  border-top-color: rgb(255 255 255 / 2%);
+  border-left-color: rgb(255 255 255 / 2%);
+  border-bottom-color: rgb(0 0 0 / 25%);
+  border-right-color: rgb(0 0 0 / 20%);
 }
 
 .hero-chip-brand {
@@ -2277,7 +2313,8 @@ html[data-theme="light"] .vision-map::after {
   height: 1.3cqw;
   flex: none;
   border-radius: 50%;
-  background: currentColor;
+  background: #303232;
+  box-shadow: inset 1px 2px 2px #080909, 0 1px 0 rgb(255 255 255 / 13%);
 }
 
 @media (max-width: 780px) {
