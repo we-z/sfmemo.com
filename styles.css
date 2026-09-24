@@ -2321,6 +2321,8 @@ html[data-theme="light"] .vision-map::after {
     padding: clamp(6.5rem, 18svh, 10rem) var(--gutter) 1rem;
   }
   .hero-horizon .hero-copy { width: 100%; }
+  .hero-horizon .hero-copy,
+  .hero-horizon .hero-visual { transform: translateY(clamp(1rem, calc(12svh - 3rem), 4rem)); }
   .hero-visual {
     position: relative;
     grid-row: 2;
