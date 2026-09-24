@@ -30,22 +30,21 @@ async function initialize() {
   const front = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.96, metalness: 0 });
   const body = new THREE.Mesh(new THREE.BoxGeometry(5.8, 4, 0.28), [side, side, side, side, front, side]);
   root.add(body);
-  const substrate = new THREE.Mesh(new THREE.BoxGeometry(5.94, 4.14, 0.08), new THREE.MeshStandardMaterial({ color: 0x17231d, roughness: 0.82 }));
-  substrate.position.z = -0.18;
-  root.add(substrate);
-  // Underside contacts remain part of the same solid package when rotated.
-  const pads = new THREE.InstancedMesh(new THREE.CircleGeometry(0.075, 12), new THREE.MeshStandardMaterial({ color: 0x9e9272, metalness: 0.65, roughness: 0.5, side: THREE.DoubleSide }), 96);
+  // Solder balls sit directly in the package's rear face, with no backing plate.
+  const balls = new THREE.InstancedMesh(new THREE.SphereGeometry(0.075, 12, 8), new THREE.MeshStandardMaterial({ color: 0xa6a7a5, metalness: 0.75, roughness: 0.35 }), 96);
   const placement = new THREE.Object3D();
   for (let y = 0; y < 8; y++) for (let x = 0; x < 12; x++) {
-    placement.position.set((x - 5.5) * 0.44, (y - 3.5) * 0.44, -0.223);
-    placement.updateMatrix(); pads.setMatrixAt(y * 12 + x, placement.matrix);
+    placement.position.set((x - 5.5) * 0.44, (y - 3.5) * 0.44, -0.205);
+    placement.updateMatrix(); balls.setMatrixAt(y * 12 + x, placement.matrix);
   }
-  root.add(pads);
+  root.add(balls);
 
   const current = new THREE.Vector2(0, 0);
   const target = current.clone();
   const offset = new THREE.Vector2();
   let drag = null, frame = 0, visible = true, initialized = false;
+  let tapCandidate = null, tapStarted = null;
+  const tapAngle = new THREE.Vector2();
   let heroTop = 0, travel = 1;
   const hero = document.querySelector('.hero-horizon');
   const meta = hero.querySelector('.hero-meta');
@@ -69,12 +68,19 @@ async function initialize() {
     if (Math.abs(targetDeparture - departure) < 0.0001) departure = targetDeparture;
     meta.style.opacity = `${1 - departure}`;
     meta.style.transform = `translate3d(0, ${-80 * departure}px, 0)`;
-    root.rotation.set(current.x, current.y, 0);
+    const wasTapping = tapStarted !== null;
+    let wobble = 0;
+    if (wasTapping) {
+      const phase = clamp((now - tapStarted) / 600, 0, 1);
+      if (phase === 1 || reduced.matches) tapStarted = null;
+      else wobble = Math.sin(phase * Math.PI * 2) * (1 - phase) ** 2;
+    }
+    root.rotation.set(current.x + tapAngle.x * wobble, current.y + tapAngle.y * wobble, 0);
     root.updateMatrix();
-    // Fit the actual rotated package bounds, including the substrate and thickness.
+    // Symmetric bounds include the solder balls extending behind the package.
     const m = root.matrix.elements;
-    const projectedWidth = Math.abs(m[0]) * 5.94 + Math.abs(m[4]) * 4.14 + Math.abs(m[8]) * 0.46;
-    const projectedHeight = Math.abs(m[1]) * 5.94 + Math.abs(m[5]) * 4.14 + Math.abs(m[9]) * 0.46;
+    const projectedWidth = Math.abs(m[0]) * 5.8 + Math.abs(m[4]) * 4 + Math.abs(m[8]) * 0.56;
+    const projectedHeight = Math.abs(m[1]) * 5.8 + Math.abs(m[5]) * 4 + Math.abs(m[9]) * 0.56;
     const viewWidth = Math.max(baseViewWidth, projectedWidth * 1.12, projectedHeight * aspect * 1.12);
     if (Math.abs(viewWidth - lastViewWidth) > 0.00001) {
       lastViewWidth = viewWidth;
@@ -82,9 +88,9 @@ async function initialize() {
       camera.top = viewWidth / aspect / 2; camera.bottom = -camera.top;
       camera.updateProjectionMatrix();
     }
-    if (needsRender || rotationChanged) renderer.render(scene, camera);
+    if (needsRender || rotationChanged || wasTapping) renderer.render(scene, camera);
     needsRender = false;
-    if (current.distanceToSquared(target) > 0.00000001 || departure !== targetDeparture) schedule();
+    if (current.distanceToSquared(target) > 0.00000001 || departure !== targetDeparture || tapStarted !== null) schedule();
     else lastFrameTime = 0;
   }
   function schedule() { if (initialized && !frame && visible && !document.hidden) frame = requestAnimationFrame(render); }
@@ -114,11 +120,35 @@ async function initialize() {
     updateScroll();
   }
   const raycaster = new THREE.Raycaster();
-  canvas.addEventListener('pointerdown', event => {
-    if (nativeScroll.matches || event.pointerType !== 'mouse' || event.button !== 0) return;
+  function hitsChip(event) {
     const bounds = canvas.getBoundingClientRect();
     raycaster.setFromCamera(new THREE.Vector2((event.clientX - bounds.left) / bounds.width * 2 - 1, -(event.clientY - bounds.top) / bounds.height * 2 + 1), camera);
-    if (!raycaster.intersectObject(root, true).length) return;
+    return raycaster.intersectObject(root, true).length > 0;
+  }
+  // Observe taps without capturing touch input or blocking native scrolling/pinching.
+  surface.addEventListener('pointerdown', event => {
+    tapCandidate = null;
+    if (!initialized || reduced.matches || !event.isPrimary || event.button !== 0) return;
+    if (!nativeScroll.matches && event.pointerType === 'mouse') return;
+    if (tapStarted !== null || !hitsChip(event)) return;
+    tapCandidate = { id: event.pointerId, x: event.clientX, y: event.clientY, time: performance.now() };
+  }, { passive: true });
+  surface.addEventListener('pointermove', event => {
+    if (tapCandidate && (event.pointerId !== tapCandidate.id || Math.hypot(event.clientX - tapCandidate.x, event.clientY - tapCandidate.y) > 10)) tapCandidate = null;
+  }, { passive: true });
+  surface.addEventListener('pointerup', event => {
+    const tap = tapCandidate; tapCandidate = null;
+    if (!tap || event.pointerId !== tap.id || reduced.matches || performance.now() - tap.time > 350) return;
+    if (Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > 10 || !hitsChip(event)) return;
+    const bounds = canvas.getBoundingClientRect();
+    tapAngle.set(event.clientY > bounds.top + bounds.height / 2 ? -0.10 : 0.10, event.clientX > bounds.left + bounds.width / 2 ? 0.16 : -0.16);
+    tapStarted = performance.now();
+    schedule();
+  }, { passive: true });
+  surface.addEventListener('pointercancel', () => { tapCandidate = null; }, { passive: true });
+  surface.addEventListener('pointerleave', () => { tapCandidate = null; }, { passive: true });
+  canvas.addEventListener('pointerdown', event => {
+    if (!initialized || nativeScroll.matches || event.pointerType !== 'mouse' || event.button !== 0 || !hitsChip(event)) return;
     drag = { id: event.pointerId, x: event.clientX, y: event.clientY, rotation: target.clone(), offset: offset.clone() };
     canvas.setPointerCapture(event.pointerId);
     surface.dataset.dragging = 'true';
@@ -141,9 +171,9 @@ async function initialize() {
   canvas.addEventListener('pointerup', release);
   canvas.addEventListener('pointercancel', release);
   canvas.addEventListener('lostpointercapture', release);
-  window.addEventListener('blur', () => release());
+  window.addEventListener('blur', () => { tapCandidate = null; release(); });
   canvas.addEventListener('dblclick', () => { offset.set(0, 0); updateScroll(); });
-  window.addEventListener('scroll', () => { scrollDirty = true; schedule(); }, { passive: true });
+  window.addEventListener('scroll', () => { tapCandidate = null; scrollDirty = true; schedule(); }, { passive: true });
   nativeScroll.addEventListener('change', () => { release(); offset.set(0, 0); resize(); });
   reduced.addEventListener('change', () => { resize(); });
   document.addEventListener('visibilitychange', schedule);
