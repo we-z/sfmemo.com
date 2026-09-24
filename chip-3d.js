@@ -71,21 +71,26 @@ async function initialize() {
     ctx.fillStyle = `rgba(15,16,16,${random() * 0.28})`;
     ctx.fillRect(random() * 1450, random() * 1000, 1.4, 1.4);
   }
+  // Molded rim remains visible even when the package faces the camera.
+  ctx.strokeStyle = '#373a3b'; ctx.lineWidth = 7;
+  ctx.strokeRect(4, 4, 1442, 992);
+  ctx.strokeStyle = '#101212'; ctx.lineWidth = 5;
+  ctx.strokeRect(13, 13, 1424, 974);
   const texture = new THREE.CanvasTexture(textureCanvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   const side = new THREE.MeshStandardMaterial({ color: 0x171a19, roughness: 0.92 });
   const front = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.96, metalness: 0 });
-  const body = new THREE.Mesh(new THREE.BoxGeometry(5.8, 4, 0.2), [side, side, side, side, front, side]);
+  const body = new THREE.Mesh(new THREE.BoxGeometry(5.8, 4, 0.28), [side, side, side, side, front, side]);
   root.add(body);
-  const substrate = new THREE.Mesh(new THREE.BoxGeometry(5.84, 4.04, 0.055), new THREE.MeshStandardMaterial({ color: 0x17231d, roughness: 0.82 }));
-  substrate.position.z = -0.123;
+  const substrate = new THREE.Mesh(new THREE.BoxGeometry(5.94, 4.14, 0.08), new THREE.MeshStandardMaterial({ color: 0x17231d, roughness: 0.82 }));
+  substrate.position.z = -0.18;
   root.add(substrate);
   // Underside contacts remain part of the same solid package when rotated.
   const pads = new THREE.InstancedMesh(new THREE.CircleGeometry(0.075, 12), new THREE.MeshStandardMaterial({ color: 0x9e9272, metalness: 0.65, roughness: 0.5, side: THREE.DoubleSide }), 96);
   const placement = new THREE.Object3D();
   for (let y = 0; y < 8; y++) for (let x = 0; x < 12; x++) {
-    placement.position.set((x - 5.5) * 0.44, (y - 3.5) * 0.44, -0.153);
+    placement.position.set((x - 5.5) * 0.44, (y - 3.5) * 0.44, -0.223);
     placement.updateMatrix(); pads.setMatrixAt(y * 12 + x, placement.matrix);
   }
   root.add(pads);
@@ -108,7 +113,9 @@ async function initialize() {
   function updateScroll() {
     const t = reduced.matches ? 0 : clamp((scrollY - heroTop) / (travel * 0.82), 0, 1);
     const progress = t * t * (3 - 2 * t);
-    if (!drag) target.set(-progress * 0.42 + offset.x, progress * 0.82 + offset.y);
+    if (!drag) target.set(-progress * 0.72 + offset.x, progress * 1.12 + offset.y);
+    surface.closest('.hero-horizon').style.setProperty('--chip-copy-travel', `${-Math.min(1, t * 2) * 420}px`);
+    surface.closest('.hero-horizon').style.setProperty('--chip-copy-opacity', `${1 - Math.min(1, t * 2)}`);
     schedule();
   }
   function resize() {
@@ -121,9 +128,7 @@ async function initialize() {
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     renderer.setSize(rect.width, rect.height, false);
     heroTop = hero.getBoundingClientRect().top + scrollY;
-    travel = Math.max(1, nativeScroll.matches
-      ? rect.bottom + scrollY - heroTop
-      : hero.offsetHeight - innerHeight);
+    travel = Math.max(1, hero.offsetHeight - hero.querySelector(".hero-frame").offsetHeight);
     updateScroll();
   }
   const raycaster = new THREE.Raycaster();
