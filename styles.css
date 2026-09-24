@@ -1030,7 +1030,6 @@ html[data-theme="light"] .hero-frame::before {
   background: none;
 }
 
-html[data-theme="light"] .hero-frame::after,
 html[data-theme="light"] .approach-editorial::after {
   background: rgba(128, 128, 128, 0.2);
 }
@@ -1492,17 +1491,6 @@ html[data-theme="light"] .approach-research { border-color: rgba(128, 128, 128, 
   background: none;
 }
 
-.hero-frame::after {
-  content: "";
-  position: absolute;
-  z-index: 5;
-  right: var(--gutter);
-  bottom: 0;
-  left: var(--gutter);
-  height: 1px;
-  background: rgba(128, 128, 128, 0.28);
-  pointer-events: none;
-}
 
 .hero-visual {
   position: absolute;
@@ -2330,7 +2318,7 @@ html[data-theme="light"] .vision-map::after {
     min-height: 0;
     grid-template-rows: auto minmax(0, 1fr);
     gap: 0.5rem;
-    padding: clamp(5rem, 12svh, 7.5rem) var(--gutter) 1rem;
+    padding: clamp(6.5rem, 18svh, 10rem) var(--gutter) 1rem;
   }
   .hero-horizon .hero-copy { width: 100%; }
   .hero-visual {
