@@ -1,4 +1,4 @@
-import("./chip-3d.js?v=4").catch(() => document.documentElement.classList.remove("chip-webgl-pending"));
+import("./chip-3d.js?v=5").catch(() => document.documentElement.classList.remove("chip-webgl-pending"));
 import "./systolic-array.js?v=42";
 import "./vision-map.js?v=8";
 

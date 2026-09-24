@@ -2303,7 +2303,7 @@ html[data-theme="light"] .vision-map::after {
   position: absolute;
   top: 2%;
   right: 1.5%;
-  width: 25%;
+  width: 18%;
   height: auto;
 }
 
@@ -2318,7 +2318,7 @@ html[data-theme="light"] .vision-map::after {
 
 .hero-chip-trace-side {
   position: absolute;
-  top: 36%;
+  top: 39.5%;
   right: 4%;
   writing-mode: vertical-rl;
   font-size: 6cqw;

@@ -50,14 +50,14 @@ async function initialize() {
   label('DTAHJM0042', 72, 635, 64);
   label('Made in California', 135, 856, 73);
   ctx.save();
-  ctx.translate(1390, 360);
+  ctx.translate(1390, 395);
   ctx.rotate(Math.PI / 2);
   label('B4 0836', 0, 0, 121);
   ctx.restore();
   const matrix = fallback.querySelector('.hero-chip-matrix');
   ctx.save();
-  ctx.translate(1066, 20);
-  ctx.scale(362 / 52, 362 / 52);
+  ctx.translate(1168, 20);
+  ctx.scale(260 / 52, 260 / 52);
   ctx.fill(new Path2D(matrix.querySelector('path').getAttribute('d')));
   ctx.restore();
   const dot = ctx.createRadialGradient(91, 882, 3, 94, 890, 21);
@@ -108,7 +108,7 @@ async function initialize() {
   function updateScroll() {
     const t = reduced.matches ? 0 : clamp((scrollY - heroTop) / (travel * 0.82), 0, 1);
     const progress = t * t * (3 - 2 * t);
-    if (!drag) target.set(progress * 0.42 + offset.x, -progress * 0.82 + offset.y);
+    if (!drag) target.set(-progress * 0.42 + offset.x, progress * 0.82 + offset.y);
     schedule();
   }
   function resize() {
