@@ -107,7 +107,7 @@ async function initialize() {
   }
   function schedule() { if (initialized && !frame && visible && !document.hidden) frame = requestAnimationFrame(render); }
   function updateScroll(requestFrame = true) {
-    const t = reduced.matches ? 0 : clamp((scrollY - heroTop) / (travel * 0.82), 0, 1);
+    const t = reduced.matches ? 0 : clamp((scrollY - heroTop) / travel, 0, 1);
     const progress = t * t * (3 - 2 * t);
     if (!drag) target.set(offset.x, progress * Math.PI + offset.y);
     const phase = reduced.matches ? 0 : clamp(((scrollY - heroTop) / travel - 0.08) / 0.52, 0, 1);
