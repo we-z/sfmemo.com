@@ -1,3 +1,4 @@
+import "./chip-3d.js?v=1";
 import "./systolic-array.js?v=42";
 import "./vision-map.js?v=8";
 

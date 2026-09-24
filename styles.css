@@ -2366,3 +2366,11 @@ html[data-theme="light"] .vision-map::after {
   }
   .hero-chip { width: 100%; }
 }
+
+/* Keep the static package as a layout-preserving WebGL fallback. */
+.hero-visual #hero-canvas { opacity: 0; touch-action: auto; }
+.hero-visual.chip-3d-ready #hero-canvas { opacity: 1; }
+.hero-visual.chip-3d-ready .hero-chip { visibility: hidden; }
+@media (max-width: 780px), (hover: none) and (pointer: coarse) {
+  .hero-visual #hero-canvas { pointer-events: none; }
+}
