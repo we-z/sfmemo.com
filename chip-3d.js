@@ -155,11 +155,10 @@ async function initialize() {
     raycaster.setFromCamera(new THREE.Vector2((event.clientX - bounds.left) / bounds.width * 2 - 1, -(event.clientY - bounds.top) / bounds.height * 2 + 1), camera);
     return raycaster.intersectObject(root, true).length > 0;
   }
-  // Observe taps without capturing touch input or blocking native scrolling/pinching.
+  // Share tap/click rotation without capturing touch input or blocking native scrolling.
   surface.addEventListener('pointerdown', event => {
     tapCandidate = null;
     if (!initialized || reduced.matches || !event.isPrimary || event.button !== 0) return;
-    if (!nativeScroll.matches && event.pointerType === 'mouse') return;
     if (tapStarted !== null || !hitsChip(event)) return;
     tapCandidate = { id: event.pointerId, x: event.clientX, y: event.clientY, time: performance.now() };
   }, { passive: true });
@@ -176,7 +175,7 @@ async function initialize() {
   surface.addEventListener('pointercancel', () => { tapCandidate = null; }, { passive: true });
   surface.addEventListener('pointerleave', () => { tapCandidate = null; }, { passive: true });
   canvas.addEventListener('pointerdown', event => {
-    if (!initialized || nativeScroll.matches || event.pointerType !== 'mouse' || event.button !== 0 || !hitsChip(event)) return;
+    if (!initialized || nativeScroll.matches || tapStarted !== null || event.pointerType !== 'mouse' || event.button !== 0 || !hitsChip(event)) return;
     // Grab the displayed pose even while it is catching up with a scroll target.
     offset.add(current.clone().sub(target));
     target.copy(current);
@@ -203,7 +202,7 @@ async function initialize() {
   canvas.addEventListener('pointercancel', release);
   canvas.addEventListener('lostpointercapture', release);
   window.addEventListener('blur', () => { tapCandidate = null; release(); });
-  canvas.addEventListener('dblclick', () => { offset.set(0, 0); updateScroll(); });
+  canvas.addEventListener('dblclick', () => { tapStarted = null; needsRender = true; offset.set(0, 0); updateScroll(); });
   window.addEventListener('scroll', () => { tapCandidate = null; scrollDirty = true; schedule(); }, { passive: true });
   nativeScroll.addEventListener('change', () => { release(); offset.set(0, 0); resize(); });
   reduced.addEventListener('change', () => { resize(); });
