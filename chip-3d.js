@@ -15,8 +15,14 @@ async function initialize() {
   renderer.setClearColor(0, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   const scene = new THREE.Scene();
-  const camera = new THREE.OrthographicCamera(-4, 4, 3, -3, 0.1, 30);
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
   camera.position.z = 12;
+  const tanHalfFov = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  const packageCorners = [];
+  for (const x of [-2.9, 2.9]) for (const y of [-2, 2]) for (const z of [-0.27, 0.14]) {
+    packageCorners.push(new THREE.Vector3(x, y, z));
+  }
+  const projectedCorner = new THREE.Vector3();
   const root = new THREE.Group();
   scene.add(root);
   scene.add(new THREE.HemisphereLight(0xffffff, 0x484b48, 2));
@@ -31,11 +37,11 @@ async function initialize() {
   const body = new THREE.Mesh(new THREE.BoxGeometry(5.8, 4, 0.28), [side, side, side, side, front, side]);
   root.add(body);
   // Solder balls sit directly in the package's rear face, with no backing plate.
-  const balls = new THREE.InstancedMesh(new THREE.SphereGeometry(0.075, 12, 8), new THREE.MeshStandardMaterial({ color: 0xa6a7a5, metalness: 0.75, roughness: 0.35 }), 96);
+  const balls = new THREE.InstancedMesh(new THREE.SphereGeometry(0.065, 12, 8), new THREE.MeshStandardMaterial({ color: 0xa6a7a5, metalness: 0.75, roughness: 0.35 }), 384);
   const placement = new THREE.Object3D();
-  for (let y = 0; y < 8; y++) for (let x = 0; x < 12; x++) {
-    placement.position.set((x - 5.5) * 0.44, (y - 3.5) * 0.44, -0.205);
-    placement.updateMatrix(); balls.setMatrixAt(y * 12 + x, placement.matrix);
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 24; x++) {
+    placement.position.set((x - 11.5) * 0.22, (y - 7.5) * 0.22, -0.195);
+    placement.updateMatrix(); balls.setMatrixAt(y * 24 + x, placement.matrix);
   }
   root.add(balls);
 
@@ -48,7 +54,7 @@ async function initialize() {
   const hero = document.querySelector('.hero-horizon');
   const meta = hero.querySelector('.hero-meta');
   const heroFrame = hero.querySelector('.hero-frame');
-  let aspect = 1, baseViewWidth = 8.05, lastViewWidth = 0;
+  let aspect = 1, baseViewWidth = 8.05, verticalMargin = 1.12;
   let width = 0, height = 0, pixelRatio = 0;
   let scrollDirty = false, lastFrameTime = 0, needsRender = true;
   let departure = 0, targetDeparture = 0;
@@ -81,16 +87,18 @@ async function initialize() {
     }
     root.rotation.set(current.x, current.y + spin, 0);
     root.updateMatrix();
-    // Symmetric bounds include the solder balls extending behind the package.
-    const m = root.matrix.elements;
-    const projectedWidth = Math.abs(m[0]) * 5.8 + Math.abs(m[4]) * 4 + Math.abs(m[8]) * 0.56;
-    const projectedHeight = Math.abs(m[1]) * 5.8 + Math.abs(m[5]) * 4 + Math.abs(m[9]) * 0.56;
-    const viewWidth = Math.max(baseViewWidth, projectedWidth * 1.12, projectedHeight * aspect * 1.12);
-    if (Math.abs(viewWidth - lastViewWidth) > 0.00001) {
-      lastViewWidth = viewWidth;
-      camera.left = -viewWidth / 2; camera.right = viewWidth / 2;
-      camera.top = viewWidth / aspect / 2; camera.bottom = -camera.top;
-      camera.updateProjectionMatrix();
+    // Keep the flat face's size, then fit nearer corners through the full spin.
+    const tanHorizontal = tanHalfFov * aspect;
+    let distance = 0.14 + baseViewWidth / (2 * tanHorizontal);
+    for (const corner of packageCorners) {
+      projectedCorner.copy(corner).applyMatrix4(root.matrix);
+      distance = Math.max(distance,
+        projectedCorner.z + Math.abs(projectedCorner.x) * 1.12 / tanHorizontal,
+        projectedCorner.z + Math.abs(projectedCorner.y) * verticalMargin / tanHalfFov);
+    }
+    if (Math.abs(distance - camera.position.z) > 0.00001) {
+      camera.position.z = distance;
+      camera.updateMatrixWorld();
     }
     if (needsRender || rotationChanged || wasTapping) renderer.render(scene, camera);
     needsRender = false;
@@ -110,7 +118,11 @@ async function initialize() {
     const rect = surface.getBoundingClientRect();
     aspect = rect.width / Math.max(rect.height, 1);
     baseViewWidth = nativeScroll.matches ? 6.7 : 8.05;
-    lastViewWidth = 0;
+    // The mobile canvas sits low in the hero. Leave room below its nearest corner.
+    const roomBelow = heroFrame.getBoundingClientRect().bottom - 16 - (rect.top + rect.height / 2);
+    verticalMargin = nativeScroll.matches ? Math.max(1.12, rect.height / 2 / Math.max(16, roomBelow)) : 1.12;
+    camera.aspect = aspect;
+    camera.updateProjectionMatrix();
     needsRender = true;
     const nextRatio = Math.min(devicePixelRatio, 2);
     if (pixelRatio !== nextRatio || width !== rect.width || height !== rect.height) {
