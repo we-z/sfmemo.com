@@ -1463,7 +1463,7 @@ html[data-theme="light"] .approach-research { border-color: rgba(128, 128, 128, 
 
 .hero.hero-horizon {
   --hero-frame-height: 100svh;
-  --hero-scroll-runway: 65svh;
+  --hero-scroll-runway: 18svh;
   min-height: calc(var(--hero-frame-height) + var(--hero-scroll-runway));
   padding: 0;
   overflow: visible;
@@ -2340,7 +2340,7 @@ html[data-theme="light"] .vision-map::after {
 @media (max-width: 780px) and (orientation: portrait) {
   .hero.hero-horizon {
     --hero-frame-height: 100svh;
-    --hero-scroll-runway: 85svh;
+    --hero-scroll-runway: 18svh;
   }
   .hero-frame {
     position: sticky;
@@ -2368,7 +2368,7 @@ html[data-theme="light"] .vision-map::after {
   .hero-horizon .hero-intro { font-size: 0.9rem; }
 }
 @media (orientation: landscape) and (max-height: 480px) and (max-width: 960px) {
-  .hero.hero-horizon { --hero-frame-height: 100svh; --hero-scroll-runway: 65svh; }
+  .hero.hero-horizon { --hero-frame-height: 100svh; --hero-scroll-runway: 18svh; }
   .hero-frame { position: sticky; top: 0; height: 100svh; min-height: 0; padding: 5rem var(--gutter) 1rem; }
   .hero-horizon .hero-copy { width: 44%; }
   .hero-visual { position: absolute; top: 4.5rem; right: var(--gutter); left: auto; width: 48%; height: calc(100% - 5rem); min-height: 0; margin: 0; }

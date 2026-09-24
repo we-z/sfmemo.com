@@ -134,7 +134,7 @@ async function initialize() {
   function updateScroll(requestFrame = true) {
     const t = reduced.matches ? 0 : clamp((scrollY - heroTop) / (travel * 0.82), 0, 1);
     const progress = t * t * (3 - 2 * t);
-    if (!drag) target.set(-progress * 0.72 + offset.x, progress * 1.12 + offset.y);
+    if (!drag) target.set(-progress * 0.38 + offset.x, progress * 0.6 + offset.y);
     const phase = reduced.matches ? 0 : clamp(((scrollY - heroTop) / travel - 0.08) / 0.52, 0, 1);
     const departure = phase * phase * (3 - 2 * phase);
     copy.style.opacity = `${1 - departure}`;
