@@ -48,6 +48,7 @@ async function initialize() {
   const current = new THREE.Vector2(0, 0);
   const target = current.clone();
   const offset = new THREE.Vector2();
+  const maxRotationSpeed = THREE.MathUtils.degToRad(240) / 1000;
   let drag = null, frame = 0, visible = true, initialized = false;
   let tapCandidate = null, tapStarted = null;
   let heroTop = 0, travel = 1;
@@ -61,14 +62,18 @@ async function initialize() {
   let departure = 0, targetDeparture = 0;
   function render(now = performance.now()) {
     frame = 0;
-    if (!visible || document.hidden) return;
+    if (!visible || document.hidden) { lastFrameTime = 0; return; }
     if (scrollDirty) { scrollDirty = false; updateScroll(false); }
-    const dt = lastFrameTime ? Math.min(now - lastFrameTime, 32) : 1000 / 60;
+    const dt = lastFrameTime ? clamp(now - lastFrameTime, 0, 32) : 0;
     lastFrameTime = now;
     // Brief, refresh-rate-independent settling fills gaps between native scroll samples.
     const blend = reduced.matches ? 1 : 1 - Math.exp(-dt / (drag ? 40 : 32));
     const rotationChanged = current.distanceToSquared(target) > 0.00000001;
-    if (rotationChanged) current.lerp(target, blend);
+    if (rotationChanged) {
+      // Follow native scrolling without letting a fast swipe skip the visible turn.
+      const rotationBlend = drag || reduced.matches ? blend : Math.min(blend, maxRotationSpeed * dt / current.distanceTo(target));
+      current.lerp(target, rotationBlend);
+    }
     else current.copy(target);
     departure += (targetDeparture - departure) * blend;
     if (Math.abs(targetDeparture - departure) < 0.0001) departure = targetDeparture;
@@ -106,7 +111,12 @@ async function initialize() {
     if (current.distanceToSquared(target) > 0.00000001 || departure !== targetDeparture || tapStarted !== null) schedule();
     else lastFrameTime = 0;
   }
-  function schedule() { if (initialized && !frame && visible && !document.hidden) frame = requestAnimationFrame(render); }
+  function schedule() {
+    if (initialized && !frame && visible && !document.hidden) {
+      if (!lastFrameTime) lastFrameTime = performance.now();
+      frame = requestAnimationFrame(render);
+    }
+  }
   function updateScroll(requestFrame = true) {
     const t = reduced.matches ? 0 : clamp((scrollY - heroTop) / travel, 0, 1);
     const progress = t * t * (3 - 2 * t);
@@ -167,6 +177,9 @@ async function initialize() {
   surface.addEventListener('pointerleave', () => { tapCandidate = null; }, { passive: true });
   canvas.addEventListener('pointerdown', event => {
     if (!initialized || nativeScroll.matches || event.pointerType !== 'mouse' || event.button !== 0 || !hitsChip(event)) return;
+    // Grab the displayed pose even while it is catching up with a scroll target.
+    offset.add(current.clone().sub(target));
+    target.copy(current);
     drag = { id: event.pointerId, x: event.clientX, y: event.clientY, rotation: target.clone(), offset: offset.clone() };
     canvas.setPointerCapture(event.pointerId);
     surface.dataset.dragging = 'true';
@@ -194,10 +207,10 @@ async function initialize() {
   window.addEventListener('scroll', () => { tapCandidate = null; scrollDirty = true; schedule(); }, { passive: true });
   nativeScroll.addEventListener('change', () => { release(); offset.set(0, 0); resize(); });
   reduced.addEventListener('change', () => { resize(); });
-  document.addEventListener('visibilitychange', schedule);
+  document.addEventListener('visibilitychange', () => { lastFrameTime = 0; schedule(); });
   const sizing = new ResizeObserver(resize);
   sizing.observe(surface); sizing.observe(heroFrame); sizing.observe(intro);
-  new IntersectionObserver(entries => { visible = entries[0].isIntersecting; if (visible) updateScroll(); }).observe(surface);
+  new IntersectionObserver(entries => { visible = entries[0].isIntersecting; lastFrameTime = 0; if (visible) updateScroll(); }).observe(surface);
   canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); surface.classList.remove('chip-3d-ready'); });
   canvas.addEventListener('webglcontextrestored', () => { resize(); surface.classList.add('chip-3d-ready'); });
   // Reload can restore the scroll position after module initialization.

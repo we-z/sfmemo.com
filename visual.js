@@ -1,4 +1,4 @@
-import("./chip-3d.js?v=18").catch(() => document.documentElement.classList.remove("chip-webgl-pending"));
+import("./chip-3d.js?v=19").catch(() => document.documentElement.classList.remove("chip-webgl-pending"));
 // Initialize below-fold scenes only as they enter view, after the hero releases.
 function loadScene(selector, module) {
   const surface = document.querySelector(selector);
