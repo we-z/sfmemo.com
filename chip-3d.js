@@ -90,7 +90,7 @@ async function initialize() {
   }
   root.add(pads);
 
-  const current = new THREE.Vector2(-0.09, -0.17);
+  const current = new THREE.Vector2(0.18, 0.46);
   const target = current.clone();
   const offset = new THREE.Vector2();
   let drag = null, frame = 0, visible = true;
@@ -106,9 +106,9 @@ async function initialize() {
   }
   function schedule() { if (!frame && visible && !document.hidden) frame = requestAnimationFrame(render); }
   function updateScroll() {
-    const t = reduced.matches ? 0 : clamp((scrollY - heroTop) / travel, 0, 1);
+    const t = reduced.matches ? 0 : clamp((scrollY - heroTop) / (travel * 0.82), 0, 1);
     const progress = t * t * (3 - 2 * t);
-    if (!drag) target.set(-0.09 + progress * 0.18 + offset.x, -0.17 + progress * 0.35 + offset.y);
+    if (!drag) target.set(0.18 - progress * 0.08 + offset.x, 0.46 - progress * 1.28 + offset.y);
     schedule();
   }
   function resize() {
@@ -121,7 +121,9 @@ async function initialize() {
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     renderer.setSize(rect.width, rect.height, false);
     heroTop = hero.getBoundingClientRect().top + scrollY;
-    travel = Math.max(innerHeight * 0.85, hero.offsetHeight - innerHeight);
+    travel = Math.max(1, nativeScroll.matches
+      ? rect.bottom + scrollY - heroTop
+      : hero.offsetHeight - innerHeight);
     updateScroll();
   }
   const raycaster = new THREE.Raycaster();
@@ -162,7 +164,15 @@ async function initialize() {
   new IntersectionObserver(entries => { visible = entries[0].isIntersecting; if (visible) updateScroll(); }).observe(surface);
   canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); surface.classList.remove('chip-3d-ready'); });
   canvas.addEventListener('webglcontextrestored', () => { resize(); surface.classList.add('chip-3d-ready'); });
-  resize(); render();
+  // Reload can restore the scroll position after module initialization.
+  // Reveal only after that position has settled, already at its matching angle.
+  if (document.readyState !== 'complete') await new Promise(resolve => window.addEventListener('load', resolve, { once: true }));
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  resize(); current.copy(target); render();
   surface.classList.add('chip-3d-ready');
+  document.documentElement.classList.remove('chip-webgl-pending');
 }
-if (canvas && fallback) initialize().catch(error => console.warn('Chip 3D fallback:', error));
+if (canvas && fallback) initialize().catch(error => {
+  document.documentElement.classList.remove('chip-webgl-pending');
+  console.warn('Chip 3D fallback:', error);
+});

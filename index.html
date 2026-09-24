@@ -7,6 +7,7 @@
   <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg?v=green-1">
   <script>
     (() => {
+      document.documentElement.classList.add("chip-webgl-pending");
       let theme = "dark";
       try {
         const savedTheme = localStorage.getItem("sfmemo-theme");
@@ -93,8 +94,9 @@
       ]
     }
   </script>
-  <link rel="stylesheet" href="/styles.css?v=107">
-  <script type="module" src="/visual.js?v=111"></script>
+  <link rel="preload" href="/chip-marking.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="/styles.css?v=108">
+  <script type="module" src="/visual.js?v=112"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>

@@ -2374,3 +2374,5 @@ html[data-theme="light"] .vision-map::after {
 @media (max-width: 780px), (hover: none) and (pointer: coarse) {
   .hero-visual #hero-canvas { pointer-events: none; }
 }
+
+.chip-webgl-pending .hero-chip { visibility: hidden; }
