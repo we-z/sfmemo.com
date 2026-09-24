@@ -34,10 +34,16 @@ async function initialize() {
   ctx.fillRect(0, 0, 1450, 1000);
   let seed = 42;
   const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
-  for (let i = 0; i < 240000; i++) {
-    ctx.fillStyle = `rgba(180,180,180,${random() * 0.09})`;
-    ctx.fillRect(random() * 1450, random() * 1000, 1.5, 1.5);
+  // Grain is a single pixel upload, avoiding hundreds of thousands of draw calls.
+  function grain(amount) {
+    const pixels = ctx.getImageData(0, 0, 1450, 1000);
+    for (let i = 0; i < pixels.data.length; i += 4) {
+      const noise = (random() - 0.5) * amount;
+      for (let channel = 0; channel < 3; channel++) pixels.data[i + channel] += noise;
+    }
+    ctx.putImageData(pixels, 0, 0);
   }
+  grain(10);
   ctx.fillStyle = '#73746e';
   ctx.textBaseline = 'top';
   const label = (text, x, y, size) => {
@@ -66,11 +72,8 @@ async function initialize() {
   dot.addColorStop(1, '#353737');
   ctx.fillStyle = dot;
   ctx.beginPath(); ctx.arc(94, 890, 20, 0, Math.PI * 2); ctx.fill();
-  // Grain crosses the etched markings, with no text shadow.
-  for (let i = 0; i < 180000; i++) {
-    ctx.fillStyle = `rgba(15,16,16,${random() * 0.28})`;
-    ctx.fillRect(random() * 1450, random() * 1000, 1.4, 1.4);
-  }
+  // The same fine grain continues through the laser markings.
+  grain(7);
   // Molded rim remains visible even when the package faces the camera.
   ctx.strokeStyle = '#373a3b'; ctx.lineWidth = 7;
   ctx.strokeRect(4, 4, 1442, 992);
@@ -101,41 +104,57 @@ async function initialize() {
   let drag = null, frame = 0, visible = true;
   let heroTop = 0, travel = 1;
   const hero = document.querySelector('.hero-horizon');
-  const meta = hero.querySelector('.hero-meta');
+  const copy = hero.querySelector('.hero-copy');
+  const heroFrame = hero.querySelector('.hero-frame');
+  let aspect = 1, baseViewWidth = 8.05, lastViewWidth = 0;
+  let width = 0, height = 0, pixelRatio = 0;
   let scrollDirty = false;
   function render() {
     frame = 0;
     if (!visible || document.hidden) return;
-    if (scrollDirty) { scrollDirty = false; updateScroll(); }
-    current.lerp(target, reduced.matches || (nativeScroll.matches && !drag) ? 1 : drag ? 0.34 : 0.115);
+    if (scrollDirty) { scrollDirty = false; updateScroll(false); }
+    current.lerp(target, drag ? 0.34 : 1);
     root.rotation.set(current.x, current.y, 0);
+    root.updateMatrix();
+    // Fit the actual rotated package bounds, including the substrate and thickness.
+    const m = root.matrix.elements;
+    const projectedWidth = Math.abs(m[0]) * 5.94 + Math.abs(m[4]) * 4.14 + Math.abs(m[8]) * 0.46;
+    const projectedHeight = Math.abs(m[1]) * 5.94 + Math.abs(m[5]) * 4.14 + Math.abs(m[9]) * 0.46;
+    const viewWidth = Math.max(baseViewWidth, projectedWidth * 1.12, projectedHeight * aspect * 1.12);
+    if (Math.abs(viewWidth - lastViewWidth) > 0.00001) {
+      lastViewWidth = viewWidth;
+      camera.left = -viewWidth / 2; camera.right = viewWidth / 2;
+      camera.top = viewWidth / aspect / 2; camera.bottom = -camera.top;
+      camera.updateProjectionMatrix();
+    }
     renderer.render(scene, camera);
     if (current.distanceTo(target) > 0.0001) schedule();
   }
   function schedule() { if (!frame && visible && !document.hidden) frame = requestAnimationFrame(render); }
-  function updateScroll() {
+  function updateScroll(requestFrame = true) {
     const t = reduced.matches ? 0 : clamp((scrollY - heroTop) / (travel * 0.82), 0, 1);
     const progress = t * t * (3 - 2 * t);
     if (!drag) target.set(-progress * 0.72 + offset.x, progress * 1.12 + offset.y);
-    if (nativeScroll.matches && meta) {
-      const phase = reduced.matches ? 0 : clamp(((scrollY - heroTop) / travel - 0.22) / 0.62, 0, 1);
-      const departure = phase * phase * (3 - 2 * phase);
-      meta.style.opacity = `${1 - departure}`;
-      meta.style.transform = `translate3d(0, ${-30 * departure}px, 0)`;
-    } else if (meta) { meta.style.removeProperty('opacity'); meta.style.removeProperty('transform'); }
-    schedule();
+    const phase = reduced.matches ? 0 : clamp(((scrollY - heroTop) / travel - 0.08) / 0.52, 0, 1);
+    const departure = phase * phase * (3 - 2 * phase);
+    copy.style.opacity = `${1 - departure}`;
+    copy.style.transform = `translate3d(0, ${-80 * departure}px, 0)`;
+    if (requestFrame) schedule();
   }
   function resize() {
     const rect = surface.getBoundingClientRect();
-    const aspect = rect.width / Math.max(rect.height, 1);
-    const viewWidth = Math.max(nativeScroll.matches ? 6.45 : 8.05, 4.6 * aspect);
-    camera.left = -viewWidth / 2; camera.right = viewWidth / 2;
-    camera.top = viewWidth / aspect / 2; camera.bottom = -camera.top;
-    camera.updateProjectionMatrix();
-    renderer.setPixelRatio(Math.min(devicePixelRatio, nativeScroll.matches ? 1.5 : 2));
-    renderer.setSize(rect.width, rect.height, false);
+    aspect = rect.width / Math.max(rect.height, 1);
+    baseViewWidth = nativeScroll.matches ? 6.7 : 8.05;
+    lastViewWidth = 0;
+    const nextRatio = Math.min(devicePixelRatio, nativeScroll.matches ? 1.5 : 2);
+    if (pixelRatio !== nextRatio || width !== rect.width || height !== rect.height) {
+      pixelRatio = nextRatio; width = rect.width; height = rect.height;
+      renderer.setPixelRatio(pixelRatio);
+      renderer.setSize(width, height, false);
+    }
     heroTop = hero.getBoundingClientRect().top + scrollY;
-    travel = Math.max(1, hero.offsetHeight - hero.querySelector(".hero-frame").offsetHeight);
+    const pinnedTravel = hero.offsetHeight - heroFrame.offsetHeight;
+    travel = Math.max(1, pinnedTravel > 1 ? pinnedTravel : hero.offsetHeight);
     updateScroll();
   }
   const raycaster = new THREE.Raycaster();
@@ -170,9 +189,10 @@ async function initialize() {
   canvas.addEventListener('dblclick', () => { offset.set(0, 0); updateScroll(); });
   window.addEventListener('scroll', () => { scrollDirty = true; schedule(); }, { passive: true });
   nativeScroll.addEventListener('change', () => { release(); offset.set(0, 0); resize(); });
-  reduced.addEventListener('change', updateScroll);
+  reduced.addEventListener('change', () => { resize(); });
   document.addEventListener('visibilitychange', schedule);
-  new ResizeObserver(resize).observe(surface);
+  const sizing = new ResizeObserver(resize);
+  sizing.observe(surface); sizing.observe(heroFrame);
   new IntersectionObserver(entries => { visible = entries[0].isIntersecting; if (visible) updateScroll(); }).observe(surface);
   canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); surface.classList.remove('chip-3d-ready'); });
   canvas.addEventListener('webglcontextrestored', () => { resize(); surface.classList.add('chip-3d-ready'); });

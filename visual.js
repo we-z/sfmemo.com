@@ -1,6 +1,17 @@
-import("./chip-3d.js?v=7").catch(() => document.documentElement.classList.remove("chip-webgl-pending"));
-import "./systolic-array.js?v=42";
-import "./vision-map.js?v=8";
+import("./chip-3d.js?v=8").catch(() => document.documentElement.classList.remove("chip-webgl-pending"));
+// Initialize below-fold scenes only as they enter view, after the hero releases.
+function loadScene(selector, module) {
+  const surface = document.querySelector(selector);
+  if (!surface) return;
+  const observer = new IntersectionObserver(entries => {
+    if (!entries.some(entry => entry.isIntersecting)) return;
+    observer.disconnect();
+    import(module).catch(error => console.warn('Scene unavailable:', error));
+  });
+  observer.observe(surface);
+}
+loadScene('.approach-systolic', './systolic-array.js?v=42');
+loadScene('.vision-map', './vision-map.js?v=8');
 
 const hero = document.querySelector(".hero-horizon");
 const heroFrame = hero?.querySelector(".hero-frame");
@@ -90,7 +101,6 @@ function updateScrollMotion() {
   const documentHeight = Math.max(document.documentElement.scrollHeight - viewportHeight, 1);
 
   const allElements = [
-    motionScenes.hero,
     motionScenes.approach,
     motionScenes.vision,
     motionScenes.visionMap,
@@ -105,28 +115,10 @@ function updateScrollMotion() {
       height: bounds.height,
     });
   });
-  const frameHeight = heroFrame?.offsetHeight || viewportHeight;
 
   setMotionVariable("--scroll-progress", unit(clamp01(targetScroll / documentHeight)));
   setMotionVariable("--page-grid-x", px(-visualScroll * 0.012));
   setMotionVariable("--page-grid-y", px(-visualScroll * 0.028));
-
-  if (motionScenes.hero) {
-    const heroMetrics = measurements.get(motionScenes.hero);
-    const heroRange = Math.max(heroMetrics.height - frameHeight, 1);
-    const heroProgress = clamp01((visualScroll - heroMetrics.top) / heroRange);
-    const departureStart = mobile ? 0.08 : 0.22;
-    const departureEnd = mobile ? 0.62 : 1;
-    const metaStart = mobile ? 0.04 : 0.22;
-    const metaEnd = mobile ? 0.3 : 0.84;
-    const departure = smoothstep(clamp01((heroProgress - departureStart) / (departureEnd - departureStart)));
-    const metaDeparture = smoothstep(clamp01((heroProgress - metaStart) / (metaEnd - metaStart)));
-
-    setMotionVariable("--hero-eyebrow-y", px(-18 * departure * amplitude), motionScenes.hero);
-    setMotionVariable("--hero-eyebrow-opacity", unit(1 - metaDeparture * 0.88), motionScenes.hero);
-    setMotionVariable("--hero-meta-y", px(-30 * metaDeparture * amplitude), motionScenes.hero);
-    setMotionVariable("--hero-meta-opacity", unit(1 - metaDeparture), motionScenes.hero);
-  }
 
   if (motionScenes.approach) {
     const approachMetrics = measurements.get(motionScenes.approach);
