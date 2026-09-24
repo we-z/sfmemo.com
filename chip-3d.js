@@ -109,7 +109,7 @@ async function initialize() {
   function updateScroll(requestFrame = true) {
     const t = reduced.matches ? 0 : clamp((scrollY - heroTop) / (travel * 0.82), 0, 1);
     const progress = t * t * (3 - 2 * t);
-    if (!drag) target.set(-progress * 0.20 + offset.x, progress * 0.32 + offset.y);
+    if (!drag) target.set(offset.x, progress * Math.PI + offset.y);
     const phase = reduced.matches ? 0 : clamp(((scrollY - heroTop) / travel - 0.08) / 0.52, 0, 1);
     targetDeparture = phase * phase * (3 - 2 * phase);
     if (requestFrame) schedule();
