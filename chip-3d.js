@@ -9,7 +9,7 @@ const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
 async function initialize() {
   // Use the same baked artwork without generating millions of pixels during page load.
-  const texture = await new THREE.TextureLoader().loadAsync('./chip-surface.webp');
+  const texture = await new THREE.TextureLoader().loadAsync('./chip-surface.png');
   await texture.image.decode();
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
   renderer.setClearColor(0, 0);
@@ -91,7 +91,7 @@ async function initialize() {
   function updateScroll(requestFrame = true) {
     const t = reduced.matches ? 0 : clamp((scrollY - heroTop) / (travel * 0.82), 0, 1);
     const progress = t * t * (3 - 2 * t);
-    if (!drag) target.set(-progress * 0.38 + offset.x, progress * 0.6 + offset.y);
+    if (!drag) target.set(-progress * 0.20 + offset.x, progress * 0.32 + offset.y);
     const phase = reduced.matches ? 0 : clamp(((scrollY - heroTop) / travel - 0.08) / 0.52, 0, 1);
     targetDeparture = phase * phase * (3 - 2 * phase);
     if (requestFrame) schedule();
@@ -102,7 +102,7 @@ async function initialize() {
     baseViewWidth = nativeScroll.matches ? 6.7 : 8.05;
     lastViewWidth = 0;
     needsRender = true;
-    const nextRatio = Math.min(devicePixelRatio, nativeScroll.matches ? 1.5 : 2);
+    const nextRatio = Math.min(devicePixelRatio, 2);
     if (pixelRatio !== nextRatio || width !== rect.width || height !== rect.height) {
       pixelRatio = nextRatio; width = rect.width; height = rect.height;
       renderer.setPixelRatio(pixelRatio);
