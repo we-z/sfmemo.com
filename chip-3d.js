@@ -45,14 +45,14 @@ async function initialize() {
     ctx.fillText(text, x, y);
   };
   label('sfmemo', 72, 65, 181);
-  label('SFM8H256A', 72, 320, 151);
-  label('CA01 / 2609', 72, 500, 151);
-  label('DTAHJM0042', 72, 690, 85);
-  label('Made in California', 135, 840, 97);
+  label('SFM8H256A', 72, 320, 113);
+  label('CA01 / 2609', 72, 465, 113);
+  label('DTAHJM0042', 72, 635, 64);
+  label('Made in California', 135, 856, 73);
   ctx.save();
   ctx.translate(1390, 360);
   ctx.rotate(Math.PI / 2);
-  label('B4 0836', 0, 0, 161);
+  label('B4 0836', 0, 0, 121);
   ctx.restore();
   const matrix = fallback.querySelector('.hero-chip-matrix');
   ctx.save();
@@ -108,7 +108,7 @@ async function initialize() {
   function updateScroll() {
     const t = reduced.matches ? 0 : clamp((scrollY - heroTop) / (travel * 0.82), 0, 1);
     const progress = t * t * (3 - 2 * t);
-    if (!drag) target.set(progress * 0.1 + offset.x, -progress * 0.82 + offset.y);
+    if (!drag) target.set(progress * 0.42 + offset.x, -progress * 0.82 + offset.y);
     schedule();
   }
   function resize() {

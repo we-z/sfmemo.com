@@ -2311,7 +2311,7 @@ html[data-theme="light"] .vision-map::after {
   position: absolute;
   top: 32%;
   left: 5%;
-  font-size: 7.5cqw;
+  font-size: 5.6cqw;
   line-height: 1.2;
   letter-spacing: 0.055em;
 }
@@ -2321,7 +2321,7 @@ html[data-theme="light"] .vision-map::after {
   top: 36%;
   right: 4%;
   writing-mode: vertical-rl;
-  font-size: 8cqw;
+  font-size: 6cqw;
   line-height: 1;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -2331,7 +2331,7 @@ html[data-theme="light"] .vision-map::after {
   position: absolute;
   left: 5%;
   bottom: 23%;
-  font-size: 4.2cqw;
+  font-size: 3.15cqw;
   line-height: 1;
   letter-spacing: 0.09em;
 }
@@ -2344,7 +2344,7 @@ html[data-theme="light"] .vision-map::after {
   display: flex;
   align-items: center;
   gap: 3%;
-  font-size: 4.8cqw;
+  font-size: 3.6cqw;
   white-space: nowrap;
 }
 
