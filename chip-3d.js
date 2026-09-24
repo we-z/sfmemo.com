@@ -8,12 +8,14 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
 async function initialize() {
-  // Use the same baked artwork without generating millions of pixels during page load.
-  const texture = await new THREE.TextureLoader().loadAsync('./chip-surface.png');
+  // Native 4K lettering and surface detail are baked offline, never during scrolling.
+  const texture = await new THREE.TextureLoader().loadAsync('./chip-surface-4k.webp');
   await texture.image.decode();
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
   renderer.setClearColor(0, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  const gl = renderer.getContext();
+  const maxBufferSide = Math.min(4096, gl.getParameter(gl.MAX_RENDERBUFFER_SIZE), ...gl.getParameter(gl.MAX_VIEWPORT_DIMS));
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
   camera.position.z = 12;
@@ -31,13 +33,13 @@ async function initialize() {
   scene.add(key);
 
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
   const side = new THREE.MeshStandardMaterial({ color: 0x171a19, roughness: 0.92 });
   const front = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.96, metalness: 0 });
   const body = new THREE.Mesh(new THREE.BoxGeometry(5.8, 4, 0.28), [side, side, side, side, front, side]);
   root.add(body);
   // Solder balls sit directly in the package's rear face, with no backing plate.
-  const balls = new THREE.InstancedMesh(new THREE.SphereGeometry(0.065, 12, 8), new THREE.MeshStandardMaterial({ color: 0xa6a7a5, metalness: 0.75, roughness: 0.35 }), 384);
+  const balls = new THREE.InstancedMesh(new THREE.SphereGeometry(0.065, 24, 16), new THREE.MeshStandardMaterial({ color: 0xa6a7a5, metalness: 0.75, roughness: 0.35 }), 384);
   const placement = new THREE.Object3D();
   for (let y = 0; y < 16; y++) for (let x = 0; x < 24; x++) {
     placement.position.set((x - 11.5) * 0.22, (y - 7.5) * 0.22, -0.195);
@@ -57,7 +59,7 @@ async function initialize() {
   const meta = hero.querySelector('.hero-meta');
   const heroFrame = hero.querySelector('.hero-frame');
   let aspect = 1, baseViewWidth = 8.05, horizontalMargin = 1.12, verticalMargin = 1.12;
-  let width = 0, height = 0, pixelRatio = 0;
+  let width = 0, height = 0, resolutionScale = 0, resolutionTimer = 0;
   let scrollDirty = false, lastFrameTime = 0, needsRender = true;
   let departure = 0, targetDeparture = 0;
   function render(now = performance.now()) {
@@ -125,6 +127,22 @@ async function initialize() {
     targetDeparture = phase * phase * (3 - 2 * phase);
     if (requestFrame) schedule();
   }
+  function updateResolution() {
+    if (!width || !height) return;
+    resolutionScale = devicePixelRatio * (window.visualViewport?.scale || 1);
+    // Redraw detail for Retina and pinch zoom, bounded by GPU size and memory.
+    const ratio = Math.min(resolutionScale, 6, Math.sqrt(6000000 / (width * height)), maxBufferSide / width, maxBufferSide / height);
+    if (canvas.width === Math.floor(width * ratio) && canvas.height === Math.floor(height * ratio)) return;
+    renderer.setDrawingBufferSize(width, height, ratio);
+    needsRender = true;
+    schedule();
+  }
+  function queueResolutionUpdate() {
+    clearTimeout(resolutionTimer);
+    if (devicePixelRatio * (window.visualViewport?.scale || 1) === resolutionScale) return;
+    // Allocate once when zoom settles, rather than on every pinch sample.
+    resolutionTimer = setTimeout(updateResolution, 120);
+  }
   function resize() {
     const rect = surface.getBoundingClientRect();
     aspect = rect.width / Math.max(rect.height, 1);
@@ -138,12 +156,8 @@ async function initialize() {
     camera.aspect = aspect;
     camera.updateProjectionMatrix();
     needsRender = true;
-    const nextRatio = Math.min(devicePixelRatio, 2);
-    if (pixelRatio !== nextRatio || width !== rect.width || height !== rect.height) {
-      pixelRatio = nextRatio; width = rect.width; height = rect.height;
-      renderer.setPixelRatio(pixelRatio);
-      renderer.setSize(width, height, false);
-    }
+    width = rect.width; height = rect.height;
+    updateResolution();
     heroTop = hero.getBoundingClientRect().top + scrollY;
     const pinnedTravel = hero.offsetHeight - heroFrame.offsetHeight;
     travel = Math.max(1, pinnedTravel > 1 ? pinnedTravel : hero.offsetHeight);
@@ -204,6 +218,8 @@ async function initialize() {
   window.addEventListener('blur', () => { tapCandidate = null; release(); });
   canvas.addEventListener('dblclick', () => { tapStarted = null; needsRender = true; offset.set(0, 0); updateScroll(); });
   window.addEventListener('scroll', () => { tapCandidate = null; scrollDirty = true; schedule(); }, { passive: true });
+  window.addEventListener('resize', queueResolutionUpdate, { passive: true });
+  window.visualViewport?.addEventListener('resize', queueResolutionUpdate, { passive: true });
   nativeScroll.addEventListener('change', () => { release(); offset.set(0, 0); resize(); });
   reduced.addEventListener('change', () => { resize(); });
   document.addEventListener('visibilitychange', () => { lastFrameTime = 0; schedule(); });
