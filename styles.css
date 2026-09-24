@@ -2318,12 +2318,12 @@ html[data-theme="light"] .vision-map::after {
 
 .hero-chip-trace-side {
   position: absolute;
-  top: 39%;
-  right: 5%;
+  top: 36%;
+  right: 4%;
   writing-mode: vertical-rl;
-  font-size: 5.8cqw;
+  font-size: 8cqw;
   line-height: 1;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 
