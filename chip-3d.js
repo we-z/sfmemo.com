@@ -52,9 +52,10 @@ async function initialize() {
   let tapCandidate = null, tapStarted = null;
   let heroTop = 0, travel = 1;
   const hero = document.querySelector('.hero-horizon');
+  const intro = hero.querySelector('.hero-intro');
   const meta = hero.querySelector('.hero-meta');
   const heroFrame = hero.querySelector('.hero-frame');
-  let aspect = 1, baseViewWidth = 8.05, verticalMargin = 1.12;
+  let aspect = 1, baseViewWidth = 8.05, horizontalMargin = 1.12, verticalMargin = 1.12;
   let width = 0, height = 0, pixelRatio = 0;
   let scrollDirty = false, lastFrameTime = 0, needsRender = true;
   let departure = 0, targetDeparture = 0;
@@ -93,7 +94,7 @@ async function initialize() {
     for (const corner of packageCorners) {
       projectedCorner.copy(corner).applyMatrix4(root.matrix);
       distance = Math.max(distance,
-        projectedCorner.z + Math.abs(projectedCorner.x) * 1.12 / tanHorizontal,
+        projectedCorner.z + Math.abs(projectedCorner.x) * horizontalMargin / tanHorizontal,
         projectedCorner.z + Math.abs(projectedCorner.y) * verticalMargin / tanHalfFov);
     }
     if (Math.abs(distance - camera.position.z) > 0.00001) {
@@ -117,9 +118,12 @@ async function initialize() {
   function resize() {
     const rect = surface.getBoundingClientRect();
     aspect = rect.width / Math.max(rect.height, 1);
-    baseViewWidth = nativeScroll.matches ? 6.7 : 8.05;
+    const faceWidth = Math.max(1, Math.min(intro.getBoundingClientRect().width, rect.width - 2));
+    horizontalMargin = rect.width / faceWidth;
+    baseViewWidth = 5.8 * horizontalMargin;
+    fallback.style.width = `${faceWidth}px`;
     // The mobile canvas sits low in the hero. Leave room below its nearest corner.
-    const roomBelow = heroFrame.getBoundingClientRect().bottom - 16 - (rect.top + rect.height / 2);
+    const roomBelow = heroFrame.getBoundingClientRect().bottom - 8 - (rect.top + rect.height / 2);
     verticalMargin = nativeScroll.matches ? Math.max(1.12, rect.height / 2 / Math.max(16, roomBelow)) : 1.12;
     camera.aspect = aspect;
     camera.updateProjectionMatrix();
@@ -192,7 +196,7 @@ async function initialize() {
   reduced.addEventListener('change', () => { resize(); });
   document.addEventListener('visibilitychange', schedule);
   const sizing = new ResizeObserver(resize);
-  sizing.observe(surface); sizing.observe(heroFrame);
+  sizing.observe(surface); sizing.observe(heroFrame); sizing.observe(intro);
   new IntersectionObserver(entries => { visible = entries[0].isIntersecting; if (visible) updateScroll(); }).observe(surface);
   canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); surface.classList.remove('chip-3d-ready'); });
   canvas.addEventListener('webglcontextrestored', () => { resize(); surface.classList.add('chip-3d-ready'); });
