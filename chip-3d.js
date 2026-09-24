@@ -8,7 +8,9 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
 async function initialize() {
-  await document.fonts.load('100px "Chip Marking"');
+  // Use the same baked artwork without generating millions of pixels during page load.
+  const texture = await new THREE.TextureLoader().loadAsync('./chip-surface.webp');
+  await texture.image.decode();
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
   renderer.setClearColor(0, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -22,64 +24,6 @@ async function initialize() {
   key.position.set(-3, 5, 8);
   scene.add(key);
 
-  // Bake the existing package layout into the material, not floating geometry.
-  const textureCanvas = document.createElement('canvas');
-  textureCanvas.width = 1450;
-  textureCanvas.height = 1000;
-  const ctx = textureCanvas.getContext('2d');
-  const gradient = ctx.createLinearGradient(0, 0, 1450, 1000);
-  gradient.addColorStop(0, '#242526');
-  gradient.addColorStop(1, '#121314');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 1450, 1000);
-  let seed = 42;
-  const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
-  // Grain is a single pixel upload, avoiding hundreds of thousands of draw calls.
-  function grain(amount) {
-    const pixels = ctx.getImageData(0, 0, 1450, 1000);
-    for (let i = 0; i < pixels.data.length; i += 4) {
-      const noise = (random() - 0.5) * amount;
-      for (let channel = 0; channel < 3; channel++) pixels.data[i + channel] += noise;
-    }
-    ctx.putImageData(pixels, 0, 0);
-  }
-  grain(10);
-  ctx.fillStyle = '#73746e';
-  ctx.textBaseline = 'top';
-  const label = (text, x, y, size) => {
-    ctx.font = `${size}px "Chip Marking"`;
-    ctx.fillText(text, x, y);
-  };
-  label('sfmemo', 72, 65, 181);
-  label('SFM8H256A', 72, 320, 113);
-  label('CA01 / 2609', 72, 465, 113);
-  label('DTAHJM0042', 72, 635, 64);
-  label('Made in California', 135, 856, 73);
-  ctx.save();
-  ctx.translate(1390, 395);
-  ctx.rotate(Math.PI / 2);
-  label('B4 0836', 0, 0, 121);
-  ctx.restore();
-  const matrix = fallback.querySelector('.hero-chip-matrix');
-  ctx.save();
-  ctx.translate(1168, 20);
-  ctx.scale(260 / 52, 260 / 52);
-  ctx.fill(new Path2D(matrix.querySelector('path').getAttribute('d')));
-  ctx.restore();
-  const dot = ctx.createRadialGradient(91, 882, 3, 94, 890, 21);
-  dot.addColorStop(0, '#101112');
-  dot.addColorStop(0.8, '#171819');
-  dot.addColorStop(1, '#353737');
-  ctx.fillStyle = dot;
-  ctx.beginPath(); ctx.arc(94, 890, 20, 0, Math.PI * 2); ctx.fill();
-  // The same fine grain continues through the laser markings.
-  grain(7);
-  // Molded rim remains visible even when the package faces the camera.
-  ctx.strokeStyle = '#373a3b'; ctx.lineWidth = 7;
-  ctx.strokeRect(4, 4, 1442, 992);
-  ctx.strokeStyle = '#101212'; ctx.lineWidth = 5;
-  ctx.strokeRect(13, 13, 1424, 974);
-  const texture = new THREE.CanvasTexture(textureCanvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   const side = new THREE.MeshStandardMaterial({ color: 0x171a19, roughness: 0.92 });
@@ -101,19 +45,30 @@ async function initialize() {
   const current = new THREE.Vector2(0, 0);
   const target = current.clone();
   const offset = new THREE.Vector2();
-  let drag = null, frame = 0, visible = true;
+  let drag = null, frame = 0, visible = true, initialized = false;
   let heroTop = 0, travel = 1;
   const hero = document.querySelector('.hero-horizon');
   const meta = hero.querySelector('.hero-meta');
   const heroFrame = hero.querySelector('.hero-frame');
   let aspect = 1, baseViewWidth = 8.05, lastViewWidth = 0;
   let width = 0, height = 0, pixelRatio = 0;
-  let scrollDirty = false;
-  function render() {
+  let scrollDirty = false, lastFrameTime = 0, needsRender = true;
+  let departure = 0, targetDeparture = 0;
+  function render(now = performance.now()) {
     frame = 0;
     if (!visible || document.hidden) return;
     if (scrollDirty) { scrollDirty = false; updateScroll(false); }
-    current.lerp(target, drag ? 0.34 : 1);
+    const dt = lastFrameTime ? Math.min(now - lastFrameTime, 32) : 1000 / 60;
+    lastFrameTime = now;
+    // Brief, refresh-rate-independent settling fills gaps between native scroll samples.
+    const blend = reduced.matches ? 1 : 1 - Math.exp(-dt / (drag ? 40 : 32));
+    const rotationChanged = current.distanceToSquared(target) > 0.00000001;
+    if (rotationChanged) current.lerp(target, blend);
+    else current.copy(target);
+    departure += (targetDeparture - departure) * blend;
+    if (Math.abs(targetDeparture - departure) < 0.0001) departure = targetDeparture;
+    meta.style.opacity = `${1 - departure}`;
+    meta.style.transform = `translate3d(0, ${-80 * departure}px, 0)`;
     root.rotation.set(current.x, current.y, 0);
     root.updateMatrix();
     // Fit the actual rotated package bounds, including the substrate and thickness.
@@ -127,18 +82,18 @@ async function initialize() {
       camera.top = viewWidth / aspect / 2; camera.bottom = -camera.top;
       camera.updateProjectionMatrix();
     }
-    renderer.render(scene, camera);
-    if (current.distanceTo(target) > 0.0001) schedule();
+    if (needsRender || rotationChanged) renderer.render(scene, camera);
+    needsRender = false;
+    if (current.distanceToSquared(target) > 0.00000001 || departure !== targetDeparture) schedule();
+    else lastFrameTime = 0;
   }
-  function schedule() { if (!frame && visible && !document.hidden) frame = requestAnimationFrame(render); }
+  function schedule() { if (initialized && !frame && visible && !document.hidden) frame = requestAnimationFrame(render); }
   function updateScroll(requestFrame = true) {
     const t = reduced.matches ? 0 : clamp((scrollY - heroTop) / (travel * 0.82), 0, 1);
     const progress = t * t * (3 - 2 * t);
     if (!drag) target.set(-progress * 0.38 + offset.x, progress * 0.6 + offset.y);
     const phase = reduced.matches ? 0 : clamp(((scrollY - heroTop) / travel - 0.08) / 0.52, 0, 1);
-    const departure = phase * phase * (3 - 2 * phase);
-    meta.style.opacity = `${1 - departure}`;
-    meta.style.transform = `translate3d(0, ${-80 * departure}px, 0)`;
+    targetDeparture = phase * phase * (3 - 2 * phase);
     if (requestFrame) schedule();
   }
   function resize() {
@@ -146,6 +101,7 @@ async function initialize() {
     aspect = rect.width / Math.max(rect.height, 1);
     baseViewWidth = nativeScroll.matches ? 6.7 : 8.05;
     lastViewWidth = 0;
+    needsRender = true;
     const nextRatio = Math.min(devicePixelRatio, nativeScroll.matches ? 1.5 : 2);
     if (pixelRatio !== nextRatio || width !== rect.width || height !== rect.height) {
       pixelRatio = nextRatio; width = rect.width; height = rect.height;
@@ -200,7 +156,10 @@ async function initialize() {
   // Reveal only after that position has settled, already at its matching angle.
   if (document.readyState !== 'complete') await new Promise(resolve => window.addEventListener('load', resolve, { once: true }));
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-  resize(); current.copy(target); render();
+  // Compile shaders before the first visible frame; supported drivers do this in parallel.
+  await renderer.compileAsync(scene, camera);
+  resize(); current.copy(target); departure = targetDeparture;
+  initialized = true; render();
   surface.classList.add('chip-3d-ready');
   document.documentElement.classList.remove('chip-webgl-pending');
 }
