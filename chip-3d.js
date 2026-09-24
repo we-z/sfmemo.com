@@ -104,7 +104,7 @@ async function initialize() {
   let drag = null, frame = 0, visible = true;
   let heroTop = 0, travel = 1;
   const hero = document.querySelector('.hero-horizon');
-  const copy = hero.querySelector('.hero-copy');
+  const meta = hero.querySelector('.hero-meta');
   const heroFrame = hero.querySelector('.hero-frame');
   let aspect = 1, baseViewWidth = 8.05, lastViewWidth = 0;
   let width = 0, height = 0, pixelRatio = 0;
@@ -137,8 +137,8 @@ async function initialize() {
     if (!drag) target.set(-progress * 0.38 + offset.x, progress * 0.6 + offset.y);
     const phase = reduced.matches ? 0 : clamp(((scrollY - heroTop) / travel - 0.08) / 0.52, 0, 1);
     const departure = phase * phase * (3 - 2 * phase);
-    copy.style.opacity = `${1 - departure}`;
-    copy.style.transform = `translate3d(0, ${-80 * departure}px, 0)`;
+    meta.style.opacity = `${1 - departure}`;
+    meta.style.transform = `translate3d(0, ${-80 * departure}px, 0)`;
     if (requestFrame) schedule();
   }
   function resize() {

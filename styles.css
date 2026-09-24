@@ -2336,7 +2336,7 @@ html[data-theme="light"] .vision-map::after {
 .chip-webgl-pending .hero-chip { visibility: hidden; }
 
 /* One fixed-height mobile stage. Text and canvas cannot expand its bounds. */
-.hero-horizon .hero-copy { will-change: transform, opacity; }
+.hero-horizon .hero-meta { will-change: transform, opacity; }
 @media (max-width: 780px) and (orientation: portrait) {
   .hero.hero-horizon {
     --hero-frame-height: 100svh;
