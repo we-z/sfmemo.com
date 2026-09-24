@@ -44,7 +44,6 @@ async function initialize() {
   const offset = new THREE.Vector2();
   let drag = null, frame = 0, visible = true, initialized = false;
   let tapCandidate = null, tapStarted = null;
-  const tapAngle = new THREE.Vector2();
   let heroTop = 0, travel = 1;
   const hero = document.querySelector('.hero-horizon');
   const meta = hero.querySelector('.hero-meta');
@@ -69,13 +68,18 @@ async function initialize() {
     meta.style.opacity = `${1 - departure}`;
     meta.style.transform = `translate3d(0, ${-80 * departure}px, 0)`;
     const wasTapping = tapStarted !== null;
-    let wobble = 0;
+    let spin = 0;
     if (wasTapping) {
-      const phase = clamp((now - tapStarted) / 600, 0, 1);
-      if (phase === 1 || reduced.matches) tapStarted = null;
-      else wobble = Math.sin(phase * Math.PI * 2) * (1 - phase) ** 2;
+      const elapsed = now - tapStarted;
+      if (elapsed >= 1800 || reduced.matches) tapStarted = null;
+      else {
+        // Ease through two half-turns, with 300ms to see the solder balls.
+        const outward = clamp(elapsed / 750, 0, 1);
+        const homeward = clamp((elapsed - 1050) / 750, 0, 1);
+        spin = Math.PI * (outward * outward * (3 - 2 * outward) + homeward * homeward * (3 - 2 * homeward));
+      }
     }
-    root.rotation.set(current.x + tapAngle.x * wobble, current.y + tapAngle.y * wobble, 0);
+    root.rotation.set(current.x, current.y + spin, 0);
     root.updateMatrix();
     // Symmetric bounds include the solder balls extending behind the package.
     const m = root.matrix.elements;
@@ -140,8 +144,6 @@ async function initialize() {
     const tap = tapCandidate; tapCandidate = null;
     if (!tap || event.pointerId !== tap.id || reduced.matches || performance.now() - tap.time > 350) return;
     if (Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > 10 || !hitsChip(event)) return;
-    const bounds = canvas.getBoundingClientRect();
-    tapAngle.set(event.clientY > bounds.top + bounds.height / 2 ? -0.10 : 0.10, event.clientX > bounds.left + bounds.width / 2 ? 0.16 : -0.16);
     tapStarted = performance.now();
     schedule();
   }, { passive: true });
