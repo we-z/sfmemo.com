@@ -90,7 +90,7 @@ async function initialize() {
   }
   root.add(pads);
 
-  const current = new THREE.Vector2(0.18, 0.46);
+  const current = new THREE.Vector2(0, 0);
   const target = current.clone();
   const offset = new THREE.Vector2();
   let drag = null, frame = 0, visible = true;
@@ -108,7 +108,7 @@ async function initialize() {
   function updateScroll() {
     const t = reduced.matches ? 0 : clamp((scrollY - heroTop) / (travel * 0.82), 0, 1);
     const progress = t * t * (3 - 2 * t);
-    if (!drag) target.set(0.18 - progress * 0.08 + offset.x, 0.46 - progress * 1.28 + offset.y);
+    if (!drag) target.set(progress * 0.1 + offset.x, -progress * 0.82 + offset.y);
     schedule();
   }
   function resize() {
