@@ -2382,10 +2382,7 @@ html[data-theme="light"] .vision-map::after {
   .hero.hero-horizon { --hero-scroll-runway: 100svh; }
   .hero-frame { position: sticky; top: 0; min-height: 100svh; }
   .hero-visual { height: clamp(22rem, 44svh, 26rem); }
-  .hero-horizon .hero-copy {
-    transform: translateY(var(--chip-copy-travel, 0px));
-    opacity: var(--chip-copy-opacity, 1);
-  }
+  .hero-horizon .hero-meta { will-change: transform, opacity; }
 }
 @media (prefers-reduced-motion: reduce) {
   .hero.hero-horizon { --hero-scroll-runway: 0px; }

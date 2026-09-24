@@ -101,10 +101,13 @@ async function initialize() {
   let drag = null, frame = 0, visible = true;
   let heroTop = 0, travel = 1;
   const hero = document.querySelector('.hero-horizon');
+  const meta = hero.querySelector('.hero-meta');
+  let scrollDirty = false;
   function render() {
     frame = 0;
     if (!visible || document.hidden) return;
-    current.lerp(target, reduced.matches ? 1 : drag ? 0.34 : 0.115);
+    if (scrollDirty) { scrollDirty = false; updateScroll(); }
+    current.lerp(target, reduced.matches || (nativeScroll.matches && !drag) ? 1 : drag ? 0.34 : 0.115);
     root.rotation.set(current.x, current.y, 0);
     renderer.render(scene, camera);
     if (current.distanceTo(target) > 0.0001) schedule();
@@ -114,8 +117,12 @@ async function initialize() {
     const t = reduced.matches ? 0 : clamp((scrollY - heroTop) / (travel * 0.82), 0, 1);
     const progress = t * t * (3 - 2 * t);
     if (!drag) target.set(-progress * 0.72 + offset.x, progress * 1.12 + offset.y);
-    surface.closest('.hero-horizon').style.setProperty('--chip-copy-travel', `${-Math.min(1, t * 2) * 420}px`);
-    surface.closest('.hero-horizon').style.setProperty('--chip-copy-opacity', `${1 - Math.min(1, t * 2)}`);
+    if (nativeScroll.matches && meta) {
+      const phase = reduced.matches ? 0 : clamp(((scrollY - heroTop) / travel - 0.22) / 0.62, 0, 1);
+      const departure = phase * phase * (3 - 2 * phase);
+      meta.style.opacity = `${1 - departure}`;
+      meta.style.transform = `translate3d(0, ${-30 * departure}px, 0)`;
+    } else if (meta) { meta.style.removeProperty('opacity'); meta.style.removeProperty('transform'); }
     schedule();
   }
   function resize() {
@@ -125,7 +132,7 @@ async function initialize() {
     camera.left = -viewWidth / 2; camera.right = viewWidth / 2;
     camera.top = viewWidth / aspect / 2; camera.bottom = -camera.top;
     camera.updateProjectionMatrix();
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(devicePixelRatio, nativeScroll.matches ? 1.5 : 2));
     renderer.setSize(rect.width, rect.height, false);
     heroTop = hero.getBoundingClientRect().top + scrollY;
     travel = Math.max(1, hero.offsetHeight - hero.querySelector(".hero-frame").offsetHeight);
@@ -161,7 +168,7 @@ async function initialize() {
   canvas.addEventListener('lostpointercapture', release);
   window.addEventListener('blur', () => release());
   canvas.addEventListener('dblclick', () => { offset.set(0, 0); updateScroll(); });
-  window.addEventListener('scroll', updateScroll, { passive: true });
+  window.addEventListener('scroll', () => { scrollDirty = true; schedule(); }, { passive: true });
   nativeScroll.addEventListener('change', () => { release(); offset.set(0, 0); resize(); });
   reduced.addEventListener('change', updateScroll);
   document.addEventListener('visibilitychange', schedule);
